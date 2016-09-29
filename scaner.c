@@ -47,19 +47,23 @@ char *allocate(int i)
 	return string;
 }*/
 
-char * extend_token(int *i, char c)
+static void extend_token(int *i, char c)
 {
 	token.data = (char*)realloc(token.data,(*i)*sizeof(char)+2);
-	if(token.data == NULL)
-		return NULL;
+//	if(token.data == NULL)
+//		return NULL;
 	token.data[(*i)+1] = '\0';
 	token.data[(*i)]=c;
-	return token.data;
+	(*i)++;
+//	return token.data;
 }
 
 /**
   * Identifikuje jednotlive lexemy a vracia Token
-  *
+  * TODO
+  * 	Zmenit navratovy typ
+	doplnit stavy
+	je zlozeny identifikator rozdeleny na Class a ID?
   */
 void get_token(){
 	char c ;
@@ -67,7 +71,11 @@ void get_token(){
 	init_token();
 	int i = 0;
 /*skusam tu*/
-	(void) i;
+	extend_token(&i,'k');
+	if(token.data == NULL){
+		exit(1);
+	}
+	printf("%s string \n\n",token.data);
 
 
 	
