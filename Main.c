@@ -1,4 +1,5 @@
 #include <stdio.h>
+<<<<<<< HEAD
 #include <stdlib.h>
 #include "scaner.h"
 #include <stdbool.h>
@@ -41,3 +42,17 @@ int main(int argc, char *argv[])
 	return 0;
 
 }
+=======
+
+int main(int argc, char *argv[])
+{
+	if(argc != 2)
+	{
+		return 99;
+	}
+	if((subor_docasny_nazov = fopen(argv[1], "r")) == NULL )
+	{
+		return 99;
+	}
+}
+>>>>>>> 93e666446ce41f43e5b14c6148cab53933114c61
