@@ -8,3 +8,7 @@ Tento projekt je to, na čo sme všetci čakali celý prvák. Psychicky sa pripr
 * 0.0.0.0.0.0.1
 
 *asi by to chcelo vymysliet globalnu strukturu na vracanie chyb
+
+
+*************GET_TOKEN******************
+*get_token vracia jeden token zo suboru... pri dalsom volani v maine sa vracia dalsi token
