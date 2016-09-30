@@ -29,7 +29,7 @@ typedef enum{
 	S_MULTI_ID,		//zlozeny identifikator
 	S_INT,		//integer
 	S_DOUBLE,	//double s bodkou
-//	S_EXP,		//exponent v double cisle
+	S_EXP,		//exponent v double cisle
 //	S_EXPO,		//exponent so znamienkom
 //	S_EX,		//pokracovanie cislom exponenta priklad: e24485654
 //	S_PLUS,		//scitanie +

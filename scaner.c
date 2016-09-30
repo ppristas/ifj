@@ -169,7 +169,9 @@ Ttoken get_token(){
 					token.stav = S_DOUBLE;					
 				}else if( (c == 'e') || c == 'E'){
 					printf("[S_INT e] \t\t---%c---\n",c);
-					//treba dorobit uz sa mi nechce
+					extend_token(&i,c);
+					stav = S_EXP;
+					token.stav = S_EXP;	
 				}
 				else{
 					printf("[S_INT else] \t\t---%c---\n",c);
@@ -186,13 +188,30 @@ Ttoken get_token(){
 					stav = S_DOUBLE;
 					token.stav = S_DOUBLE;
 					token.error = E_OK;
-				}else{
+				} //******TODO doplnit pre exponent
+					else{
 					printf("[S_DOUBLE NE] \t\t---%c---\n",c);
 					stav = S_END;
 					token.error = E_LEXICAL;
 					return_char(c);
 				}
 				break;
+			}
+		case S_EXP:
+			{
+				if(isdigit(c)){
+					printf("[S_EXP num] \t\t---%c---\n",c);
+					stav = S_EXP;
+					token.stav = S_EXP;
+					extend_token(&i,c);
+				} //TODO doplnit if pre znamienka
+				else{
+					printf("[S_EXP else] \t\t---%c---\n",c);
+					stav = S_ERROR;
+					return_char(c);					
+				}
+				break;
+					
 			}
         case S_ERROR:
         case S_END:
