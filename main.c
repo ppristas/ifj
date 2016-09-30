@@ -1,46 +1,52 @@
-/********************************************************************************
-   *    Predmet:        Formalne jazyky a prekladace (IFJ), Algoritmy (IAL)     *
-   *    Projekt:        Interpret zjednoduseneho jazyka Java SE                 *
-   *    Variant:        b/2/II                                                  *
-   *    Tim:            092                                                     *
-   *    Subor:          main.c                                               *
-   *    Riesitelia:     Filip Mik       (xmikfi00@stud.fit.vutbr.cz)            *
-   *                    Peter Ziska     (xziska02@stud.fit.vutbr.cz)            *
-   *                    Peter Pristas   (xprist05@stud.fit.vutbr.cz)            *
-   *                    Daniel Florek   (xflore02@stud.fit.vutbr.cz)            *
-   *                    Martin Grnac    (xgrnac00@stud.fit.vutbr.cz)            *
-   *                                                                            *               
-   ********************************************************************************/
-
+#include <stdio.h>
+#include <stdlib.h>
 #include "scaner.h"
 #include <stdbool.h>
 
 
 bool arguments( int argc, char *argv[]){
 	
-	if(argc != 2){
+	if(argc == 1){
 		printf("Nespravny pocet argumentov\n");
 		return false;
 	}
-	if( (file = fopen(argv[1],"r")) == NULL){
-		printf("Chybny otvaraci subor\n");
+	else if(argc == 2){
+		if( (file = fopen(argv[1],"r")) == NULL){
+			printf("Chybny otvaraci subor\n");
+			return false;
+		}
+		return true;
+	}
+	else{
+		printf("Implicitne zadane argumenty\n");
 		return false;
 	}
-	return true;
+		
 }
 
 
 int main(int argc, char *argv[])
 {
+
 	if( !(arguments(argc, argv)) )
 	{
 		printf("Chyba pri spracovani argumentov\n");
-		return 99;
+		return 1;
 	}
+	
+	get_token();	
+
 	get_token();
+	if(token.error == E_OK)
+		printf("cosijaaaak\n");		
+	printf("vrateny token:  <%s> | stav = %d\n",token.data,token.stav);	
+	free(token.data);
+	token.data = NULL;
+	
 	if( (fclose(file)) == EOF){
-		return 99;
+		return 1;
 	}	
 	return 0;
 
 }
+
