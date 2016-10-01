@@ -27,15 +27,17 @@ typedef enum{
 	S_ERROR,	//chyba
 	S_ID,		//jednoduchy identifikato
 	S_MULTI_ID,		//zlozeny identifikator
+	S_KEY,
 	S_INT,		//integer
 	S_DOUBLE,	//double s bodkou
 	S_EXP,		//exponent v double cisle
-//	S_EXPO,		//exponent so znamienkom
+	S_EXP_SIGNED,		//exponent so znamienkom
 //	S_EX,		//pokracovanie cislom exponenta priklad: e24485654
 //	S_PLUS,		//scitanie +
 //	S_MINUS,	//odcitanie -
 //	S_KRAT,		//nasobenie *
 //	S_DIV,		//delenie//delenie doplnit
+
 
 //	S_MEN,		//mensi <
 //	S_MENROV,	//mensi rovny <=
@@ -43,10 +45,10 @@ typedef enum{
 //	S_VACROV,	//vacsi rovny >=
 //	S_DIV,		//delenie /
 //	S_KOMR,		//Riadkovy komentar
-//	S_KOMBOX,	//Blokovy komentar /*	
+//	S_MULTI_KOM,	//Blokovy komentar /*	
 //	S_CIARKA,	//ciarka
 //	S_STREDNIK,	//bodkociarka ;
-
+//	S_STRING,	//string "
 }TStav;
 
 
@@ -54,15 +56,14 @@ typedef enum{
 	E_OK,
 	E_LEXICAL,
 	E_INTERNAL,
-}EErrr;
+}Eerror;
 
 typedef struct{
         char *data;
-        TStav stav;
-		EErrr error;
+        TStav stav;	
 }Ttoken;
 
-
+extern Eerror error; 
 extern Ttoken token;
 
 //bool test_reserved_words();i

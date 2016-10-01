@@ -22,7 +22,7 @@
 
 //globalna deklaracia struktury Ttoken
 Ttoken token;
-
+Eerror error;
 
 //klucove slova
 char *key_words[num_key_words] = {	"boolean\0",
@@ -46,16 +46,16 @@ char *key_words[num_key_words] = {	"boolean\0",
 /**
   * Funkcia na overenie ci je token klucove slovo 
   * navratovy typ : boolean
-  **//*
-static bool test_key_words()
+  **/
+static bool test_key_words(char *word)
 {
-    for( int i = 0; i< 2; i++){
-        if((strcmp(token.data,key_words[i]) == 0)){
+    for( int i = 0; i<num_key_words; i++){
+        if((strcmp(word,key_words[i]) == 0)){
             return true;
         }
     }
     return false;
-}*/
+}
 
 /**
   *  Vrati znak do bufferu
@@ -76,19 +76,24 @@ static void init_token()
 {
 	token.data = NULL;
 	token.stav = S_START;
-	token.error = E_LEXICAL;
 }
 
 
 static void extend_token(int *i, char c)
 {
-	token.data = (char*)realloc(token.data,(*i)*sizeof(char) + 2);
+	token.data = (char*)realloc(token.data,(*i)*(sizeof(char)) + 2);
 //	if(token.data == NULL)
 //		return NULL;
 	token.data[(*i)+1] = '\0';
 	token.data[(*i)]=c;
 	(*i)++;
 //	return token.data;
+}
+
+static void fill_token(TStav status,Eerror err)
+{
+	token.stav = status;
+	error = err;
 }
 
 /**
@@ -99,6 +104,7 @@ static void extend_token(int *i, char c)
   *	je zlozeny identifikator rozdeleny na Class a ID?
   */
 Ttoken get_token(){
+	error = E_OK;
 	char c ;
 	TStav stav = S_START;
 
@@ -145,81 +151,139 @@ Ttoken get_token(){
 					printf("[S_JID -if]   \t\t---%c---\n",c);
 					extend_token(&i,c);
 					stav = S_ID;
-					token.stav = S_ID;	
-				}
+					fill_token(stav,E_OK);	
+				}//doplnit pre zlozeny identifikator s bodkou .
 				else{
 					printf("[S_JID -else]   \t---%c---\n",c);
 					return_char(c);
-					stav=S_END;
+					if(test_key_words(token.data)){
+						printf("vyznam\n");
+						fill_token(stav,E_OK);
+					}
+					stav = S_END;
+					fill_token(S_ID,E_OK);
 				}
 				break;
 			}
-		case S_MULTI_ID:
+		case S_MULTI_ID: ////rozdelit class.ID na tri tokeny alebo nie?
+			{
+			}	
+		// konecny stav dat na koniec
+		case S_KEY:
         case S_INT:
 			{
 				if(isdigit(c)){
 					printf("[S_INT] \t\t---%c---\n",c);
 					extend_token(&i,c);
 					stav = S_INT;
-					token.stav = S_INT;
+					fill_token(S_INT,E_OK);
 				}else if( c == '.'){
 					printf("[S_INT .] \t\t---%c---\n",c);
 					extend_token(&i,c);
 					stav = S_DOUBLE;
-					token.stav = S_DOUBLE;					
+					fill_token(S_DOUBLE,E_OK);				
 				}else if( (c == 'e') || c == 'E'){
 					printf("[S_INT e] \t\t---%c---\n",c);
 					extend_token(&i,c);
 					stav = S_EXP;
-					token.stav = S_EXP;	
+					fill_token(stav,E_OK);
 				}
 				else{
 					printf("[S_INT else] \t\t---%c---\n",c);
 					return_char(c);
 					stav=S_END;
+					fill_token(S_INT,E_OK);
 				}
 				break;
 			}
-		case S_DOUBLE:
+		case S_DOUBLE:				//cislo double 1.222554
 			{
 				if(isdigit(c)){
 					printf("[S_DOUBLE] \t\t---%c---\n",c);
 					extend_token(&i,c);
 					stav = S_DOUBLE;
-					token.stav = S_DOUBLE;
-					token.error = E_OK;
+					fill_token(stav,E_OK);					
 				} //******TODO doplnit pre exponent
-					else{
+				else if( (c == 'e') || (c == 'E')){
+					printf("[S_DOUBLE e] \t\t---%c---\n",c);
+					extend_token(&i,c);
+					stav = S_EXP;
+					fill_token(stav,E_OK);		
+				}	
+				else{
 					printf("[S_DOUBLE NE] \t\t---%c---\n",c);
-					stav = S_END;
-					token.error = E_LEXICAL;
+					stav = S_ERROR;
+					fill_token(stav,E_OK);
 					return_char(c);
 				}
 				break;
 			}
-		case S_EXP:
+		case S_EXP:					//zakladny exponent bez znamienka 2e120
 			{
 				if(isdigit(c)){
 					printf("[S_EXP num] \t\t---%c---\n",c);
 					stav = S_EXP;
-					token.stav = S_EXP;
+					fill_token(stav,E_OK);
 					extend_token(&i,c);
 				} //TODO doplnit if pre znamienka
-				else{
+				else if(( c == '+') || ( c == '-')){
+					printf("[S_EXP SIGN] \t\t---%c---\n",c);
+					stav = S_EXP_SIGNED;
+					fill_token(stav,E_OK);
+					extend_token(&i,c);
+				}else{
 					printf("[S_EXP else] \t\t---%c---\n",c);
 					stav = S_ERROR;
+					fill_token(stav,E_LEXICAL);
 					return_char(c);					
 				}
 				break;
 					
 			}
+		case S_EXP_SIGNED:			//exponent so znamienkami 2e+4566
+			{
+				if(isdigit(c)){
+					printf("[S_EXPS num] \t\t---%c---\n",c);
+					stav = S_EXP_SIGNED;
+					fill_token(stav,E_OK);
+					extend_token(&i,c);
+				}else{
+				//ako mam detekovat ze to je lexikalna chyba
+				//vzdy pri tomto "else" mi nasledne vrati nulu pretoze
+				// to precita iny znak ako cislo aj ked tam bude +,- atd...
+					c = getc(file);
+					printf("==========================%c\n",c);
+					if(isdigit(c)){	
+						printf("[S_EXPS NE] \t\t---%c---\n",c);
+						stav = S_ERROR;
+						fill_token(stav,E_LEXICAL);
+						return_char(c);
+					}else{
+						printf("[S_EXPS NO] \t\t---%c---\n",c);
+						stav = S_END;
+						fill_token(stav,E_OK);
+						return_char(c);
+					}
+					return_char(c);
+				}
+				//return_char(c);
+				break;
+				
+			}
         case S_ERROR:
+			{
+				
+				error = E_LEXICAL;
+				end_cycle = false;
+				break;
+			}
         case S_END:
 			{
 			printf("[S_END]   \t\t---%c---\n",c);
 			if(isspace(c))
 				break;
-			return_char(c);		//akoby mi nechcelo vracat znak -
+			return_char(c);		//akoby mi nechcelo vracat znak 
+								//(ak sa nudite mozte to nejak vycihat :D
 			return_char(c);		//preto musim dva krat zavolat return_char
 			end_cycle = false;
             break;
@@ -228,6 +292,6 @@ Ttoken get_token(){
 	}
 
 
-	printf("<===================KONIEC=================>\n");
+	printf("<==============KONIEC VOLANIA FUNKCIE=============>\n");
 	return token;			
 }

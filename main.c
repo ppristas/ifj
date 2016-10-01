@@ -27,26 +27,39 @@ bool arguments( int argc, char *argv[]){
 
 int main(int argc, char *argv[])
 {
-
+	//Ttoken test;
 	if( !(arguments(argc, argv)) )
 	{
 		printf("Chyba pri spracovani argumentov\n");
 		return 1;
 	}
+	get_token();
+	/** ULOZENIE DAT DO INEJ PREMENNEJ NESTACI LEN PRIRADIT
+
 	
-	get_token();	
+	test.data = (char*)malloc(strlen(token.data)*sizeof(char) +2);
+	strcpy(test.data,token.data);
+	test.stav = token.stav;	
+	printf("predosly token: <%s> | stav = %d\n",test.data,test.stav); 
+
+	free(test.data);
+	*********************************/
 
 	get_token();
-	if(token.error == E_OK)
-		printf("cosijaaaak\n");		
+	get_token();
+	get_token();
+	if(error == E_OK)
+		printf("-----error: E_OK\n");		
+
 	printf("vrateny token:  <%s> | stav = %d\n",token.data,token.stav);	
+	//printf("predosly token: <%s> | stav = %d\n",test.data,test.stav);
 	free(token.data);
 	token.data = NULL;
 	
 	if( (fclose(file)) == EOF){
 		return 1;
 	}	
-	return 0;
+	return error;
 
 }
 
