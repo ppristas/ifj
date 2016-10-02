@@ -22,7 +22,7 @@
 
 //globalna deklaracia struktury Ttoken
 Ttoken token;
-Eerror error;
+Enum_error error;
 
 //klucove slova
 char *key_words[num_key_words] = {	"boolean\0",
@@ -90,7 +90,7 @@ static void extend_token(int *i, char c)
 //	return token.data;
 }
 
-static void fill_token(TStav status,Eerror err)
+static void fill_token(TStav status,Enum_error err)
 {
 	token.stav = status;
 	error = err;
@@ -176,27 +176,32 @@ Ttoken get_token(){
 					printf("[S_INT] \t\t---%c---\n",c);
 					extend_token(&i,c);
 					stav = S_INT;
-					fill_token(S_INT,E_OK);
+					//fill_token(S_INT,E_OK);
 				}else if( c == '.'){
 					printf("[S_INT .] \t\t---%c---\n",c);
 					extend_token(&i,c);
-					stav = S_DOUBLE;
-					fill_token(S_DOUBLE,E_OK);				
+					stav = S_DOUBLE_POM;
+					//fill_token(S_DOUBLE,E_OK);				
 				}else if( (c == 'e') || c == 'E'){
 					printf("[S_INT e] \t\t---%c---\n",c);
 					extend_token(&i,c);
 					stav = S_EXP;
-					fill_token(stav,E_OK);
+					break;
+					//fill_token(stav,E_OK);
+				}else if((isalpha(c)) || ( c == '$') || ( c == '_')){
+					printf("CHYBA INT\n");
+					stav = S_ERROR;
+					fill_token(stav,E_LEXICAL);
 				}
 				else{
 					printf("[S_INT else] \t\t---%c---\n",c);
 					return_char(c);
-					stav=S_END;
-					fill_token(S_INT,E_OK);
+					fill_token(stav,E_OK);
+					stav = S_END;
 				}
 				break;
 			}
-		case S_DOUBLE:				//cislo double 1.222554
+		case S_DOUBLE_POM:				//cislo double 1.222554
 			{
 				if(isdigit(c)){
 					printf("[S_DOUBLE] \t\t---%c---\n",c);
@@ -204,16 +209,42 @@ Ttoken get_token(){
 					stav = S_DOUBLE;
 					fill_token(stav,E_OK);					
 				} //******TODO doplnit pre exponent
-				else if( (c == 'e') || (c == 'E')){
+				/*else if( (c == 'e') || (c == 'E')){
 					printf("[S_DOUBLE e] \t\t---%c---\n",c);
 					extend_token(&i,c);
 					stav = S_EXP;
 					fill_token(stav,E_OK);		
-				}	
+				}*/
 				else{
 					printf("[S_DOUBLE NE] \t\t---%c---\n",c);
 					stav = S_ERROR;
+					fill_token(stav,E_LEXICAL);
+					return_char(c);
+				}
+				break;
+			}
+		case S_DOUBLE:
+			{
+				if(isdigit(c)){
+					printf("[S_DOUBLE] \t\t---%c---\n",c);
+					extend_token(&i,c);
+					stav = S_DOUBLE;
+				}
+				else if( (c == 'e') || (c == 'E')){
+                    printf("[S_DOUBLE e] \t\t---%c---\n",c);
+                    extend_token(&i,c);
+                    stav = S_EXP;
+					break;
+                    //fill_token(stav,E_OK);     
+                }else if((isalpha(c)) || ( c == '$') || ( c == '_') || (c== '.')){
+					printf("CHYBA DOUBLE\n");
+					stav = S_ERROR;
+					fill_token(stav,E_LEXICAL);
+					return_char(c);
+				}else{
+					printf("[S_DOUBLE DONE] \t\t---%c---\n",c);
 					fill_token(stav,E_OK);
+					stav = S_END;
 					return_char(c);
 				}
 				break;
@@ -222,10 +253,10 @@ Ttoken get_token(){
 			{
 				if(isdigit(c)){
 					printf("[S_EXP num] \t\t---%c---\n",c);
-					stav = S_EXP;
+					stav = S_EX;
 					fill_token(stav,E_OK);
 					extend_token(&i,c);
-				} //TODO doplnit if pre znamienka
+				} //doplnit if pre znamienka
 				else if(( c == '+') || ( c == '-')){
 					printf("[S_EXP SIGN] \t\t---%c---\n",c);
 					stav = S_EXP_SIGNED;
@@ -244,29 +275,31 @@ Ttoken get_token(){
 			{
 				if(isdigit(c)){
 					printf("[S_EXPS num] \t\t---%c---\n",c);
-					stav = S_EXP_SIGNED;
+					stav = S_EX;
 					fill_token(stav,E_OK);
 					extend_token(&i,c);
 				}else{
 				//ako mam detekovat ze to je lexikalna chyba
 				//vzdy pri tomto "else" mi nasledne vrati nulu pretoze
 				// to precita iny znak ako cislo aj ked tam bude +,- atd...
-					c = getc(file);
-					printf("==========================%c\n",c);
-					if(isdigit(c)){	
-						printf("[S_EXPS NE] \t\t---%c---\n",c);
-						stav = S_ERROR;
-						fill_token(stav,E_LEXICAL);
-						return_char(c);
-					}else{
-						printf("[S_EXPS NO] \t\t---%c---\n",c);
-						stav = S_END;
-						fill_token(stav,E_OK);
-						return_char(c);
-					}
+					printf("[chyba exp_signed]\n");
+					stav = S_ERROR;
 					return_char(c);
 				}
 				//return_char(c);
+				break;
+				
+			}
+		case S_EX:
+			{
+				if(isdigit(c)){
+					printf("[S_EX] \t\t---%c---\n",c);
+					stav = S_EX;
+					extend_token(&i,c);
+				}else if( (isalpha(c)) || ( c == '$') || ( c == '_')){
+					printf("[S_EX CHYBA]\n");
+					stav = S_ERROR;
+				}
 				break;
 				
 			}
@@ -279,6 +312,7 @@ Ttoken get_token(){
 			}
         case S_END:
 			{
+			fill_token(stav,E_OK);
 			printf("[S_END]   \t\t---%c---\n",c);
 			if(isspace(c))
 				break;

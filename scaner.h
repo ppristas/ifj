@@ -22,21 +22,23 @@
 
 FILE *file;
 typedef enum{
-	S_START,	//start
-	S_END,		//koncovy stav
-	S_ERROR,	//chyba
-	S_ID,		//jednoduchy identifikato
-	S_MULTI_ID,		//zlozeny identifikator
-	S_KEY,
-	S_INT,		//integer
-	S_DOUBLE,	//double s bodkou
-	S_EXP,		//exponent v double cisle
-	S_EXP_SIGNED,		//exponent so znamienkom
-//	S_EX,		//pokracovanie cislom exponenta priklad: e24485654
-//	S_PLUS,		//scitanie +
-//	S_MINUS,	//odcitanie -
-//	S_KRAT,		//nasobenie *
-//	S_DIV,		//delenie//delenie doplnit
+	S_START,			// 0 start
+	S_END,				// 1 koncovy stav
+	S_ERROR,			// 2 chyba
+	S_ID,				// 3 jednoduchy identifikato
+	S_MULTI_ID,			// 4 zlozeny identifikator
+	S_KEY,				// 5 klucove slova
+	S_INT,				// 6 integer
+	S_DOUBLE_POM,		// 7 double s bodkou
+	S_DOUBLE,			// 8 double pomocny
+	S_EXP,				// 9 exponent v double cisle
+	S_EXP_SIGNED,		// 10 exponent so znamienkom
+//	S_EXP_SIGNED_POM,	// 11 pomocna pre exponent
+	S_EX,				// 12 pokracovanie cislom exponenta priklad: e24485654
+//	S_PLUS,				// 13 scitanie +
+//	S_MINUS,			// 14 odcitanie -
+//	S_KRAT,				// 15 nasobenie *
+//	S_DIV,				// 16 delenie//delenie doplnit
 
 
 //	S_MEN,		//mensi <
@@ -56,14 +58,14 @@ typedef enum{
 	E_OK,
 	E_LEXICAL,
 	E_INTERNAL,
-}Eerror;
+}Enum_error;
 
 typedef struct{
         char *data;
         TStav stav;	
 }Ttoken;
 
-extern Eerror error; 
+extern Enum_error error; 
 extern Ttoken token;
 
 //bool test_reserved_words();i
