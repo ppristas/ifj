@@ -33,23 +33,22 @@ typedef enum{
 	S_DOUBLE,			// 8 double pomocny
 	S_EXP,				// 9 exponent v double cisle
 	S_EXP_SIGNED,		// 10 exponent so znamienkom
-//	S_EXP_SIGNED_POM,	// 11 pomocna pre exponent
-	S_EX,				// 12 pokracovanie cislom exponenta priklad: e24485654
-//	S_PLUS,				// 13 scitanie +
-//	S_MINUS,			// 14 odcitanie -
-//	S_KRAT,				// 15 nasobenie *
-//	S_DIV,				// 16 delenie//delenie doplnit
-
-
-//	S_MEN,		//mensi <
-//	S_MENROV,	//mensi rovny <=
-//	S_VAC,		//vacsi >
-//	S_VACROV,	//vacsi rovny >=
-//	S_DIV,		//delenie /
-//	S_KOMR,		//Riadkovy komentar
-//	S_MULTI_KOM,	//Blokovy komentar /*	
-//	S_CIARKA,	//ciarka
-//	S_STREDNIK,	//bodkociarka ;
+	S_EX,				// 11 pokracovanie cislom exponenta priklad: e24485654
+	S_PLUS,				// 12 scitanie +
+	S_MINUS,			// 13 odcitanie -
+	S_MULTI,			// 14 nasobenie *
+	S_DIV,				// 15 delenie//delenie doplnit
+	S_COM_LINE,			// 16 riadkovy komentar 		
+	S_MULTI_COM,		// 17 multi komentar
+	S_EOF,				// 18 Koniec dokumentu
+	S_SEMICOLON,		// 19 bodkociarka
+	S_PRIR,				// 20 priradenie
+	S_MEN,				// 21 mensi <
+	S_MENROV,			// 22 mensi rovny <=
+	S_VAC,				// 23 vacsi >
+	S_VACROV,			// 24 vacsi rovny >=	
+	S_ROVNY,			// 25 rovnost ==
+	S_CIARKA,			// 26 ciarka
 //	S_STRING,	//string "
 }TStav;
 

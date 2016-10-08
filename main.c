@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
 		printf("Chyba pri spracovani argumentov\n");
 		return 1;
 	}
-	get_token();
+//	get_token();
 	/** ULOZENIE DAT DO INEJ PREMENNEJ NESTACI LEN PRIRADIT
 
 	
@@ -44,14 +44,16 @@ int main(int argc, char *argv[])
 
 	free(test.data);
 	*********************************/
+	while(token.stav != S_EOF){
+		get_token();
+		printf("\nvrateny token:  |%s| | stav = %d\n\n",token.data,token.stav);
+	}
 
-	get_token();
-	get_token();
-	get_token();
+
 	if(error == E_OK)
 		printf("-----error: E_OK\n");		
 
-	printf("vrateny token:  <%s> | stav = %d\n",token.data,token.stav);	
+//	printf("vrateny token:  <%s> | stav = %d\n",token.data,token.stav);	
 	//printf("predosly token: <%s> | stav = %d\n",test.data,test.stav);
 	free(token.data);
 	token.data = NULL;
