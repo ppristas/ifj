@@ -147,9 +147,15 @@ Ttoken get_token(){
 				else if(c == EOF)		stav = S_EOF;
 				else if(c == '<'){		stav = S_MEN; extend_token(&i,c);break;}
 				else if(c == '>'){		stav = S_VAC; extend_token(&i,c);break;}
+				else if(c == '(')		stav = S_LZAT;
+				else if(c == ')')		stav = S_PZAT;
+				else if(c == '{')		stav = S_L_KOSZ;
+				else if(c == '}')		stav = S_P_KOSZ;
+				else if(c == '!'){		stav = S_VYKR;extend_token(&i,c);break;}
 				else{
 				//	printf("[S_START -else] \t---%c---\n",c);
-					stav = S_END;
+					stav = S_ERROR;
+					return_char(c);
 					break;		
 				}
 				return_char(c);			
@@ -403,6 +409,17 @@ Ttoken get_token(){
 				}
 				break;
 			}
+		case S_VYKR:
+			{
+				if(c == '='){
+					stav = S_NEROV;
+					extend_token(&i,c);
+					fill_token(stav,E_OK);
+				}else{
+					stav = S_ERROR;
+				}
+				break;
+			}
         case S_ERROR:
 			{
 				fill_token(stav,E_LEXICAL);
@@ -416,15 +433,24 @@ Ttoken get_token(){
 		case S_EOF:
 		case S_SEMICOLON:
 		case S_CIARKA:
+		case S_LZAT:
+		case S_PZAT:
+		case S_P_KOSZ:
+		case S_L_KOSZ:
 			{
 				extend_token(&i,c);
 				fill_token(stav,E_OK);
+	//			stav = S_END;
+	//			return_char(c);
+	//			break;
 			}
+		case S_NEROV:
 		case S_ROVNY:
 		case S_KEY:
 		case S_MENROV:
 		case S_VACROV:
 			{
+				return_char(c);
 				end_cycle = false;
 				break;
 			}
@@ -440,6 +466,9 @@ Ttoken get_token(){
 			end_cycle = false;
             break;
         	}
+		}
+		if(error){
+			break;
 		}
 	}
 

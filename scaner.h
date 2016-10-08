@@ -49,6 +49,12 @@ typedef enum{
 	S_VACROV,			// 24 vacsi rovny >=	
 	S_ROVNY,			// 25 rovnost ==
 	S_CIARKA,			// 26 ciarka
+	S_LZAT,				// 27 lava zatvorka
+	S_PZAT,				// 28 prava zatvorka
+	S_P_KOSZ,			// 29 prava kosata zatvorka
+	S_L_KOSZ,			// 30 lava kosata zatvorka
+	S_VYKR,				// 31 vykricnik
+	S_NEROV,			// 32 != nerovna sa
 //	S_STRING,	//string "
 }TStav;
 
