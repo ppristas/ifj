@@ -1,11 +1,14 @@
-class main(){
+class k  main(){
 	class run()
 	{
 		int text;
 		cosijak;
 		text = 6;
+		printf("Ahoj\nSve'te\\\042");
 		while(c){
 			text;
 		}
 	}
 }
+
+

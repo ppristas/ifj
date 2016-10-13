@@ -3,7 +3,7 @@
    *    Projekt:        Interpret zjednoduseneho jazyka Java SE                 *
    *    Variant:        b/2/II                                                  *
    *    Tim:            092                                                     *
-   *    Subor:          scaner.c                                                *
+   *    Subor:          ial.h                                                *
    *    Riesitelia:     Filip Mik       (xmikfi00@stud.fit.vutbr.cz)            *
    *                    Peter Ziska     (xziska02@stud.fit.vutbr.cz)            *
    *                    Peter Pristas   (xprist05@stud.fit.vutbr.cz)            *

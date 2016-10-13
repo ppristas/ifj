@@ -126,15 +126,12 @@ Ttoken get_token(){
 		case S_START:
 			{
 				if(isspace(c)){
-					//printf("[S_START -if]  \t\t---%c---\n",c);
 				    stav = S_START;
 					break;
-			    }else if( (c == '$') || (c == '_') || (isalpha(c))){
-					//printf("[S_START -alpha] \t---%c---\n",c);	
+			    }else if( (c == '$') || (c == '_') || (isalpha(c))){	
 					stav = S_ID;
 				}
-				else if( isdigit(c)){
-                  //  printf("[S_START -digit] \t---%c---\n",c);
+				else if( isdigit(c)){ 
 					stav = S_INT;		     
                 }
 				else if(c == '+')		stav = S_PLUS;
@@ -152,35 +149,32 @@ Ttoken get_token(){
 				else if(c == '{')		stav = S_L_KOSZ;
 				else if(c == '}')		stav = S_P_KOSZ;
 				else if(c == '!'){		stav = S_VYKR;extend_token(&i,c);break;}
+				else if(c == '"'){		stav = S_STRING;break;}
 				else{
-				//	printf("[S_START -else] \t---%c---\n",c);
 					stav = S_ERROR;
 					return_char(c);
 					break;		
 				}
 				return_char(c);			
-				//extend_token(&i,c);
         		break;
 		    }
 		case S_ID:
 			{
 				if((c == '$') || (c == '_') || (isalpha(c)) || (isdigit(c))){
-				//	printf("[S_JID -if]   \t\t---%c---\n",c);
 					extend_token(&i,c);
 					stav = S_ID;
 					fill_token(stav,E_OK);	
-				}//doplnit pre zlozeny identifikator s bodkou .
+				}//doplnit pre zlozeny identifikator s bodkou .TODO
 				else{
-				//	printf("[S_JID -else]   \t---%c---\n",c);
-					return_char(c);
+				
 					if(test_key_words(token.data)){
 						stav = S_KEY;
-				//		printf("vyznam\n");
 						fill_token(stav,E_OK);
 					}else{
 					stav = S_END;
 					fill_token(S_ID,E_OK);
 					}
+					return_char(c);
 				}
 				break;
 			}
@@ -190,28 +184,20 @@ Ttoken get_token(){
         case S_INT:
 			{
 				if(isdigit(c)){
-				//	printf("[S_INT] \t\t---%c---\n",c);
 					extend_token(&i,c);
 					stav = S_INT;
-					//fill_token(S_INT,E_OK);
 				}else if( c == '.'){
-				//	printf("[S_INT .] \t\t---%c---\n",c);
 					extend_token(&i,c);
-					stav = S_DOUBLE_POM;
-					//fill_token(S_DOUBLE,E_OK);				
+					stav = S_DOUBLE_POM;				
 				}else if( (c == 'e') || c == 'E'){
-				//	printf("[S_INT e] \t\t---%c---\n",c);
 					extend_token(&i,c);
 					stav = S_EXP;
 					break;
-					//fill_token(stav,E_OK);
 				}else if((isalpha(c)) || ( c == '$') || ( c == '_')){
-				//	printf("CHYBA INT\n");
 					stav = S_ERROR;
 					fill_token(stav,E_LEXICAL);
 				}
 				else{
-				//	printf("[S_INT else] \t\t---%c---\n",c);
 					return_char(c);
 					fill_token(stav,E_OK);
 					stav = S_END;
@@ -221,19 +207,18 @@ Ttoken get_token(){
 		case S_DOUBLE_POM:				//cislo double 1.222554
 			{
 				if(isdigit(c)){
-					printf("[S_DOUBLE] \t\t---%c---\n",c);
+
 					extend_token(&i,c);
 					stav = S_DOUBLE;
 					fill_token(stav,E_OK);					
 				} //******TODO doplnit pre exponent
-				/*else if( (c == 'e') || (c == 'E')){
-					printf("[S_DOUBLE e] \t\t---%c---\n",c);
+				else if( (c == 'e') || (c == 'E')){
+
 					extend_token(&i,c);
 					stav = S_EXP;
 					fill_token(stav,E_OK);		
-				}*/
+				}
 				else{
-				//	printf("[S_DOUBLE NE] \t\t---%c---\n",c);
 					stav = S_ERROR;
 					fill_token(stav,E_LEXICAL);
 					return_char(c);
@@ -242,24 +227,21 @@ Ttoken get_token(){
 			}
 		case S_DOUBLE:
 			{
+		
 				if(isdigit(c)){
-				//	printf("[S_DOUBLE] \t\t---%c---\n",c);
 					extend_token(&i,c);
 					stav = S_DOUBLE;
 				}
 				else if( (c == 'e') || (c == 'E')){
-              //      printf("[S_DOUBLE e] \t\t---%c---\n",c);
-                    extend_token(&i,c);
+               
+					extend_token(&i,c);
                     stav = S_EXP;
-					break;
-                    //fill_token(stav,E_OK);     
+				//	break;
                 }else if((isalpha(c)) || ( c == '$') || ( c == '_') || (c== '.')){
-			//		printf("CHYBA DOUBLE\n");
 					stav = S_ERROR;
 					fill_token(stav,E_LEXICAL);
 					return_char(c);
 				}else{
-			//		printf("[S_DOUBLE DONE] \t\t---%c---\n",c);
 					fill_token(stav,E_OK);
 					stav = S_END;
 					return_char(c);
@@ -269,18 +251,15 @@ Ttoken get_token(){
 		case S_EXP:					//zakladny exponent bez znamienka 2e120
 			{
 				if(isdigit(c)){
-			//		printf("[S_EXP num] \t\t---%c---\n",c);
 					stav = S_EX;
 					fill_token(stav,E_OK);
 					extend_token(&i,c);
 				} //doplnit if pre znamienka
 				else if(( c == '+') || ( c == '-')){
-			//		printf("[S_EXP SIGN] \t\t---%c---\n",c);
 					stav = S_EXP_SIGNED;
 					fill_token(stav,E_OK);
 					extend_token(&i,c);
 				}else{
-			//		printf("[S_EXP else] \t\t---%c---\n",c);
 					stav = S_ERROR;
 					fill_token(stav,E_LEXICAL);
 					return_char(c);					
@@ -291,7 +270,6 @@ Ttoken get_token(){
 		case S_EXP_SIGNED:			//exponent so znamienkami 2e+4566
 			{
 				if(isdigit(c)){
-			//		printf("[S_EXPS num] \t\t---%c---\n",c);
 					stav = S_EX;
 					fill_token(stav,E_OK);
 					extend_token(&i,c);
@@ -310,12 +288,14 @@ Ttoken get_token(){
 		case S_EX:
 			{
 				if(isdigit(c)){
-			//		printf("[S_EX] \t\t---%c---\n",c);
 					stav = S_EX;
 					extend_token(&i,c);
 				}else if( (isalpha(c)) || ( c == '$') || ( c == '_')){
-			//		printf("[S_EX CHYBA]\n");
 					stav = S_ERROR;
+				}else{
+					fill_token(stav,E_OK);
+					return_char(c);
+					stav = S_END;
 				}
 				break;
 				
@@ -346,10 +326,8 @@ Ttoken get_token(){
 			}
 		case S_MULTI_COM:
 			{
-		//		printf("multiline stav\n");
 				if(c == '*'){
 					c = getc(file);
-					//printf("cococo %c\n",k);
 					if( c == '/'){
 						stav = S_START;
 						i = 0;
@@ -365,16 +343,12 @@ Ttoken get_token(){
 			}
 		case S_PRIR:
 			{
-				//printf("znak -<%c>-\n",c);
 				if(c == '='){
-					//printf("kokosajs %s\n",token.data);
 					extend_token(&i,c);	
-					//printf("dalsiznak >%s<\n",token.data); 
 					stav = S_ROVNY;
 					fill_token(stav,E_OK);
 					return_char(c);
 				}else{
-					//extend_token(&i,'=');
 					fill_token(stav,E_OK);
 					stav = S_END;
 					return_char(c);
@@ -423,9 +397,68 @@ Ttoken get_token(){
         case S_ERROR:
 			{
 				fill_token(stav,E_LEXICAL);
-				error = E_LEXICAL;
 				end_cycle = false;
 				break;
+			}
+		case S_STRING:
+			{
+				if( c == '"'){
+					fill_token(stav,E_OK);
+					stav = S_END;
+				}
+				else if(c == 92){
+				//	printf("kekek\n");				/* ak c je \ */
+					stav = S_ESCAPE;
+				}else{
+					extend_token(&i,c);
+					stav = S_STRING;
+				}
+			break;
+			}
+		case S_ESCAPE:
+			{
+			if(c == 'n'){
+				extend_token(&i,'\n');
+				stav = S_STRING;
+			}else if( c == '\"'){
+				extend_token(&i,'\"');
+				stav = S_STRING;
+			}else if( c == 't'){
+				extend_token(&i,'\t');
+				stav = S_STRING;
+			}else if(c == 92){
+				extend_token(&i,'\\');
+				stav = S_STRING;
+			}else if(isdigit(c)){
+				int oktal_num;
+				char pom[3];
+				if((c >= 48) || ( c <= 51)){
+					pom[0] = c;
+					c = getc(file);
+					if((isdigit(c)) && ((c >= 48) || (c <= 55))){
+						pom[1] = c;
+						c = getc(file);
+	                    if((isdigit(c)) && ((c >= 49) || (c <= 55))){
+							pom[2] = c;
+							pom[3] = '\0';
+							oktal_num = strtol(pom,NULL,8);
+					 		c = oktal_num;
+							extend_token(&i,c);
+							stav = S_STRING;	
+							break;
+						}
+					}
+					stav = S_ERROR; 				
+				}else{
+					fill_token(S_ERROR,E_LEXICAL);
+					stav = S_ERROR;
+				} 
+			}else{
+				printf("jo ----%c----\n",c);
+				fill_token(S_ERROR,E_LEXICAL);
+				stav = S_ERROR;
+			}
+			break;
 			}
 		case S_PLUS:
 		case S_MINUS:
@@ -446,7 +479,6 @@ Ttoken get_token(){
 			}
 		case S_NEROV:
 		case S_ROVNY:
-		case S_KEY:
 		case S_MENROV:
 		case S_VACROV:
 			{
@@ -454,6 +486,7 @@ Ttoken get_token(){
 				end_cycle = false;
 				break;
 			}
+		case S_KEY:
         case S_END:
 			{
 		//	fill_token(stav,E_OK);
@@ -470,6 +503,7 @@ Ttoken get_token(){
 		if(error){
 			break;
 		}
+		
 	}
 
 

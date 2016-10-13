@@ -55,7 +55,9 @@ typedef enum{
 	S_L_KOSZ,			// 30 lava kosata zatvorka
 	S_VYKR,				// 31 vykricnik
 	S_NEROV,			// 32 != nerovna sa
-//	S_STRING,	//string "
+	S_STRING,			//string "gfdsgfg"
+	S_ESCAPE,			// escape sekvencia /n /t /ddd
+	
 }TStav;
 
 
