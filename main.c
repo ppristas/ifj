@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
 	*********************************/
 	while(token.stav != S_EOF){
 		get_token();
-		printf("\nvrateny token:  |%s| | stav = %d\n\n",token.data,token.stav);
+		printf("\nvrateny token:  |%s| | stav = %d error = %d\n\n",token.data,token.stav,error);
 	}
 
 

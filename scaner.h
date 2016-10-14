@@ -26,7 +26,7 @@ typedef enum{
 	S_END,				// 1 koncovy stav
 	S_ERROR,			// 2 chyba
 	S_ID,				// 3 jednoduchy identifikato
-	S_MULTI_ID,			// 4 zlozeny identifikator
+	S_CLASS,			// 4 zlozeny identifikator
 	S_KEY,				// 5 klucove slova
 	S_INT,				// 6 integer
 	S_DOUBLE_POM,		// 7 double s bodkou
@@ -64,6 +64,7 @@ typedef enum{
 typedef enum{
 	E_OK,
 	E_LEXICAL,
+	E_ESCAPE,
 	E_INTERNAL,
 }Enum_error;
 

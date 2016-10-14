@@ -26,22 +26,22 @@ Enum_error error;
 
 //klucove slova
 char *key_words[num_key_words] = {	"boolean\0",
-					"break\0",
-					"class\0",
-					"continue\0",
-					"do\0",
-					"double\0",
-					"else\0",
-					"false\0",
-					"for\0",
-					"if\0",
-					"int\0",
-					"return\0",
-					"String\0",
-					"static\0",
-					"true\0",
-					"void\0",	
-					"while\0",};
+									"break\0",
+									"class\0",
+									"continue\0",
+									"do\0",
+									"double\0",
+									"else\0",
+									"false\0",
+									"for\0",
+									"if\0",
+									"int\0",
+									"return\0",
+									"String\0",
+									"static\0",
+									"true\0",
+									"void\0",	
+									"while\0",};
 
 /**
   * Funkcia na overenie ci je token klucove slovo 
@@ -110,16 +110,12 @@ Ttoken get_token(){
 
 	int i = 0;
 	bool end_cycle = true;
-/**************/
-
-
 
 	if(token.data != NULL){
 		free(token.data);	
 	}
 	init_token();	
 
-/*skusam tu*/
 	while((c= getc(file)) && (end_cycle)){
 		switch (stav)
 		{
@@ -165,6 +161,9 @@ Ttoken get_token(){
 					stav = S_ID;
 					fill_token(stav,E_OK);	
 				}//doplnit pre zlozeny identifikator s bodkou .TODO
+				else if( c == '.'){
+					stav = S_CLASS;
+				}
 				else{
 				
 					if(test_key_words(token.data)){
@@ -178,8 +177,17 @@ Ttoken get_token(){
 				}
 				break;
 			}
-		case S_MULTI_ID: ////rozdelit class.ID na tri tokeny alebo nie?
+		case S_CLASS: ////rozdelit class.ID na tri tokeny alebo nie?
 			{
+				if((isalpha(c)) || (c == '$') || (c == '_')){
+					fill_token(stav,E_OK);
+					stav = S_END;
+					return_char(c);
+				}else{
+					stav = S_ERROR;
+				
+				}
+				break;
 			}	
         case S_INT:
 			{
@@ -375,7 +383,7 @@ Ttoken get_token(){
 					extend_token(&i,c);
 					stav = S_VACROV;
 					fill_token(stav,E_OK);
-					return_char(c);
+				//	return_char(c);
 				}else{
 					fill_token(stav,E_OK);
 					stav = S_END;
@@ -389,8 +397,10 @@ Ttoken get_token(){
 					stav = S_NEROV;
 					extend_token(&i,c);
 					fill_token(stav,E_OK);
+					return_char(c);
 				}else{
 					stav = S_ERROR;
+					return_char(c);
 				}
 				break;
 			}
@@ -409,7 +419,10 @@ Ttoken get_token(){
 				else if(c == 92){
 				//	printf("kekek\n");				/* ak c je \ */
 					stav = S_ESCAPE;
-				}else{
+				}else if(c == EOF){
+					stav = S_ERROR;
+				}
+				else{
 					extend_token(&i,c);
 					stav = S_STRING;
 				}
@@ -448,13 +461,21 @@ Ttoken get_token(){
 							break;
 						}
 					}
-					stav = S_ERROR; 				
+					stav = S_ERROR; 		
+					fill_token(S_ERROR,E_ESCAPE);		
 				}else{
-					fill_token(S_ERROR,E_LEXICAL);
+					fill_token(S_ERROR,E_ESCAPE);
 					stav = S_ERROR;
 				} 
 			}else{
-				printf("jo ----%c----\n",c);
+				while((c = getc(file)) != '"'){
+					if(c == EOF){
+						stav = S_ERROR;
+						fill_token(S_ERROR,E_ESCAPE);
+						break;
+					}
+				}
+
 				fill_token(S_ERROR,E_LEXICAL);
 				stav = S_ERROR;
 			}
