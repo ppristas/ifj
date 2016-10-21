@@ -41,6 +41,6 @@
 
 // globalna premenna pre navratovu hodnotu chyby
 int error_ret;
-int printError();
+int printError(void);
 
 #endif
