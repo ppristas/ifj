@@ -40,6 +40,10 @@
 #define INTERNAL_ERR 99
 
 // globalna premenna pre navratovu hodnotu chyby
-int error_ret;
+int error;
+int line;
+int column;
+extern char* filename;
 
+void errorFce();
 #endif

@@ -16,15 +16,12 @@
 #include <stdlib.h>
 #include "scaner.h"
 #include <stdbool.h>
-#include "ial.h"
-//#include "symbol.h"
+#include "error.h"
 
-int HTSIZE = MAX_HTSIZE;
-HTab_table* ptrht;
-//HTab_listitem_sym* UNDEFPTR;
+char *filename = NULL;
 
 bool arguments( int argc, char *argv[]){
-	
+
 	if(argc == 1){
 		printf("Nespravny pocet argumentov\n");
 		return false;
@@ -34,6 +31,13 @@ bool arguments( int argc, char *argv[]){
 			printf("Chybny otvaraci subor\n");
 			return false;
 		}
+		int length = strlen(argv[1]);
+	    	filename = (char *)malloc(length*sizeof(char)+2);
+	    	if( filename == NULL)
+	       	 	return false;
+	
+	   	 strcpy(filename,argv[1]);
+
 		return true;
 	}
 	else{
@@ -43,70 +47,33 @@ bool arguments( int argc, char *argv[]){
 		
 }
 
-void printhash(HTab_table* ptrht) {
-	int maxlen = 0;
-	int sumcnt = 0;
-
-	printf("------------Hash biiitch----------\n");
-	for(int i = 0; i < HTSIZE; i++) {
-		printf("%i:",i);
-		int cnt = 0;
-		HTab_listitem_sym* ptritem = (*ptrht)[i];
-		while(ptritem != NULL) {
-			printf("(%s %d)",((*ptritem).token.data),ptritem->token.stav);
-			ptritem = ptritem->ptrnext;
-		}
-		printf("\n");
-		if(cnt > maxlen)
-			maxlen = cnt;
-		sumcnt += cnt;
-	}
-	printf("-----------------------------\n");
-}
 
 int main(int argc, char *argv[])
 {
+	token.stav = SUCCESS;
 	//Ttoken test;
 	if( !(arguments(argc, argv)) )
 	{
-		printf("Chyba pri spracovani argumentov\n");
-		return 1;
+		fprintf(stderr,"Chyba pri spracovani argumentov\n");
+		return INTERNAL_ERR;
 	}
-	//------------------------------
-
-	ptrht = (HTab_table*) malloc(sizeof(HTab_table));
-	HTSIZE = 19;
-	printhash(ptrht);
-
-//	get_token();
-	/** ULOZENIE DAT DO INEJ PREMENNEJ NESTACI LEN PRIRADIT
 
 	
-	test.data = (char*)malloc(strlen(token.data)*sizeof(char) +2);
-	strcpy(test.data,token.data);
-	test.stav = token.stav;	
-	printf("predosly token: <%s> | stav = %d\n",test.data,test.stav); 
-
-	free(test.data);
-	*********************************/
 	while(token.stav != S_EOF){
 		get_token();
-		printf("\nvrateny token:  |%s| | stav = %d error = %d\n\n",token.data,token.stav,error);
-		HTab_insert(ptrht,token);
+		printf("%s :%d:%d: vrateny token:  |%s| | stav = %d error = %d\n\n",filename,token.line,token.column,token.data,token.stav,error);
 	}
-	printhash(ptrht);
 
 
-	if(error == E_OK)
+	if(error == SUCCESS)
 		printf("-----error: E_OK\n");		
 
 //	printf("vrateny token:  <%s> | stav = %d\n",token.data,token.stav);	
 	//printf("predosly token: <%s> | stav = %d\n",test.data,test.stav);
 	free(token.data);
+	free(filename);
 	token.data = NULL;
 	
-	//---------------------------------
-	HTab_free(ptrht);
 	if( (fclose(file)) == EOF){
 		return 1;
 	}	
