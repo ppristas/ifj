@@ -15,14 +15,14 @@
 
 #include "scaner.h"
 #include <stdbool.h>
-
+#include "error.h"
 
 //pocet klucovych slov
 #define	num_key_words  17
 
 //globalna deklaracia struktury Ttoken
 Ttoken token;
-Enum_error error;
+
 
 //klucove slova
 char *key_words[num_key_words] = {	"boolean\0",
@@ -47,26 +47,30 @@ char *key_words[num_key_words] = {	"boolean\0",
   * Funkcia na overenie ci je token klucove slovo 
   * navratovy typ : boolean
   **/
-static bool test_key_words(char *word)
+static void test_key_words(char *word)
 {
     for( int i = 0; i<num_key_words; i++){
         if((strcmp(word,key_words[i]) == 0)){
-            return true;
+            token.stav = S_KEY;
+			return;
         }
     }
-    return false;
+	token.stav = S_ID;
+    return;
 }
 
 /**
   *  Vrati znak do bufferu
   *  
   **/
-static void return_char(char c)
+static void return_char(int c)
 {
     // vratime znak ak je neprazdny
-    if (!isspace(c))
-        ungetc(c, file);
+    if(!isspace(c))    
+		c = ungetc(c, file);
 
+	if(isprint(c))
+		column--;
 }
 
 /**
@@ -76,26 +80,35 @@ static void init_token()
 {
 	token.data = NULL;
 	token.stav = S_START;
+	token.column = column;
+	token.line = line;
 }
 
 
-static void extend_token(int *i, char c)
+static void extend_token(int *i, int c)
 {
+	
 	token.data = (char*)realloc(token.data,(*i)*(sizeof(char)) + 2);
-//	if(token.data == NULL)
-//		return NULL;
-	token.data[(*i)+1] = '\0';
+	if(token.data == NULL){
+		error = INTERNAL_ERR;
+		return;
+	}
 	token.data[(*i)]=c;
 	(*i)++;
+	token.data[(*i)] = '\0';
+	
 //	return token.data;
 }
 
-static void fill_token(TStav status,Enum_error err)
+static void fill_token(TStav status,int err)
 {
 	token.stav = status;
 	error = err;
 }
 
+
+
+				
 /**
   * Identifikuje jednotlive lexemy a vracia Token
   * TODO
@@ -104,10 +117,11 @@ static void fill_token(TStav status,Enum_error err)
   *	je zlozeny identifikator rozdeleny na Class a ID?
   */
 Ttoken get_token(){
-	error = E_OK;
-	char c ;
+	
+	error = SUCCESS;
+	int c = getc(file);;
 	TStav stav = S_START;
-
+	
 	int i = 0;
 	bool end_cycle = true;
 
@@ -116,11 +130,13 @@ Ttoken get_token(){
 	}
 	init_token();	
 
-	while((c= getc(file)) && (end_cycle)){
+	do{
 		switch (stav)
 		{
 		case S_START:
 			{
+				token.column = column;
+				token.line = line;
 				if(isspace(c)){
 				    stav = S_START;
 					break;
@@ -129,66 +145,69 @@ Ttoken get_token(){
 				}
 				else if( isdigit(c)){ 
 					stav = S_INT;		     
-                }
-				else if(c == '+')		stav = S_PLUS;
+				}
+				else if(c == '+')		stav = S_PLUS;//extend_token(&i,c);c = ungetc(c,file);column++;break;}
 				else if(c == '-')		stav = S_MINUS;
 				else if(c == '*')		stav = S_MULTI;
-				else if(c == '/'){		stav = S_DIV;break;}
+				else if(c == '/'){		stav = S_DIV;c = ungetc(c,file);break;}
 				else if(c == ';')		stav = S_SEMICOLON;
 				else if(c == ',')		stav = S_CIARKA;
-				else if(c == '='){		stav = S_PRIR;extend_token(&i,c);break;}
+				else if(c == '=')		stav = S_PRIR;
 				else if(c == EOF)		stav = S_EOF;
-				else if(c == '<'){		stav = S_MEN; extend_token(&i,c);break;}
-				else if(c == '>'){		stav = S_VAC; extend_token(&i,c);break;}
+				else if(c == '<')		stav = S_MEN;
+				else if(c == '>')		stav = S_VAC;
 				else if(c == '(')		stav = S_LZAT;
 				else if(c == ')')		stav = S_PZAT;
 				else if(c == '{')		stav = S_L_KOSZ;
 				else if(c == '}')		stav = S_P_KOSZ;
-				else if(c == '!'){		stav = S_VYKR;extend_token(&i,c);break;}
+				else if(c == '!')		stav = S_VYKR;
 				else if(c == '"'){		stav = S_STRING;break;}
 				else{
 					stav = S_ERROR;
-					return_char(c);
 					break;		
 				}
-				return_char(c);			
+//				printf("((((%c))))\n",c);
+				extend_token(&i,c);		
         		break;
 		    }
 		case S_ID:
 			{
 				if((c == '$') || (c == '_') || (isalpha(c)) || (isdigit(c))){
-					extend_token(&i,c);
 					stav = S_ID;
-					fill_token(stav,E_OK);	
+					extend_token(&i,c);
+						
 				}//doplnit pre zlozeny identifikator s bodkou .TODO
 				else if( c == '.'){
-					stav = S_CLASS;
+					fill_token(S_CLASS,SUCCESS);
+					//ungetc(c,file);
+					//column--;
+					return token;
+					stav = S_END;
 				}
 				else{
-				
-					if(test_key_words(token.data)){
-						stav = S_KEY;
-						fill_token(stav,E_OK);
-					}else{
+//					printf("koniec slova: -%c-\n",c);
+					fill_token(stav,SUCCESS);
+					test_key_words(token.data);	
 					stav = S_END;
-					fill_token(S_ID,E_OK);
-					}
-					return_char(c);
+					ungetc(c,file);
+					column--;
+					return token;
 				}
+
 				break;
 			}
-		case S_CLASS: ////rozdelit class.ID na tri tokeny alebo nie?
+	case S_CLASS: ////rozdelit class.ID na tri tokeny alebo nie?
 			{
-				if((isalpha(c)) || (c == '$') || (c == '_')){
+	/*			if((isalpha(c)) || (c == '$') || (c == '_')){
 					fill_token(stav,E_OK);
 					stav = S_END;
-					return_char(c);
+					return_char((char)c);
 				}else{
 					stav = S_ERROR;
 				
 				}
 				break;
-			}	
+	*/		}	
         case S_INT:
 			{
 				if(isdigit(c)){
@@ -203,12 +222,15 @@ Ttoken get_token(){
 					break;
 				}else if((isalpha(c)) || ( c == '$') || ( c == '_')){
 					stav = S_ERROR;
-					fill_token(stav,E_LEXICAL);
+					fill_token(stav,LEXICAL_ERR);
+					c = ungetc(c,file);
+					column--;
 				}
 				else{
-					return_char(c);
-					fill_token(stav,E_OK);
-					stav = S_END;
+					c = ungetc(c,file);
+					column--;
+					fill_token(stav,SUCCESS);
+					return token;
 				}
 				break;
 			}
@@ -218,18 +240,20 @@ Ttoken get_token(){
 
 					extend_token(&i,c);
 					stav = S_DOUBLE;
-					fill_token(stav,E_OK);					
+					fill_token(stav,SUCCESS);					
 				} //******TODO doplnit pre exponent
 				else if( (c == 'e') || (c == 'E')){
 
 					extend_token(&i,c);
 					stav = S_EXP;
-					fill_token(stav,E_OK);		
+					fill_token(stav,SUCCESS);		
 				}
 				else{
 					stav = S_ERROR;
-					fill_token(stav,E_LEXICAL);
-					return_char(c);
+					fill_token(stav,LEXICAL_ERR);
+					c = ungetc(c,file);
+					column--;
+				
 				}
 				break;
 			}
@@ -247,12 +271,22 @@ Ttoken get_token(){
 				//	break;
                 }else if((isalpha(c)) || ( c == '$') || ( c == '_') || (c== '.')){
 					stav = S_ERROR;
-					fill_token(stav,E_LEXICAL);
-					return_char(c);
+					fill_token(stav,LEXICAL_ERR);
+					while((c = getc(file))){
+                        if(isspace(c)){
+                            break;
+                        }
+                        column++;
+                    }
+                    c = ungetc(c,file);
+                    column--;
+					
 				}else{
-					fill_token(stav,E_OK);
+					fill_token(stav,SUCCESS);
 					stav = S_END;
-					return_char(c);
+					c=ungetc(c,file);
+					column--;
+					return token;
 				}
 				break;
 			}
@@ -260,17 +294,26 @@ Ttoken get_token(){
 			{
 				if(isdigit(c)){
 					stav = S_EX;
-					fill_token(stav,E_OK);
+					fill_token(stav,SUCCESS);
 					extend_token(&i,c);
 				} //doplnit if pre znamienka
 				else if(( c == '+') || ( c == '-')){
 					stav = S_EXP_SIGNED;
-					fill_token(stav,E_OK);
+					fill_token(stav,SUCCESS);
 					extend_token(&i,c);
 				}else{
 					stav = S_ERROR;
-					fill_token(stav,E_LEXICAL);
-					return_char(c);					
+					fill_token(stav,LEXICAL_ERR);
+					while((c = getc(file))){
+                        if(isspace(c)){
+                            break;
+                        }
+                        column++;
+                    }
+                    c = ungetc(c,file);
+                    column--;
+
+				
 				}
 				break;
 					
@@ -279,7 +322,7 @@ Ttoken get_token(){
 			{
 				if(isdigit(c)){
 					stav = S_EX;
-					fill_token(stav,E_OK);
+					fill_token(stav,SUCCESS);
 					extend_token(&i,c);
 				}else{
 				//ako mam detekovat ze to je lexikalna chyba
@@ -287,9 +330,20 @@ Ttoken get_token(){
 				// to precita iny znak ako cislo aj ked tam bude +,- atd...
 			//		printf("[chyba exp_signed]\n");
 					stav = S_ERROR;
-					return_char(c);
+					fill_token(stav,LEXICAL_ERR);
+					while((c = getc(file))){
+						if(isspace(c)){
+							break;
+						}
+						column++;
+					}
+					c = ungetc(c,file);
+					column--;
+					//c = ungetc(c,file);
+					//column--;
+				
 				}
-				//return_char(c);
+				//return_char((char)c);
 				break;
 				
 			}
@@ -300,9 +354,20 @@ Ttoken get_token(){
 					extend_token(&i,c);
 				}else if( (isalpha(c)) || ( c == '$') || ( c == '_')){
 					stav = S_ERROR;
+					fill_token(stav,LEXICAL_ERR);
+					while((c = getc(file))){
+                        if(isspace(c)){
+                            break;
+                        }
+                        column++;
+                    }
+                    c = ungetc(c,file);
+                    column--;
+
 				}else{
-					fill_token(stav,E_OK);
-					return_char(c);
+					fill_token(stav,SUCCESS);
+					c = ungetc(c,file);
+					column--;
 					stav = S_END;
 				}
 				break;
@@ -316,9 +381,10 @@ Ttoken get_token(){
 					stav = S_MULTI_COM;
 				}else{
 					extend_token(&i,'/');
-					fill_token(stav,E_OK);
+					fill_token(stav,SUCCESS);
 					stav = S_END;
-					return_char(c);
+					c = ungetc(c,file);
+					column--;
 				}
 				break;
 			}
@@ -342,7 +408,7 @@ Ttoken get_token(){
 					}
 				}else if(c == EOF){
 					stav = S_ERROR;
-					fill_token(stav,E_LEXICAL);
+					fill_token(stav,LEXICAL_ERR);
 					
 				}else{
 					stav = S_MULTI_COM;
@@ -351,15 +417,19 @@ Ttoken get_token(){
 			}
 		case S_PRIR:
 			{
+
+
 				if(c == '='){
 					extend_token(&i,c);	
 					stav = S_ROVNY;
-					fill_token(stav,E_OK);
-					return_char(c);
+					fill_token(stav,SUCCESS);
+					c = ungetc(c,file);
+					column--;
 				}else{
-					fill_token(stav,E_OK);
+					fill_token(stav,SUCCESS);
 					stav = S_END;
-					return_char(c);
+					c = ungetc(c,file);
+					return token;	
 				}
 				break;
 			}
@@ -368,10 +438,9 @@ Ttoken get_token(){
 				if(c == '='){
 					extend_token(&i,c);
 					stav = S_MENROV;
-					fill_token(stav,E_OK);
-					return_char(c);
+					fill_token(stav,SUCCESS);
 				}else{
-					fill_token(stav,E_OK);
+					fill_token(stav,SUCCESS);
 					stav = S_END;
 					return_char(c);
 				}
@@ -382,12 +451,13 @@ Ttoken get_token(){
 				if(c == '='){
 					extend_token(&i,c);
 					stav = S_VACROV;
-					fill_token(stav,E_OK);
-				//	return_char(c);
+					fill_token(stav,SUCCESS);
+				//	return_char((char)c);
 				}else{
-					fill_token(stav,E_OK);
+					fill_token(stav,SUCCESS);
 					stav = S_END;
-					return_char(c);
+					c = ungetc(c,file);
+					column--;
 				}
 				break;
 			}
@@ -396,25 +466,27 @@ Ttoken get_token(){
 				if(c == '='){
 					stav = S_NEROV;
 					extend_token(&i,c);
-					fill_token(stav,E_OK);
-					return_char(c);
+					fill_token(stav,SUCCESS);
 				}else{
 					stav = S_ERROR;
-					return_char(c);
+					return_char((char)c);
 				}
 				break;
+	
 			}
         case S_ERROR:
 			{
-				fill_token(stav,E_LEXICAL);
+				c = ungetc(c,file);
+				column--;
 				end_cycle = false;
 				break;
 			}
 		case S_STRING:
 			{
 				if( c == '"'){
-					fill_token(stav,E_OK);
+					fill_token(stav,SUCCESS);
 					stav = S_END;
+					return token;
 				}
 				else if(c == 92){
 				//	printf("kekek\n");				/* ak c je \ */
@@ -445,38 +517,51 @@ Ttoken get_token(){
 			}else if(isdigit(c)){
 				int oktal_num;
 				char pom[3];
-				if((c >= 48) || ( c <= 51)){
+				if((c >= 48) && ( c <= 51)){
 					pom[0] = c;
 					c = getc(file);
-					if((isdigit(c)) && ((c >= 48) || (c <= 55))){
+					if((isdigit(c)) && ((c >= 48) && (c <= 55))){
 						pom[1] = c;
 						c = getc(file);
-	                    if((isdigit(c)) && ((c >= 49) || (c <= 55))){
+	                    if((isdigit(c)) && ((c >= 49) && (c <= 55))){
 							pom[2] = c;
 							pom[3] = '\0';
 							oktal_num = strtol(pom,NULL,8);
-					 		c = oktal_num;
-							extend_token(&i,c);
-							stav = S_STRING;	
+							c = oktal_num;
+							if(c <= 377){
+								extend_token(&i,c);
+								stav = S_STRING;	
+							}else{
+								while((c = getc(file)) != '"'){
+				                    if(c == EOF)
+            				            break;               				
+								}						
+								fill_token(S_ERROR,LEXICAL_ERR);
+								stav =  S_ERROR;
+							}
 							break;
 						}
 					}
+				}
+
+					while((c = getc(file)) != '"'){
+                        if(c == EOF)
+                            break;
+					}
 					stav = S_ERROR; 		
-					fill_token(S_ERROR,E_ESCAPE);		
-				}else{
-					fill_token(S_ERROR,E_ESCAPE);
-					stav = S_ERROR;
-				} 
+					fill_token(S_ERROR,LEXICAL_ERR);		
+				//}else{
+				//	fill_token(S_ERROR,E_L_ESCAPE);
+				//	stav = S_ERROR;
+				//}// 
 			}else{
 				while((c = getc(file)) != '"'){
 					if(c == EOF){
-						stav = S_ERROR;
-						fill_token(S_ERROR,E_ESCAPE);
 						break;
 					}
 				}
 
-				fill_token(S_ERROR,E_LEXICAL);
+				fill_token(S_ERROR,LEXICAL_ERR);
 				stav = S_ERROR;
 			}
 			break;
@@ -491,43 +576,49 @@ Ttoken get_token(){
 		case S_PZAT:
 		case S_P_KOSZ:
 		case S_L_KOSZ:
-			{
-				extend_token(&i,c);
-				fill_token(stav,E_OK);
-	//			stav = S_END;
-	//			return_char(c);
-	//			break;
-			}
 		case S_NEROV:
 		case S_ROVNY:
 		case S_MENROV:
 		case S_VACROV:
-			{
-				return_char(c);
-				end_cycle = false;
-				break;
-			}
 		case S_KEY:
+			{
+				fill_token(stav,SUCCESS);
+				c = ungetc(c,file);
+				return token;
+				/*
+				printf("---%c---\n",c);
+				token.stav = stav;
+				error = E_OK;
+				ungetc(c,file);
+				column--;
+				printf(">>>%c<<<<\n",c);
+				end_cycle = false;
+				break;*/
+			}
         case S_END:
 			{
-		//	fill_token(stav,E_OK);
-		//	printf("[S_END]   \t\t---%c---\n",c);
-			if(isspace(c))
+//				printf("===%c===\n",c);
+				c = ungetc(c,file);
+				column--;
+				end_cycle = false;
 				break;
-			return_char(c);		//akoby mi nechcelo vracat znak 
-								//(ak sa nudite mozte to nejak vycihat :D
-			return_char(c);		//preto musim dva krat zavolat return_char
-			end_cycle = false;
-            break;
-        	}
+	    	}
+			
 		}
-		if(error){
+		if(error != SUCCESS){
 			break;
 		}
 		
-	}
+		if( c == '\n'){
+			line++;
+			column = 1;
+		}else if((isprint(c)) || (isspace(c))){
+			column++;	
+		}
+		//printf("column:%d line:%d char:%c\n",line,column,c);
+	}while((c = getc(file)) && (end_cycle));
 
 
-	printf("<==============KONIEC VOLANIA FUNKCIE=============>\n");
+//	printf("<==============KONIEC VOLANIA FUNKCIE=============>\n");
 	return token;			
 }

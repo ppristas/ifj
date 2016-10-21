@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+//#include "error.h"
 //typedef FILE *tfile;
 
 //tfile file;
@@ -60,7 +61,7 @@ typedef enum{
 	
 }TStav;
 
-
+/*
 typedef enum{
 	E_OK,
 	E_LEXICAL,
@@ -68,12 +69,15 @@ typedef enum{
 	E_INTERNAL,
 }Enum_error;
 
+*/
 typedef struct{
         char *data;
         TStav stav;	
+	int column;
+	int line;
 }Ttoken;
 
-extern Enum_error error; 
+//extern Enum_error error; 
 extern Ttoken token;
 
 //bool test_reserved_words();i
