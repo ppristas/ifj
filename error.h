@@ -2,6 +2,8 @@
 #define ERROR_H
 
 
+#define SUCCESS 0
+
 // --Chyba v ramci lexikalnej analyzy
 //chyba v programu v ramci lexikalni analyzy (chybna struktura aktulniho lexemu).
 #define LEXICAL_ERR 1
