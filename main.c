@@ -32,11 +32,11 @@ bool arguments( int argc, char *argv[]){
 			return false;
 		}
 		int length = strlen(argv[1]);
-	    filename = (char *)malloc(length*sizeof(char)+2);
-	    if( filename == NULL)
-	        return false;
+	    	filename = (char *)malloc(length*sizeof(char)+2);
+	    	if( filename == NULL)
+	       	 	return false;
 	
-	    strcpy(filename,argv[1]);
+	   	 strcpy(filename,argv[1]);
 
 		return true;
 	}
@@ -58,8 +58,7 @@ int main(int argc, char *argv[])
 		return INTERNAL_ERR;
 	}
 
-
-	printf("keket\n");	
+	
 	while(token.stav != S_EOF){
 		get_token();
 		printf("%s :%d:%d: vrateny token:  |%s| | stav = %d error = %d\n\n",filename,token.line,token.column,token.data,token.stav,error);

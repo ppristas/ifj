@@ -15,12 +15,12 @@
 #include "error.h"
 #include "scaner.h"
 
-int column = 1;
-int line = 1;
+//int column = 1;
+//int line = 1;
 
-void errorFce(int err)
+void errorFce()
 {
-	switch (err)
+	switch (error)
 	{
 		case LEXICAL_ERR:
 			{

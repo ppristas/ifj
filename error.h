@@ -45,5 +45,5 @@ int line;
 int column;
 extern char* filename;
 
-void errorFce(int err);
+void errorFce();
 #endif
