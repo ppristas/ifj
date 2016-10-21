@@ -16,7 +16,12 @@
 #include <stdlib.h>
 #include "scaner.h"
 #include <stdbool.h>
+#include "ial.h"
+//#include "symbol.h"
 
+int HTSIZE = MAX_HTSIZE;
+HTab_table* ptrht;
+//HTab_listitem_sym* UNDEFPTR;
 
 bool arguments( int argc, char *argv[]){
 	
@@ -38,6 +43,26 @@ bool arguments( int argc, char *argv[]){
 		
 }
 
+void printhash(HTab_table* ptrht) {
+	int maxlen = 0;
+	int sumcnt = 0;
+
+	printf("------------Hash biiitch----------\n");
+	for(int i = 0; i < HTSIZE; i++) {
+		printf("%i:",i);
+		int cnt = 0;
+		HTab_listitem_sym* ptritem = (*ptrht)[i];
+		while(ptritem != NULL) {
+			printf("(%s %d)",((*ptritem).token.data),ptritem->token.stav);
+			ptritem = ptritem->ptrnext;
+		}
+		printf("\n");
+		if(cnt > maxlen)
+			maxlen = cnt;
+		sumcnt += cnt;
+	}
+	printf("-----------------------------\n");
+}
 
 int main(int argc, char *argv[])
 {
@@ -47,6 +72,12 @@ int main(int argc, char *argv[])
 		printf("Chyba pri spracovani argumentov\n");
 		return 1;
 	}
+	//------------------------------
+
+	ptrht = (HTab_table*) malloc(sizeof(HTab_table));
+	HTSIZE = 19;
+	printhash(ptrht);
+
 //	get_token();
 	/** ULOZENIE DAT DO INEJ PREMENNEJ NESTACI LEN PRIRADIT
 
@@ -61,7 +92,9 @@ int main(int argc, char *argv[])
 	while(token.stav != S_EOF){
 		get_token();
 		printf("\nvrateny token:  |%s| | stav = %d error = %d\n\n",token.data,token.stav,error);
+		HTab_insert(ptrht,token);
 	}
+	printhash(ptrht);
 
 
 	if(error == E_OK)
@@ -72,6 +105,8 @@ int main(int argc, char *argv[])
 	free(token.data);
 	token.data = NULL;
 	
+	//---------------------------------
+	HTab_free(ptrht);
 	if( (fclose(file)) == EOF){
 		return 1;
 	}	

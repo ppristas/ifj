@@ -3,7 +3,7 @@
    *    Projekt:        Interpret zjednoduseneho jazyka Java SE                 *
    *    Variant:        b/2/II                                                  *
    *    Tim:            092                                                     *
-   *    Subor:          ial.h                                                *
+   *    Subor:          ial.h                                                   *
    *    Riesitelia:     Filip Mik       (xmikfi00@stud.fit.vutbr.cz)            *
    *                    Peter Ziska     (xziska02@stud.fit.vutbr.cz)            *
    *                    Peter Pristas   (xprist05@stud.fit.vutbr.cz)            *
@@ -13,26 +13,39 @@
    ********************************************************************************/
 #ifndef IAL_H
 #define IAL_H
+#define MAX_HTSIZE 101
 
-#include <stdio.h>
-#include "symbol.h"
-//#include "str.h"
 
-typedef enum {
+extern int HTSIZE;
+
+typedef struct HTab_listitem_sym {
+   Ttoken token;
+   struct HTab_listitem_sym* ptrnext;
+} HTab_listitem_sym;
+
+typedef HTab_listitem_sym* HTab_table[MAX_HTSIZE];
+
+void HTab_init(HTab_table* ptrht);
+HTab_listitem_sym* HTab_search(HTab_table* ptrht,Ttoken token);
+void HTab_insert(HTab_table* ptrht,Ttoken token);
+int hash_function(Ttoken token);
+void HTab_free(HTab_table* ptrht);
+
+/*typedef enum {
    type_variable,
-   type_function,
-   type_class
+   //type_function,
+   //type_class
 } item_type;
 
 //list item of symbols
 typedef struct HTab_listitem_sym {
    item_type type;
-   char key[];//-------may be in str.h
+   char* key;//-------may be in str.h
    struct HTab_listitem_sym *ptrnext;
    union {
       struct TsymbolVariable *ptr_variable;
-      struct TsymbolFunction *ptr_function;
-      struct TsymbolClass *ptr_class;
+      //struct TsymbolFunction *ptr_function;
+      //struct TsymbolClass *ptr_class;
    } ptr;
 } HTab_listitem;
 
@@ -43,11 +56,8 @@ typedef struct HTab {
 } HTab_t;
 
 //Functions to be used ------TODO
-void HTab_init();//--HTab_t* HTab_init();
-unsigned int HTab_hashCode();
-HTab_listitem* HTab_insert();
-HTab_listitem* HTab_search();
-void HTab_remove();
-void HTab_clear();
+HTab_t* HTab_init(HTab_t* ptrht);
+unsigned int hash_function(HTab_t* ptrht,char* data)
+void HTab_free(HTab_t* ptrht);*/
 
 #endif
