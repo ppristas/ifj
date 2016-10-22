@@ -16,7 +16,7 @@
    #include <stdbool.h>
    #include "error.h"
 
-   #define TAB_SIZE (8)
+   #define TAB_SIZE (17)
 
    static const char predenense_table[TAB_SIZE][TAB_SIZE] = 
    {/*     +    -    *    /    (    )   id   idf   =    <    >   <=   >=   ==   !=    ,    $  */
