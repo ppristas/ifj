@@ -18,6 +18,7 @@
 #include <stdbool.h>
 #include "error.h"
 #include "stack.h"
+#include "parser.h"
 
 char *filename = NULL;
 tStack stack;
@@ -61,6 +62,12 @@ int main(int argc, char *argv[])
 		return INTERNAL_ERR;
 	}
 
+	/*-------------parsrik------------*/
+	error = parser();
+	if(error != SUCCESS)
+		return error;
+
+
 	
 	while(token.stav != S_EOF){
 		get_token();
@@ -92,11 +99,6 @@ int main(int argc, char *argv[])
 		printf("[ %d ]\n",stack.top->data);
 		stackPop(&stack);
 	}
-
-	
-
-
-
 	errorFce();
 
 	free(token.data);

@@ -25,8 +25,8 @@ void errorFce()
 	case SUCCESS:
         break;
 	case LEXICAL_ERR:
-		fprintf(stderr,"%s :%d:%d:	Chyba v ramci lexikalnej analyzy.\n",filename,token.line,token.column);
-		break;	
+		    fprintf(stderr,"%s :%d:%d:	Chyba v ramci lexikalnej analyzy.\n",filename,token.line,token.column);
+		    break;	
 	case SYNTAX_ERR:
         fprintf(stderr,"%s :%d:%d:	Chyba v ramci syntaktickej analyzy.\n",filename,token.line,token.column);
         break;
@@ -55,5 +55,4 @@ void errorFce()
         fprintf(stderr,"%s :%d:%d:	Interna chyba – chyba alokacie pamate,chyba pri otvarani suboru...\n",filename,token.line,token.column);
         break;
     }
-	
 }
