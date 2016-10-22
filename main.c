@@ -17,8 +17,11 @@
 #include "scaner.h"
 #include <stdbool.h>
 #include "error.h"
+#include "stack.h"
 
 char *filename = NULL;
+tStack stack;
+
 
 bool arguments( int argc, char *argv[]){
 
@@ -68,8 +71,34 @@ int main(int argc, char *argv[])
 	if(error == SUCCESS)
 		printf("-----error: E_OK\n");		
 
-//	printf("vrateny token:  <%s> | stav = %d\n",token.data,token.stav);	
-	//printf("predosly token: <%s> | stav = %d\n",test.data,test.stav);
+
+
+
+	stackInit(&stack);
+	stackPush(&stack,5);
+	stackPush(&stack,7);
+	stackPush(&stack,52);
+	stackPush(&stack,789);
+	stackFree(&stack);
+	
+	stackPush(&stack,5);
+    stackPush(&stack,7);
+    stackPush(&stack,52);
+    stackPush(&stack,789);
+
+
+	
+	while(stack.top != NULL){
+		printf("[ %d ]\n",stack.top->data);
+		stackPop(&stack);
+	}
+
+	
+
+
+
+	errorFce();
+
 	free(token.data);
 	free(filename);
 	token.data = NULL;

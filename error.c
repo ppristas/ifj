@@ -55,5 +55,5 @@ void errorFce()
         fprintf(stderr,"%s :%d:%d:	Interna chyba – chyba alokacie pamate,chyba pri otvarani suboru...\n",filename,token.line,token.column);
         break;
     }
-		
+	
 }

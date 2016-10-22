@@ -3,7 +3,7 @@
    *    Projekt:        Interpret zjednoduseneho jazyka Java SE                 *
    *    Variant:        b/2/II                                                  *
    *    Tim:            092                                                     *
-   *    Subor:          stack.c                                                *
+   *    Subor:          stack.h                                                *
    *    Riesitelia:     Filip Mik       (xmikfi00@stud.fit.vutbr.cz)            *
    *                    Peter Ziska     (xziska02@stud.fit.vutbr.cz)            *
    *                    Peter Pristas   (xprist05@stud.fit.vutbr.cz)            *
@@ -11,62 +11,34 @@
    *                    Martin Grnac    (xgrnac00@stud.fit.vutbr.cz)            *
    *                                                                            *               
    ********************************************************************************/
+#include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <stdbool.h>
 
-#include "stack.h"
-#include "error.h"
+//data nahradit za typ ktory chceme davat do stacku da
+typedef struct SItem{
 
-void stackInit(tStack* s){
-	
-	s->top = NULL;
-}
+	struct SItem* nextptr;
+	int data;
 
-bool stackEmpty(tStack* s){
-	return(s->top == NULL);
-}
+} tStackItem;
 
-void stackPush(tStack *s, int dat){
-	tStackItem *pom;
-	pom = malloc(sizeof(struct SItem));	
-	if( pom == NULL){
-		error = INTERNAL_ERR;
-		return;
-	}
-	pom->nextptr = s->top;
-	pom->data = dat;
-	s->top = pom;
-}
 
-void stackPop(tStack *s){
-	
-	tStackItem *pom;
-	if(!stackEmpty(s)){
-			pom = s->top;
-			s->top = s->top->nextptr;
-			free(pom);
-	}	
-}
+//rulz treba nahradit poriadnym enumom pravdepodobne
+typedef struct{
 
-int stackTop(tStack *s){
-	if(!stackEmpty(s)){
-		return s->top->data;
-	}
-	error = INTERNAL_ERR;
-	return error;
-}
+	tStackItem *top;
 
-void stackFree(tStack *s){
-	while(s->top != NULL){
-		stackPop(s);
-	}
-}
+}tStack;
 
-void stackPrint(tStack* s){
-		
-	if( s->top == NULL){
-		printf("Je inicializovany bez polozky\n");
-	}
-	while(s->top != NULL){
-		printf("[ %d ]\n",s->top->data);
-		stackPop(s);
-	}
-}
+
+void stackInit(tStack* s);
+void stackPush(tStack* s, int dat);
+bool stackEmpty(tStack* s);
+void stackPop(tStack* s);
+
+
+int stackTop(tStack* s);		//navratovy typ zmenit podla data ;
+void stackPrint(tStack* s);
+void stackFree(tStack* s);
