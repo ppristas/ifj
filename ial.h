@@ -13,23 +13,25 @@
    ********************************************************************************/
 #ifndef IAL_H
 #define IAL_H
-#define MAX_HTSIZE 101
-
-
-extern int HTSIZE;
 
 typedef struct HTab_listitem_sym {
    Ttoken token;
    struct HTab_listitem_sym* ptrnext;
-} HTab_listitem_sym;
+} HTab_listitem;
 
-typedef HTab_listitem_sym* HTab_table[MAX_HTSIZE];
+typedef struct HTab_table {
+	unsigned htable_size;
+	struct HTab_listitem_sym *list[];
+} HTab_t;
 
-void HTab_init(HTab_table* ptrht);
-HTab_listitem_sym* HTab_search(HTab_table* ptrht,Ttoken token);
-void HTab_insert(HTab_table* ptrht,Ttoken token);
-int hash_function(Ttoken token);
-void HTab_free(HTab_table* ptrht);
+HTab_t* HTab_init(unsigned size);
+HTab_listitem* HTab_insert(HTab_t* ptrht, Ttoken token);
+unsigned hash_function(unsigned size, Ttoken token);
+void HTab_free(HTab_t* ptrht);
+void HTab_clear(HTab_t* ptrht);
+void HTab_remove(HTab_t* ptrht,Ttoken token);
+
+//HTab_listitem* HTab_insert(HTab_t* ptrht, Ttoken token);
 
 /*typedef enum {
    type_variable,
