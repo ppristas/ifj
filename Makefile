@@ -1,7 +1,7 @@
 CFLAGS=-std=c99 -Wall -Wextra -Werror -pedantic -DNDEBUG -g
 LDFLAGS=-lm
-scaner: scaner.o main.o
-	gcc $(CFLAGS) scaner.o main.o -o scaner $(LDFLAGS)
+interpret: scaner.o main.o error.o stack.o parser.o
+	gcc $(CFLAGS) scaner.o main.o error.o stack.o parser.o -o interpret $(LDFLAGS)
 clean:
 	-rm *.o
 
