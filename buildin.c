@@ -25,3 +25,76 @@ char* sort(const char *str)
     free(str_tmp);
     return str_ret;
 }
+
+//Dlzka retazca
+int length(const char* s){
+    int i;
+    for(i=0; s[i] != '\0'; i++){}
+    return i;
+}
+
+
+// tmp treba uvolnit
+char* substring(const char *s, const int i, const int n){
+    if(i < 0 || i >= length(s)){
+        return NULL;
+    }
+
+    if(i+n > length(s)){
+        return NULL;
+    }
+
+    if (s == NULL){
+        return NULL;
+    }
+
+
+    char* tmp;
+    if ((tmp = (char *) malloc(n+1 * sizeof(char))) == NULL){
+        return NULL;
+    }
+    int index=0;
+
+    for(int k=i; k<i+n; k++){
+        tmp[index++]=s[k];
+    }
+
+    tmp[n]='\0';
+
+
+    return tmp;
+
+}
+
+
+
+int compare(const char *s1, const char *s2){
+    int index=0;
+    if(length(s1) <= length(s2)){
+        while(s1[index] != '\0'){
+            if(s1[index] != s2[index]){
+                return s1[index] - s2[index];
+            }
+            index++;
+        }
+        if(s1[index] == '\0' && s2[index] != '\0'){
+        return length(s1)-length(s2);
+        }
+    }
+
+    else if(length(s2) < length(s1)){
+        while(s2[index] != '\0'){
+            if(s2[index] != s1[index]){
+                return s1[index] - s2[index];
+            }
+            index++;
+        }
+        if(s2[index] == '\0' && s1[index] != '\0'){
+        return length(s1)-length(s2);
+        }
+
+    }
+
+    return 0;
+}
+
