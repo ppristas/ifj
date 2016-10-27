@@ -217,3 +217,64 @@ void HTab_free(HTab_t* ptrht) {
    }
 }
 */
+
+
+static void stifDown(char *str,   int left,   int right);
+
+static void stifDown(char *str,   int left,   int right)
+{
+      int i=left;
+      int j=2*i;
+      int checker;
+
+    char temp=str[i];
+    checker=(j<=right);
+
+
+    while (checker)
+    {
+        if (j<right)
+        {
+            if (str[j] > str[j+1])  //uprava <  10....1
+            {
+                j=j+1;
+            }
+        }
+
+        if (temp < str[j])   //uprava >= pre zoradenie 10....1
+        {
+             checker=0;
+        }
+        else
+        {
+            str[i]=str[j];
+            i=j;
+            j=2*i;
+            checker=(j<=right);
+        }
+    }
+    str[i]=temp;
+}
+
+void heapsort(char *ptr,char *str_ret)
+{
+    int n=ptr[0];
+    int left,right;
+    left=n/2;
+    right=n;
+
+    for(  int i = left; i>0; --i)
+    {
+        stifDown(ptr,i,right);
+    }
+
+    int i=0;
+
+    for(right = n;right > 1; --right)
+    {
+        str_ret[i++]=ptr[1];
+        ptr[1]=ptr[right];
+        stifDown(ptr,1,right-1);
+    }
+    str_ret[i]=ptr[1];
+}
