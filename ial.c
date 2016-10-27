@@ -18,92 +18,145 @@
 #include "scaner.h"
 #include "ial.h"
 
-void HTab_init(HTab_table* ptrht) {
+HTab_t* HTab_init(unsigned size) {
 
-   if(ptrht != NULL) {
-      for(int i = 0; i < HTSIZE; i++) {
-         (*ptrht)[i] = NULL;
-      }
-   }
+	HTab_t* result = malloc(sizeof(HTab_t)+size*sizeof(HTab_listitem));
+   
+	if(result == NULL)
+		/*allocation error*/
+		return NULL;
+	result->htable_size = size;
+	for(unsigned i = 0; i < size; i++) {
+		result->list[i] = NULL;
+	}
+	return result;
+	free(result);
+
 }
 
-/*HTab_table* HTab_insert(HTab_table* ptrht,Ttoken token) {
-
-}*/
-
-HTab_listitem_sym* HTab_search(HTab_table* ptrht,Ttoken token) {
-
-   HTab_listitem_sym* ptrsym = NULL;
-   HTab_listitem_sym* tmp;
-   int i = hash_function(token);
-   if(ptrht != NULL) {
-      tmp = (*ptrht)[i];
-      while(tmp != NULL) {
-         if(tmp->token.data == token.data) {
-            ptrsym = tmp;
-            return ptrsym;
-         }
-         else {
-            tmp = tmp->ptrnext;
-         }
-      }
-      return NULL;//not found
-   }
-   return NULL;
+unsigned hash_function(unsigned size, Ttoken token) {
+	//unsigned int hash = 0;
+	unsigned retval = 1;
+	unsigned keylen = strlen(token.data);
+	for(unsigned int i = 0; i < keylen; i++) {
+		retval += token.data[i];
+	}
+	return(retval % size);
 }
 
-void HTab_insert(HTab_table* ptrht,Ttoken token) {
-   HTab_listitem_sym* ptrsym = NULL;
-   HTab_listitem_sym* newsym;
+HTab_listitem* HTab_insert(HTab_t* ptrht, Ttoken token) {
+	unsigned ind = hash_function(ptrht->htable_size,token);
+	HTab_listitem* item_ptr = NULL;
+	HTab_listitem* item = ptrht->list[ind];
+	HTab_listitem* nextitem;
 
-   int i;
-   if(ptrht != NULL) {
-      ptrsym = HTab_search(ptrht,token);
-      if(ptrsym == NULL) {
-         i = hash_function(token);
-         if((newsym = (struct HTab_listitem_sym*)malloc(sizeof(struct HTab_listitem_sym))) == NULL) {
-            /*allocation error*/
-         }
-         else {
-            newsym->token.data = token.data;
-            newsym->token.stav = token.stav;
+	if(item == NULL) {
+		nextitem = malloc(sizeof(HTab_listitem)+sizeof(char)*(strlen(token.data)+1));
 
-            newsym->ptrnext = (*ptrht)[i];
-            (*ptrht)[i] = newsym;
-         }
-      }
-      else
-         //element is in the table update data
-         ptrsym->token.data = token.data;
-   }
+		if(nextitem == NULL)
+			/*allocation error*/
+			return NULL;
+		else {
+			//printf("HERE\n");
+			//printf("%s\n", token.data);
+			//memcpy(nextitem->token.data,token.data,strlen(token.data)+1);
+			int length = strlen(token.data);
+            nextitem->token.data = malloc(length * sizeof((char) +2));
+            strcpy(nextitem->token.data,token.data);
+            nextitem->token.data[length] = '\0';
+            nextitem->token.stav = token.stav;
+			//printf("HERE AFTER\n");
+			nextitem->ptrnext = NULL;
+
+			item = ptrht->list[ind] = nextitem;
+			
+			nextitem = NULL;
+			if(item == NULL)
+				return NULL;
+		}
+	}
+	else {
+		while(item != NULL) {
+			if(strcmp(item->token.data,token.data) == 0) {
+				//if found
+				item_ptr = item;
+				break;
+			}
+			else {
+				//next item
+				item_ptr = item;
+				item = item->ptrnext;
+			}
+		}
+		if(item_ptr != NULL && item != item_ptr) {
+			//not found insert next item
+			nextitem = malloc(sizeof(HTab_listitem*)+sizeof(char)*(strlen(token.data)+1));
+			if(nextitem == NULL)
+				/*allocation error*/
+				return NULL;
+			else {
+				//memcpy(nextitem->token.data,token.data,strlen(token.data)+1);
+				int length = strlen(token.data);
+	            nextitem->token.data = malloc(length * sizeof((char) +2));
+	            strcpy(nextitem->token.data,token.data);
+	            nextitem->token.data[length] = '\0';
+	            nextitem->token.stav = token.stav;
+
+				nextitem->ptrnext = NULL;
+				item = nextitem;
+				if(item == NULL)
+					return NULL;
+				item_ptr->ptrnext = item;
+			}
+		}
+	}
+	return item;
 }
 
-int hash_function(Ttoken token) {
-   int retval = 1;
-   int keylen = strlen(token.data);
-   for(int i = 0 ; i < keylen; i++) {
-      retval += token.data[i];
-   }
-   return(retval % HTSIZE);
+void HTab_free(HTab_t* ptrht) {
+	if(ptrht != NULL) {
+		HTab_clear(ptrht);
+		free(ptrht);
+	}
 }
 
-void HTab_free(HTab_table* ptrht) {
+void HTab_clear(HTab_t* ptrht) {
+	HTab_listitem* item = NULL;
 
-
-   if(ptrht != NULL) {
-      for(int i = 0; i < HTSIZE; i++) {
-         HTab_listitem_sym *tmp = (*ptrht)[i];
-         HTab_listitem_sym *help;
-         while(tmp != NULL) {
-            help = tmp;
-            tmp = tmp->ptrnext;
-            free(help);
-         }
-         (*ptrht)[i] = NULL;
-
-      }
-   }
+	for(unsigned i = 0; i < ptrht->htable_size; i++) {
+		while((item = ptrht->list[i]) != NULL) {
+			HTab_remove(ptrht,token);
+		}		
+	}
+	free(item);
 }
+
+void HTab_remove(HTab_t* ptrht,Ttoken token) {
+	unsigned ind = hash_function(ptrht->htable_size,token);
+	HTab_listitem* item_ptr = ptrht->list[ind];
+	HTab_listitem* item = ptrht->list[ind];
+
+	while(item != NULL) {
+		//compare keys from table
+		if(strcmp(item->token.data,token.data) == 0) {
+			//printf("GOT IN REMOVE\n");
+			if(item_ptr == item) {
+				ptrht->list[ind] = item->ptrnext;
+			}
+			item_ptr->ptrnext = item->ptrnext;
+			free(item);
+			break;
+		}
+		else {
+			item_ptr = item;
+			item = item->ptrnext;
+		}
+	}
+	item->ptrnext = NULL;
+}
+
+
+
 /**
  * Initialization of hash table
  *
