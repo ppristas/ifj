@@ -218,14 +218,13 @@ void HTab_free(HTab_t* ptrht) {
 }
 */
 
+static void stifDown(char *str,   unsigned int left,   unsigned int right);
 
-static void stifDown(char *str,   int left,   int right);
-
-static void stifDown(char *str,   int left,   int right)
+static void stifDown(char *str,   unsigned int left,   unsigned int right)
 {
-      int i=left;
-      int j=2*i;
-      int checker;
+      unsigned int i=left;
+      unsigned int j=2*i;
+      unsigned int checker;
 
     char temp=str[i];
     checker=(j<=right);
@@ -256,19 +255,18 @@ static void stifDown(char *str,   int left,   int right)
     str[i]=temp;
 }
 
-void heapsort(char *ptr,char *str_ret)
+void heapsort(char *ptr,char *str_ret,unsigned int n)
 {
-    int n=ptr[0];
-    int left,right;
+    unsigned int left,right;
     left=n/2;
     right=n;
 
-    for(  int i = left; i>0; --i)
+    for(  unsigned int i = left; i>0; --i)
     {
         stifDown(ptr,i,right);
     }
 
-    int i=0;
+    unsigned int i=0;
 
     for(right = n;right > 1; --right)
     {
@@ -278,3 +276,28 @@ void heapsort(char *ptr,char *str_ret)
     }
     str_ret[i]=ptr[1];
 }
+
+char* sort(const char *str)
+{
+    unsigned int n = strlen(str);
+
+    char *str_tmp=NULL;
+    char *str_ret=NULL;
+    if ((str_ret=malloc(sizeof(char)*(n+1))) == NULL)
+        return NULL;
+
+    if ((str_tmp=malloc(sizeof(char)*(n+2))) == NULL )
+        return NULL;
+
+    strncpy(&str_tmp[1],str,n);
+    str_tmp[n+1]='\0';
+    str_tmp[0]='#';
+
+    memset(str_ret,0,n+1);
+
+    heapsort(str_tmp,str_ret,n);
+
+    free(str_tmp);
+    return str_ret;
+}
+
