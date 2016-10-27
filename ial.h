@@ -62,7 +62,6 @@ HTab_t* HTab_init(HTab_t* ptrht);
 unsigned int hash_function(HTab_t* ptrht,char* data)
 void HTab_free(HTab_t* ptrht);*/
 
-
-void heapsort(char *ptr, char *str_ret);
+void heapsort(char *ptr, char *str_ret, unsigned int n);
 
 #endif
