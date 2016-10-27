@@ -1,5 +1,5 @@
 #include "ial.h"
-
+#include "buildin.h"
 
 // v interprete uvolnovat vystup str_ret 
 char* sort(const char *str)
