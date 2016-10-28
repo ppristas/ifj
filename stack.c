@@ -14,6 +14,7 @@
 
 #include "stack.h"
 #include "error.h"
+#include "cleaner.h"
 
 void stackInit(tStack* s){
 	
@@ -26,7 +27,7 @@ bool stackEmpty(tStack* s){
 
 void stackPush(tStack *s, int dat){
 	tStackItem *pom;
-	pom = malloc(sizeof(struct SItem));	
+	pom = mymalloc(sizeof(struct SItem));	
 	if( pom == NULL){
 		error = INTERNAL_ERR;
 		return;
@@ -38,11 +39,9 @@ void stackPush(tStack *s, int dat){
 
 void stackPop(tStack *s){
 	
-	tStackItem *pom;
 	if(!stackEmpty(s)){
-			pom = s->top;
 			s->top = s->top->nextptr;
-			free(pom);
+			
 	}	
 }
 

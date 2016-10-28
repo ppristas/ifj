@@ -18,8 +18,7 @@
 #include <stdbool.h>
 #include "error.h"
 #include "stack.h"
-#include "parser.h"
-
+#include "cleaner.h"
 char *filename = NULL;
 tStack stack;
 
@@ -54,6 +53,7 @@ bool arguments( int argc, char *argv[]){
 
 int main(int argc, char *argv[])
 {
+	initCleaner();
 	token.stav = SUCCESS;
 	//Ttoken test;
 	if( !(arguments(argc, argv)) )
@@ -61,12 +61,6 @@ int main(int argc, char *argv[])
 		fprintf(stderr,"Chyba pri spracovani argumentov\n");
 		return INTERNAL_ERR;
 	}
-
-	/*-------------parsrik------------*/
-	error = parser();
-	if(error != SUCCESS)
-		return error;
-
 
 	
 	while(token.stav != S_EOF){
@@ -82,32 +76,22 @@ int main(int argc, char *argv[])
 
 
 	stackInit(&stack);
-	stackPush(&stack,5);
-	stackPush(&stack,7);
-	stackPush(&stack,52);
-	stackPush(&stack,789);
-	stackFree(&stack);
-	
-	stackPush(&stack,5);
-    stackPush(&stack,7);
-    stackPush(&stack,52);
-    stackPush(&stack,789);
-
 
 	
-	while(stack.top != NULL){
-		printf("[ %d ]\n",stack.top->data);
-		stackPop(&stack);
+	for(int i = 0; i<10; i++){
+		stackPush(&stack,i);
 	}
+	while(stack.top != NULL){
+		printf("\t[ %d ]\n",stack.top->data);
+		stackPop(&stack);
+	
+	}
+	
+	
 	errorFce();
 
-	free(token.data);
-	free(filename);
-	token.data = NULL;
 	
-	if( (fclose(file)) == EOF){
-		return 1;
-	}	
+	clearAll();
 	return error;
 
 }
