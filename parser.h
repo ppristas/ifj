@@ -12,39 +12,55 @@
    *                                                                            *               
    ********************************************************************************/
 
+   #include "stack.h"
+
    int parser();
    int prog();
+   int class();
    int after_class();
+   int params_after();
+   int main_body();
+
+   void expand(tStack *p_stack, int num,...);
 
    typedef enum{  
-      T_EOF,        // 0 
-      T_smcln,      // 1 semicolon ; 
-      N_P,          // 2 Program- vstupny N
-      N_C,          // 3 Class
-      T_class,      // 4 klucove slovo class
-      T_idc,        // 5 identifikator classy
-      T_L_KOSZ,     // 6 prava kosata zatvorka
-      T_P_KOSZ,     // 7 lava kosata zatvorka
-      N_AC,         // 8 after class
-      N_F,          // 9 funckia
-      N_DEFS,       // 10 staticka premenna 
-      T_static,     // 11 klucove slovo static
-      T_type,       // 12 klucove slovo type
-      T_id,         // 13 identifikator premennej
-      N_I,          // 14 inicializacia
-      T_rov,        // 15 rovnatko =
-      N_E,          // 16 expression
-      N_DEFC,       // 17 definicia lokalnej premennej  
-      T_idf,        // 18 identifikator funkcie
-      N_AL,         // 19 argument list
-      N_AD,         // 20 argument definition
-      N_ALE,        // 21 argument list extension
-      N_S,          // 22 statement
-      T_LZAT,       // 23 lava zatvorka
-      T_PZAT,       // 24 prava zatvorka
-      T_if,         // 25 if
-      T_else,       // 26 else
-      T_while,      // 27 while
-      T_return,     // 28 return
-      /*--------to be continued---------*/
+      T_dolar,      // 0 - $ 
+      T_EOF,        // 1
+      T_smcln,      // 2 semicolon ; 
+      N_P,          // 3 Program- vstupny N
+      N_C,          // 4 Class
+      T_class,      // 5 klucove slovo class
+      T_id,         // 6 identifikator
+      T_L_KOSZ,     // 7 lava kosata zatvorka
+      T_P_KOSZ,     // 8 prava kosata zatvorka
+      N_AC,         // 9 after class
+      N_SD,         // 10 static declare 
+      N_SDA,        // 11 stat declare after
+      T_static,     // 12 klucove slovo static
+      N_type,       // 13 neterminal typ
+      T_double,     // 14 double
+      T_String,     // 15 String
+      T_int,        // 16 integer
+      T_rov,        // 17 rovnatko =
+      N_pars,       // 18 params
+      N_decl,       // 19 declaration
+      N_PA,         // 20 params after
+      N_MB,         // 21 main body
+      N_NP,         // 22 next param
+      N_SList,      // 23 statement list
+      N_expr,       // 24 expr
+      N_FC,         // 25 function call
+      N_VD,         // 26 var declare
+      N_FP,         // 27 func params
+      N_NE,         // 28 next E
+      N_IB,         // 29 in body
+      N_Ext,        // 30 extension
+      N_RV,         // 31 return value
+      T_while,      // 32 while
+      T_if,         // 33 if
+      T_else,       // 34 else
+      T_ret,        // 35 return
+      T_LZAT,       // 36 lava zatvorka
+      T_PZAT,       // 37 prava zatvorka
+      T_void,       // 38 void
 }TGrammar;
