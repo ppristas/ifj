@@ -38,6 +38,11 @@
  *alokace pameti, chyba pri otvirani souboru s ridicim programem, spatne parametry
  *prikazove radky atd.).*/
 #define INTERNAL_ERR 99
+// --Filipkova chyba--
+/* Chyba v priebehu prediktivnej syntaktickej analyzy sposobena nedostatocnym vzdelanim
+ * osoby tvoriacej tuto cast kodu */
+#define FILIP_ERR 69
+
 
 // globalna premenna pre navratovu hodnotu chyby
 int error;
