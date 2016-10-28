@@ -64,4 +64,6 @@ void HTab_free(HTab_t* ptrht);*/
 
 void heapsort(char *ptr, char *str_ret, unsigned int n);
 
+int boyer_moore(const char *str, const char *pattern);
+
 #endif
