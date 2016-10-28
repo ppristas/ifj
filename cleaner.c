@@ -10,8 +10,10 @@
 
 tMemoryPtr Mem;
 
-
-void initCleaner(){
+/*
+ *function: inicializacia
+ */
+void initCleaner(){				
 	/*Mem->Act = NULL;
 	Mem->Act->data = NULL;
 	Mem->First = NULL;
@@ -24,7 +26,11 @@ Mem->First->data = NULL;*/
 
 }
 
-
+/*
+ *	function: allokuje pamat a prida ukazatel na nu do svojej datovej sturktury
+ *  params: velkost ktoru chcete alokovat
+ *
+ */
 void *mymalloc(unsigned int size){
 	
 	tAdrPtr pom;
@@ -48,19 +54,15 @@ void *mymalloc(unsigned int size){
 	}else{
 		error = INTERNAL_ERR;
 		return NULL;
-	}
-/*	void *tmp = malloc(size);
-	if(tmp == NULL){
-		error = INTERNAL_ERR;
-		return NULL;
-	}
-	Mem->Last->data = tmp;
-*/	
-	
+	}	
 	return tmp;
 			
 }
 
+/*
+ *	funciton: realokuje pamat
+ *	params: adresa ktoru treba realokovat, a velkost o kolko treba zvacsit miesto
+ */
 void *myrealloc(void *adress,unsigned int size){
 
 	void *pom;
@@ -84,6 +86,10 @@ void *myrealloc(void *adress,unsigned int size){
 	
 }
 
+/*
+ *	function: uvolni vsetku naalokovanu pamat
+ *
+ */
 
 void clearAll(){
 	tAdrPtr tmpPtr;
