@@ -149,7 +149,7 @@ Ttoken get_token(){
 				else if(c == '+')		stav = S_PLUS;//extend_token(&i,c);c = ungetc(c,file);column++;break;}
 				else if(c == '-')		stav = S_MINUS;
 				else if(c == '*')		stav = S_MULTI;
-				else if(c == '/'){		stav = S_DIV;c = ungetc(c,file);break;}
+				else if(c == '/')		stav = S_DIV;
 				else if(c == ';')		stav = S_SEMICOLON;
 				else if(c == ',')		stav = S_CIARKA;
 				else if(c == '=')		stav = S_PRIR;
