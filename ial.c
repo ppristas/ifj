@@ -276,3 +276,73 @@ void heapsort(char *ptr,char *str_ret,unsigned int n)
     }
     str_ret[i]=ptr[1];
 }
+
+//Hladanie najpravejsieho nematchnuteho prvku
+static int find_jump(const char *pattern, const char c, int index){
+    while(index >= 0){
+        if (pattern[index] == c){
+            return index;
+        }
+        index--;
+    }
+    return index;
+
+}
+
+
+
+//Hladanie podretazca boyer_moore algoritmom prvou heuristikou, funguje potrebujem vsak este odtestovat extremnejsie vstupy
+int boyer_moore(const char *str, const char *pattern){
+    int str_len=length(str);
+    int pat_len=length(pattern);
+
+    if(pat_len == 0){
+        return 0;
+    }
+
+    if(pat_len > str_len){
+        return -2;
+    }
+
+    int sIndex = pat_len-1;
+    int pIndex = pat_len-1;
+
+    while (sIndex < str_len){
+
+        if(str[sIndex] != pattern[pIndex]){
+            //osetrenie pripadu, ze nie je zhoda
+
+            if(pIndex == pat_len-1){
+                int j = find_jump(pattern, str[sIndex], pIndex-1);
+                if (j == -1){
+                    sIndex += pat_len;
+                }
+                else if (pat_len - 1 == 0){
+                    sIndex += 1;
+                }
+                else{
+                sIndex += pIndex - j ;
+                }
+            }
+
+            //je zhoda, posun na zhodu
+            else{
+                sIndex += pat_len - (pat_len - pIndex);
+            }
+            pIndex = pat_len - 1;
+        }
+
+        else{
+            if(pIndex == 0){
+                return sIndex;
+            }
+            sIndex--;
+            pIndex--;
+        }
+
+
+    }
+
+    return -1;
+
+}
