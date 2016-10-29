@@ -14,6 +14,7 @@
 #ifndef IAL_H
 #define IAL_H
 
+#include "scaner.h"
 typedef struct HTab_listitem_sym {
    Ttoken token;
    struct HTab_listitem_sym* ptrnext;

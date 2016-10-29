@@ -14,11 +14,13 @@
    
 #include <stdio.h>
 #include <stdlib.h>
-#include "scaner.h"
+//#include "scaner.h"
 #include <stdbool.h>
 #include "error.h"
 #include "stack.h"
 #include "cleaner.h"
+#include "ial.h"
+
 char *filename = NULL;
 tStack stack;
 
