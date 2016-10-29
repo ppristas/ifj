@@ -17,6 +17,7 @@
 #include <string.h>
 #include "scaner.h"
 #include "ial.h"
+#include "buildin.h"
 
 HTab_t* HTab_init(unsigned size) {
 
