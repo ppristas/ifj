@@ -22,6 +22,7 @@ tStack p_stack;
 
 bool fMain = false;  //bola uz najdena class Main? true = ano, false = nie
 
+/*
 void expand(tStack *p_stack,int num,...)   //rozsiri neterminal na neterminaly-terminaly
 {  
    stackPop(p_stack);  //Pop neterminalu na vrchu
@@ -33,14 +34,11 @@ void expand(tStack *p_stack,int num,...)   //rozsiri neterminal na neterminaly-t
    }
    return;
 }
+*/
 
 int parser()
 {
    error = SUCCESS;
-   stackInit(&p_stack);  //inicializacia stacku pouzivaneho pri prediktivnej SA 
-   stackPush(&p_stack, T_dolar);
-   
-   stackPush(&p_stack, N_P);  //zaciatocny neterminal P (prog)
    get_token();
    error = prog();
       
@@ -57,24 +55,8 @@ int prog()
    if(error != SUCCESS)
       return error;
 
-   if((fMain == false)&&(token.stav == S_EOF))  //chyba, prazdny subor
-   {
-      error = SYNTAX_ERR;
-      return error;
-   }
-   else if((fMain == true)&&(token.stav == S_EOF))   //pravidlo P -> epsilon
-   {
-      expand(&p_stack,1,T_EOF);
-      if(p_stack.top->data == T_EOF && token.stav == S_EOF)
-         stackPop(&p_stack);
-      if(p_stack.top->data == T_dolar)          //vsetky tokeny boli precitane, dosiel token konca suboru
-         return SUCCESS;                        //vstup je akceptovany
-      else                                      //na zasobniku este nieco ostalo, vsetko nebolo pokryte, error
-         return SYNTAX_ERR;
-   }
    if(!(strcmp(token.data, "class")))                   //pravidlo P -> C P
    {
-      expand(&p_stack, 2, N_P, N_C);
       error = class();
       if(error != SUCCESS)
       {
@@ -104,18 +86,13 @@ int class()
 {
    if(error != SUCCESS)
       return error;
-   expand(&p_stack,5, T_P_KOSZ, N_AC, T_L_KOSZ, T_id, T_class);   //pravidlo C -> class id { AC }         
-   if(p_stack.top->data != T_class)
-      return FILIP_ERR;
-   stackPop(&p_stack);    //token.data = p_stack.top, mozeme pouzit porovnavacie pravidlo
    get_token();   //ocakavam id
-   if((token.stav != S_ID) || ((strcmp(token.data, "Main"))&&(!fMain))) //Main musi byt prvy class
-      return SYNTAX_ERR;
    if(!(strcmp(token.data, "Main")))
       fMain = true;
-   if(p_stack.top->data != T_id)
-      return SYNTAX_ERR;
-   stackPop(&p_stack);
+   if((token.stav != S_ID) || ((strcmp(token.data, "Main"))&&(!fMain))) //Main musi byt prvy class
+      return SEMANTIC_PROG_ERR;
+   if(!(strcmp(token.data, "ifj16")))  //class ifj 16 nemoze byt definovany
+      return SEMANTIC_PROG_ERR;
 
    get_token();   //ocakavam {
    if(token.stav != S_L_KOSZ)
@@ -127,12 +104,8 @@ int class()
    if(error != SUCCESS)
       return error;
 
-   /*if(p_stack.top->data != T_P_KOSZ)
-      return FILIP_ERR;*/
-
    if(token.stav != S_P_KOSZ)
       return SYNTAX_ERR;
-   stackPop(&p_stack); //token = vrchol, mozeme popnut
    return error;
 
 }
@@ -148,45 +121,46 @@ int after_class()
    if((strcmp(token.data, "static")))
       return SYNTAX_ERR;   
 
-   expand(&p_stack, 3, N_AC, N_SD, T_static); //token = static, vrchol = static
-   stackPop(&p_stack); //popujeme static zo stacku
                 //ak pride void pravidlo: <SD> -> void id <SDA>      
    get_token(); //inak pravidlo: <SD> -> <PARS> <DECL>;
    if(!(strcmp(token.data, "void")))
    {
-      expand(&p_stack, 3, N_SDA, T_id, T_void);
-      stackPop(&p_stack);  //na vrchu je void, token je void -> pop
+      
       get_token();   //ocakavam id
       if(token.stav != S_ID)
          return SYNTAX_ERR;
-      stackPop(&p_stack);  //vrchol je id -> pop, ostalo na vrchole <SDA>
-      expand(&p_stack, 6, T_P_KOSZ, N_MB, T_L_KOSZ, T_PZAT, N_PA, T_LZAT);
+      
       //pouzite pravidlo <SDA> -> ( <PA> ) { <MB> }
       get_token(); //musi byt lava zatvorka
       if(token.stav != S_LZAT)
          return SYNTAX_ERR;
-      stackPop(&p_stack);  //pop (, top = <PA>
+      
       get_token();   //ocakava bud ) v pripade prazndych argumentov, alebo type
    
-
       if(token.stav == S_PZAT)   //prazdny pocet argumentov
       {
-         stackPop(&p_stack);  //pop <PA>, pravidlo: <PA> -> epsilon
-         stackPop(&p_stack);  //pop )
+         // pravidlo: <PA> -> epsilon
          get_token();   
          if(token.stav != S_L_KOSZ)
             return SYNTAX_ERR;
-         stackPop(&p_stack);  //pop {, top = <MB>
          
+         get_token();
          error = main_body();
 
-         get_token(); //cakam }
+         if(error != SUCCESS)
+            return SYNTAX_ERR;
+
+         //cakam }
          if(token.stav != S_P_KOSZ)
             return SYNTAX_ERR;
 
          get_token();
          if(!(strcmp(token.data, "static"))) //nachadza sa za telom funckie este nieco static?
             error = after_class();
+
+         if(error != SUCCESS)
+            return error;
+
          else if(token.stav == S_P_KOSZ)  //nactial som } znaciacu koniec classu
          {
             return error;
@@ -206,26 +180,29 @@ int after_class()
          if(error != SUCCESS)
             return error;
 
-         if(p_stack.top->data != T_PZAT)
-            return FILIP_ERR;
          if(token.stav != S_PZAT)
             return FILIP_ERR;
 
-         stackPop(&p_stack); //na vrchole je )
          get_token();   //musi byt {
          if(token.stav != S_L_KOSZ)
             return SYNTAX_ERR;
-         stackPop(&p_stack);  //token = {, stack = { -> pop
          
+         get_token(); 
          error = main_body();
 
-         get_token();   //cakam kosatu zavorku
+         if(error != SUCCESS)
+            return error;
+
+         //cakam kosatu zavorku
          if(token.stav != S_P_KOSZ)
             return SYNTAX_ERR;
 
          get_token();
          if(!(strcmp(token.data, "static"))) //nachadza sa za telom funckie este nieco static?
             error = after_class();
+
+         if(error != SUCCESS)
+            return error;
          else if(token.stav == S_P_KOSZ)  //nactial som } znaciacu koniec classu
          {
             return error;
@@ -237,57 +214,69 @@ int after_class()
    }
    else if(!((strcmp(token.data, "String"))&&(strcmp(token.data, "int"))&&(strcmp(token.data, "double"))))  //pravidlo <SD> -> <Pars> <Decl>
    {
-      expand(&p_stack, 3, N_decl, T_id, N_type);   //<Pars> nahradim <type> id
-      stackPop(&p_stack);  //token je type (string, int alebo double) , top = type, popujem
       get_token();
       if(token.stav != S_ID)
-         return SYNTAX_ERR;
-      stackPop(&p_stack);               
+         return SYNTAX_ERR;             
       get_token();
 
 
       switch(token.stav)
       {
          case S_SEMICOLON:          //pravidlo <Decl> -> ;
-            stackPop(&p_stack);     //pop decl
             get_token();
             if(!(strcmp(token.data, "static")))
             {
                error = after_class();
+               if(error != SUCCESS)
+                  return error;
             }
             return error;
             break;
 
          case S_PRIR:               // pravidlo <Decl> ->
             /* --------------EXPRESION ESTE NEVIEM----------------- */
-            stackPop(&p_stack);
+
+            get_token();   //za priradenim ;
+            if(token.stav != S_SEMICOLON)
+               return SYNTAX_ERR;
+
+            get_token();
+            if(!(strcmp(token.data, "static")))
+            {
+               error = after_class();
+               if(error != SUCCESS)
+                  return error;
+            }
             return error;
             break;
 
          case S_LZAT:               // pravidlo <Decl> -> ( <PA> ) { <MB> }
-            expand(&p_stack,6, T_P_KOSZ, N_MB, T_L_KOSZ, T_PZAT, N_PA, T_LZAT);
-            stackPop(&p_stack);  //akceptovana zavorka
-            /*------------------------TU COPY--------------------*/
             get_token();   //ocakava bud ) v pripade prazndych argumentov, alebo type
                      
             if(token.stav == S_PZAT)   //prazdny pocet argumentov
             {
-               stackPop(&p_stack);  //pop <PA>, pravidlo: <PA> -> epsilon
-               stackPop(&p_stack);  //pop )
+               //pravidlo: <PA> -> epsilon
                get_token();   
                if(token.stav != S_L_KOSZ)
                   return SYNTAX_ERR;
-               stackPop(&p_stack);  //pop {, top = <MB>
-               
+                 
+               get_token();             
                error = main_body();
 
-               get_token(); //cakam }
+               if(error != SUCCESS)
+                  return error;
+
+               //cakam }
                if(token.stav != S_P_KOSZ)
                   return SYNTAX_ERR;   
 
                get_token();
                if(!(strcmp(token.data, "static"))) //nachadza sa za telom funckie este nieco static?
                   error = after_class();
+
+               if(error != SUCCESS)
+                  return error;
+
                else if(token.stav == S_P_KOSZ)  //nactial som } znaciacu koniec classu
                {
                   return error;
@@ -307,26 +296,29 @@ int after_class()
                if(error != SUCCESS)
                   return error;
 
-               if(p_stack.top->data != T_PZAT)
-                  return FILIP_ERR;
                if(token.stav != S_PZAT)
                   return FILIP_ERR;
 
-               stackPop(&p_stack); //na vrchole je )
                get_token();   //musi byt {
                if(token.stav != S_L_KOSZ)
                   return SYNTAX_ERR;
-               stackPop(&p_stack);  //token = {, stack = { -> pop
-               
+                
+               get_token();  
                error = main_body();
 
-               get_token();
+               if(error != SUCCESS)
+                  return error;
+
                if(token.stav != S_P_KOSZ)
                   return SYNTAX_ERR;
                
                get_token();
                if(!(strcmp(token.data, "static"))) //nachadza sa za telom funckie este nieco static?
                   error = after_class();
+
+               if(error != SUCCESS)
+                  return error;
+
                else if(token.stav == S_P_KOSZ)  //nactial som } znaciacu koniec classu
                {
                   return error;
@@ -348,16 +340,13 @@ int params_after()
 {
    if(error != SUCCESS)
       return error;
-   expand(&p_stack, 3, N_NP, T_id, N_type);  //pravidlo PA -> <pars> <NP> upravene na PA -> <type> <id> <NP>
-   stackPop(&p_stack);  //top = type, token = type
    get_token();   //cakam id
    if(token.stav != S_ID)
       return SYNTAX_ERR;
-   stackPop(&p_stack); //na tope bol id, teraz je <NP>
    get_token();   //ak ) koncime a predavame riadenie, ak , pokracujeme
    if(token.stav == S_PZAT)
    {
-      stackPop(&p_stack); //popneme z vrcholu <NP> pravidlom <NP> -> epsilon;
+      // pravidlo <NP> -> epsilon;
       return error;
    }
    else if(token.stav == S_CIARKA)
@@ -366,13 +355,270 @@ int params_after()
       if((strcmp(token.data, "String"))&&(strcmp(token.data, "int"))&&(strcmp(token.data, "double")))
             return SYNTAX_ERR;
       error = params_after();
+      if(error != SUCCESS)
+         return error;
    }
    else           // inak error
       return SYNTAX_ERR;
    return error; //sem by sme sa nemali nikdy dostat
 }
 
-int main_body()
+int main_body()   //pravidlo <MB> -> <SL> <MB>
 {
-   return SUCCESS;
+   if(error != SUCCESS)
+      return error;
+
+   if(!(strcmp(token.data, "ifj16")))  //skumany token bol nacitany pred volanim main_body
+   {  
+      get_token();
+      if(strcmp(token.data, "print"))
+      {   
+         error = build_function_call();  
+         if(error != SUCCESS)
+            return error;
+      }
+      else if(!(strcmp(token.data, "print")))
+      {
+         error =  build_print();
+         if(error != SUCCESS)
+            return error;
+      }
+      else
+         return SYNTAX_ERR;
+      if(error != SUCCESS)
+         return error;
+   }
+   else if(!(strcmp(token.data, "while")))  //pravidlo <SL> -> while ( <E> ) { main body }
+   {
+      get_token();   //cakam (
+      if(token.stav != S_LZAT)
+         return SYNTAX_ERR;
+      /********************************VYRAZ*********************************/
+
+      get_token();   //cakam )
+      if(token.stav != S_PZAT)
+         return SYNTAX_ERR;
+      get_token();   //za while je povinne {
+      if(token.stav != S_L_KOSZ)
+         return SYNTAX_ERR;
+
+      error = main_body();    // v tele whilu moze byt hocico, preto volame main_body
+      
+      if(error != SUCCESS)
+            return error;
+
+      if(token.stav != S_P_KOSZ)
+         return SYNTAX_ERR;
+   }
+   else if(!(strcmp(token.data, "if")))  //pravidlo <SL> -> if ( <E> ) { <MB> } else { <MB> }
+   {
+      get_token();
+      if(token.stav != S_LZAT)
+         return SYNTAX_ERR;
+      /****************VYHODNOTENIE VYRAZU*******************/
+
+      get_token();
+      if(token.stav != S_INT)
+         return FILIP_ERR;
+
+      /*************************ZATIAL INT FAKE**************/
+      get_token();
+      if(token.stav != S_PZAT)
+         return SYNTAX_ERR;
+      get_token();
+      if(token.stav != S_L_KOSZ)
+         return SYNTAX_ERR;
+
+      get_token();
+      error = main_body();
+     
+      if(error != SUCCESS)
+         return error;
+
+      if(token.stav != S_P_KOSZ)
+         return SYNTAX_ERR;
+      get_token();
+
+      if(strcmp(token.data, "else"))   /*******************************************************************NEFUNGUJE PRAZDNY ELSE************************************************/
+         return SYNTAX_ERR;      
+
+      get_token();
+      if(token.stav != S_L_KOSZ)
+         return SYNTAX_ERR;
+
+      get_token();
+      if(token.stav != S_P_KOSZ)
+         error = main_body();
+
+      if(error != SUCCESS)
+         return error;
+      if(token.stav != S_P_KOSZ)
+         return SYNTAX_ERR;
+   }
+   else if(token.stav == S_ID)
+   {
+      get_token();
+      if(token.stav == S_PRIR)
+      {
+
+      }
+      else if(token.stav == S_LZAT)
+      {
+
+      }
+      else
+         return SYNTAX_ERR;
+   }
+
+   if(error != SUCCESS)
+      return error;
+
+   get_token();
+  
+   if(token.stav != S_P_KOSZ)
+      error = main_body();
+
+   if(error != SUCCESS)
+      return error;
+
+   if(token.stav == S_P_KOSZ)
+      return error;   
+   return error;
+}
+
+int build_function_call()
+{
+   if(error != SUCCESS)
+      return error;
+   if(!(strcmp(token.data, "readInt") && strcmp(token.data, "readDouble") && strcmp(token.data, "readString")))    //pravidlo <SL> -> <FC> -> read...();
+   {
+      get_token();   //musi byt (
+      if(token.stav != S_LZAT)
+         return SYNTAX_ERR;
+      get_token();   //musi byt )
+      if(token.stav != S_PZAT)
+         return SYNTAX_ERR;
+      get_token();   //musi byt ;
+      if(token.stav != S_SEMICOLON)
+         return SYNTAX_ERR;
+      return error;  
+   }
+   else if(!(strcmp(token.data, "sort") && strcmp(token.data, "length")))
+   {
+      get_token();   //musi byt (
+      if(token.stav != S_LZAT)
+         return SYNTAX_ERR;
+      /************TU MUSI BYT SPRACOVANIE VYRAZU*******************/
+
+         return SYNTAX_ERR;
+      get_token();   //musi byt )
+      if(token.stav != S_PZAT)
+         return SYNTAX_ERR;
+      get_token();   //musi byt ;
+      if(token.stav != S_SEMICOLON)
+         return SYNTAX_ERR; 
+      return error;                       
+   }
+   else if(!(strcmp(token.data, "find") && strcmp(token.data, "compare")))
+   {
+      get_token();   //musi byt (
+      if(token.stav != S_LZAT)
+         return SYNTAX_ERR;
+      /************TU MUSI BYT SPRACOVANIE VYRAZU*******************/
+
+      get_token();
+      if(token.stav != S_CIARKA) //musi byt ciarka medzi argumentami
+         return SYNTAX_ERR;
+
+      /************TU MUSI BYT SPRACOVANIE VYRAZU*******************/
+
+      get_token();   //musi byt )
+      if(token.stav != S_PZAT)
+         return SYNTAX_ERR;
+      get_token();   //musi byt ;
+      if(token.stav != S_SEMICOLON)
+         return SYNTAX_ERR;
+      return error;    
+   }
+   else if(!(strcmp(token.data, "substr")))
+   {
+      get_token();   //musi byt (
+      if(token.stav != S_LZAT)
+         return SYNTAX_ERR;
+
+      /************TU MUSI BYT SPRACOVANIE VYRAZU*******************/
+
+      get_token();
+      if(token.stav != S_CIARKA) //musi byt ciarka medzi argumentami
+         return SYNTAX_ERR;
+
+      /************TU MUSI BYT SPRACOVANIE VYRAZU*******************/
+
+      get_token();
+      if(token.stav != S_CIARKA) //musi byt ciarka medzi argumentami
+         return SYNTAX_ERR;
+
+      /************TU MUSI BYT SPRACOVANIE VYRAZU*******************/
+
+      get_token();   //musi byt )
+      if(token.stav != S_PZAT)
+         return SYNTAX_ERR;
+      get_token();   //musi byt ;
+      if(token.stav != S_SEMICOLON)
+         return SYNTAX_ERR;
+      return error;  
+   }
+   else
+      return SYNTAX_ERR;
+   return error;
+}
+
+int build_print()
+{
+   if(error != SUCCESS)
+      return error;
+   get_token();
+   if(token.stav != S_LZAT)
+      return SYNTAX_ERR;
+
+   error = print_params();
+   
+   if(error != SUCCESS)
+      return error;
+
+   get_token();
+   if(token.stav != S_SEMICOLON)
+      return SYNTAX_ERR;
+
+   return error;
+}
+
+int print_params()
+{
+   if(error != SUCCESS)
+      return error;
+
+
+   /*******************SPRACOVANIE VYRAZU***************/
+
+   get_token();
+   if(token.stav != S_INT)
+      return SYNTAX_ERR;
+
+   /*****************ZATIAL FAKE, LEN INT***************/
+
+   get_token();
+   if(token.stav == S_PZAT)
+   {
+      return error;
+   }
+   else if(token.stav == S_PLUS)
+   {
+      error = print_params();
+      if(error != SUCCESS)
+         return error;
+   }
+   else
+      return SYNTAX_ERR;
+   return error;
 }
