@@ -13,6 +13,7 @@
    ********************************************************************************/
 
 #include <stdarg.h>
+#include "stack.h"
 #include "parser.h"
 #include "scaner.h"
 #include "error.h"
@@ -20,7 +21,6 @@
 tStack p_stack;
 
 bool fMain = false;  //bola uz najdena class Main? true = ano, false = nie
-bool fRun = false;   //bola uz najdena funkcia run v classe Main?
 
 void expand(tStack *p_stack,int num,...)   //rozsiri neterminal na neterminaly-terminaly
 {  
@@ -76,21 +76,25 @@ int prog()
    {
       expand(&p_stack, 2, N_P, N_C);
       error = class();
+      if(error != SUCCESS)
+      {
+         return error;
+      }
    }
    else
    { 
       return SYNTAX_ERR;
    }
    get_token();
-   if(!(strcmp(token.data, "class"))) 
+   if(!(strcmp(token.data, "class"))) //nacital som class -> idem znova od zaciatku
    {
       error = prog();
    }
-
-   get_token();
    if(token.stav != S_EOF)
       error = SYNTAX_ERR;
 
+   if(error != SUCCESS)
+      return error;
    return error;
 }
 
@@ -123,17 +127,11 @@ int class()
    if(error != SUCCESS)
       return error;
 
-   get_token();   //ocakavam }
-   
-
-   if(error != SUCCESS)
-      return error;
-               
-   if(token.stav != S_P_KOSZ)
-      return SYNTAX_ERR;
    /*if(p_stack.top->data != T_P_KOSZ)
       return FILIP_ERR;*/
 
+   if(token.stav != S_P_KOSZ)
+      return SYNTAX_ERR;
    stackPop(&p_stack); //token = vrchol, mozeme popnut
    return error;
 
@@ -186,9 +184,15 @@ int after_class()
          if(token.stav != S_P_KOSZ)
             return SYNTAX_ERR;
 
-         /*get_token();
+         get_token();
          if(!(strcmp(token.data, "static"))) //nachadza sa za telom funckie este nieco static?
-            error = after_class();*/
+            error = after_class();
+         else if(token.stav == S_P_KOSZ)  //nactial som } znaciacu koniec classu
+         {
+            return error;
+         }
+         else
+            return SYNTAX_ERR;
          return error;
 
       }  
@@ -219,14 +223,15 @@ int after_class()
          if(token.stav != S_P_KOSZ)
             return SYNTAX_ERR;
 
-         /*get_token();
+         get_token();
          if(!(strcmp(token.data, "static"))) //nachadza sa za telom funckie este nieco static?
             error = after_class();
-         ---------------------------------------
-         printf("tuuuuuuuuuuu2\n");
-         printf("%s\n", token.data);
-         printf("%d\n", error);
-         ---------------------------------------*/
+         else if(token.stav == S_P_KOSZ)  //nactial som } znaciacu koniec classu
+         {
+            return error;
+         }
+         else
+            return SYNTAX_ERR;
          return error;
       }             
    }
@@ -278,8 +283,17 @@ int after_class()
 
                get_token(); //cakam }
                if(token.stav != S_P_KOSZ)
-                  return SYNTAX_ERR;   ////////////////////////tu neskacem hore rekurzivne
+                  return SYNTAX_ERR;   
 
+               get_token();
+               if(!(strcmp(token.data, "static"))) //nachadza sa za telom funckie este nieco static?
+                  error = after_class();
+               else if(token.stav == S_P_KOSZ)  //nactial som } znaciacu koniec classu
+               {
+                  return error;
+               }
+               else
+                  return SYNTAX_ERR;
                return error;
 
             }  
@@ -310,9 +324,15 @@ int after_class()
                if(token.stav != S_P_KOSZ)
                   return SYNTAX_ERR;
                
-               /*get_token();
+               get_token();
                if(!(strcmp(token.data, "static"))) //nachadza sa za telom funckie este nieco static?
-                  error = after_class();*/
+                  error = after_class();
+               else if(token.stav == S_P_KOSZ)  //nactial som } znaciacu koniec classu
+               {
+                  return error;
+               }
+               else
+                  return SYNTAX_ERR;
                return error;
             }             
 
@@ -333,11 +353,6 @@ int params_after()
    get_token();   //cakam id
    if(token.stav != S_ID)
       return SYNTAX_ERR;
-         /*------------------------------------------------------------------------------------------------------------------------*/
-         printf("tuuuuuuuuuuu\n");
-         printf("%s\n", token.data);
-         printf("%d\n", error);
-         /*------------------------------------------------------------------------------------------------------------------------------------*/
    stackPop(&p_stack); //na tope bol id, teraz je <NP>
    get_token();   //ak ) koncime a predavame riadenie, ak , pokracujeme
    if(token.stav == S_PZAT)
