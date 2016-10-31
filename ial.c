@@ -9,22 +9,25 @@
    *                    Peter Pristas   (xprist05@stud.fit.vutbr.cz)            *
    *                    Daniel Florek   (xflore02@stud.fit.vutbr.cz)            *
    *                    Martin Grnac    (xgrnac00@stud.fit.vutbr.cz)            *
-   *                                                                            *               
+   *                                                                            *
    ********************************************************************************/
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+
 #include "ial.h"
 #include "buildin.h"
+
+
 
 HTab_t* HTab_init(unsigned size) {
 
 	HTab_t* result = malloc(sizeof(HTab_t)+size*sizeof(HTab_listitem));
-   
+
 	if(result == NULL)
-		/*allocation error*/
+		//allocation error
 		return NULL;
 	result->htable_size = size;
 	for(unsigned i = 0; i < size; i++) {
@@ -32,7 +35,6 @@ HTab_t* HTab_init(unsigned size) {
 	}
 	return result;
 	free(result);
-
 }
 
 unsigned hash_function(unsigned size, Ttoken token) {
@@ -55,7 +57,7 @@ HTab_listitem* HTab_insert(HTab_t* ptrht, Ttoken token) {
 		nextitem = malloc(sizeof(HTab_listitem)+sizeof(char)*(strlen(token.data)+1));
 
 		if(nextitem == NULL)
-			/*allocation error*/
+			//allocation error
 			return NULL;
 		else {
 			//printf("HERE\n");
@@ -70,7 +72,7 @@ HTab_listitem* HTab_insert(HTab_t* ptrht, Ttoken token) {
 			nextitem->ptrnext = NULL;
 
 			item = ptrht->list[ind] = nextitem;
-			
+
 			nextitem = NULL;
 			if(item == NULL)
 				return NULL;
@@ -93,7 +95,7 @@ HTab_listitem* HTab_insert(HTab_t* ptrht, Ttoken token) {
 			//not found insert next item
 			nextitem = malloc(sizeof(HTab_listitem*)+sizeof(char)*(strlen(token.data)+1));
 			if(nextitem == NULL)
-				/*allocation error*/
+				//allocation error
 				return NULL;
 			else {
 				//memcpy(nextitem->token.data,token.data,strlen(token.data)+1);
@@ -127,7 +129,7 @@ void HTab_clear(HTab_t* ptrht) {
 	for(unsigned i = 0; i < ptrht->htable_size; i++) {
 		while((item = ptrht->list[i]) != NULL) {
 			HTab_remove(ptrht,token);
-		}		
+		}
 	}
 	free(item);
 }
@@ -183,7 +185,7 @@ void HTab_remove(HTab_t* ptrht,Ttoken token) {
  * Hash function for table
  *
  * @param   data         string which will be used for calculation
- * @param   HTab_size   size of table                     
+ * @param   HTab_size   size of table
  *
  * @return              returns calculated hash
  */
@@ -219,6 +221,7 @@ void HTab_free(HTab_t* ptrht) {
 }
 */
 
+
 static void stifDown(char *str,   unsigned int left,   unsigned int right);
 
 static void stifDown(char *str,   unsigned int left,   unsigned int right)
@@ -235,13 +238,13 @@ static void stifDown(char *str,   unsigned int left,   unsigned int right)
     {
         if (j<right)
         {
-            if (str[j] > str[j+1])  //uprava <  10....1
+            if (str[j] < str[j+1])  //uprava <  10....1
             {
                 j=j+1;
             }
         }
 
-        if (temp < str[j])   //uprava >= pre zoradenie 10....1
+        if (temp >= str[j])   //uprava >= pre zoradenie 10....1
         {
              checker=0;
         }
@@ -256,7 +259,8 @@ static void stifDown(char *str,   unsigned int left,   unsigned int right)
     str[i]=temp;
 }
 
-void heapsort(char *ptr,char *str_ret,unsigned int n)
+
+char* heapsort(char *ptr,unsigned int n)
 {
     unsigned int left,right;
     left=n/2;
@@ -271,12 +275,14 @@ void heapsort(char *ptr,char *str_ret,unsigned int n)
 
     for(right = n;right > 1; --right)
     {
-        str_ret[i++]=ptr[1];
+        char temp= ptr[1];
         ptr[1]=ptr[right];
+        ptr[right]=temp;
         stifDown(ptr,1,right-1);
     }
-    str_ret[i]=ptr[1];
+    return (char*)&ptr[1];
 }
+
 
 //Hladanie najpravejsieho nematchnuteho prvku
 static int find_jump(const char *pattern, const char c, int index){

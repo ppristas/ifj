@@ -9,7 +9,7 @@
    *                    Peter Pristas   (xprist05@stud.fit.vutbr.cz)            *
    *                    Daniel Florek   (xflore02@stud.fit.vutbr.cz)            *
    *                    Martin Grnac    (xgrnac00@stud.fit.vutbr.cz)            *
-   *                                                                            *               
+   *                                                                            *
    ********************************************************************************/
 #ifndef IAL_H
 #define IAL_H
@@ -63,8 +63,8 @@ HTab_t* HTab_init(HTab_t* ptrht);
 unsigned int hash_function(HTab_t* ptrht,char* data)
 void HTab_free(HTab_t* ptrht);*/
 
-void heapsort(char *ptr, char *str_ret, unsigned int n);
 
+char* heapsort(char *ptr,unsigned int n);
 int boyer_moore(const char *str, const char *pattern);
 
 #endif
