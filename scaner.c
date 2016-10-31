@@ -149,7 +149,7 @@ Ttoken get_token(){
 				else if(c == '+')		stav = S_PLUS;//extend_token(&i,c);c = ungetc(c,file);column++;break;}
 				else if(c == '-')		stav = S_MINUS;
 				else if(c == '*')		stav = S_MULTI;
-				else if(c == '/')		stav = S_DIV;
+				else if(c == '/'){		stav = S_DIV;break;}
 				else if(c == ';')		stav = S_SEMICOLON;
 				else if(c == ',')		stav = S_CIARKA;
 				else if(c == '=')		stav = S_PRIR;
@@ -163,6 +163,7 @@ Ttoken get_token(){
 				else if(c == '!')		stav = S_VYKR;
 				else if(c == '"'){		stav = S_STRING;break;}
 				else{
+					fill_token(S_ERROR,LEXICAL_ERR);
 					stav = S_ERROR;
 					break;		
 				}
@@ -178,11 +179,11 @@ Ttoken get_token(){
 						
 				}//doplnit pre zlozeny identifikator s bodkou .TODO
 				else if( c == '.'){
-					fill_token(S_CLASS,SUCCESS);
+					fill_token(S_ID,SUCCESS);
 					//ungetc(c,file);
 					//column--;
-					return token;
-					stav = S_END;
+					extend_token(&i,c);
+					stav = S_CLASS;
 				}
 				else{
 //					printf("koniec slova: -%c-\n",c);
@@ -198,16 +199,17 @@ Ttoken get_token(){
 			}
 	case S_CLASS: ////rozdelit class.ID na tri tokeny alebo nie?
 			{
-	/*			if((isalpha(c)) || (c == '$') || (c == '_')){
-					fill_token(stav,E_OK);
-					stav = S_END;
-					return_char((char)c);
+				if((isalpha(c)) || (c == '$') || (c == '_')){
+					stav = S_CLASS;
+					extend_token(&i,c);
 				}else{
-					stav = S_ERROR;
-				
+					stav = S_END;
+					ungetc(c,file);
+					column--;
+					return token;
 				}
 				break;
-	*/		}	
+			}	
         case S_INT:
 			{
 				if(isdigit(c)){

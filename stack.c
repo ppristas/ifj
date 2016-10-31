@@ -27,7 +27,7 @@ bool stackEmpty(tStack* s){
 
 void stackPush(tStack *s, int dat){
 	tStackItem *pom;
-	pom = mymalloc(sizeof(struct SItem));	
+	pom = mymalloc(sizeof(struct Sitem));	
 	if( pom == NULL){
 		error = INTERNAL_ERR;
 		return;

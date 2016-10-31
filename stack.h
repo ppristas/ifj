@@ -17,9 +17,9 @@
 #include <stdbool.h>
 
 //data nahradit za typ ktory chceme davat do stacku da
-typedef struct SItem{
+typedef struct Sitem{
 
-	struct SItem* nextptr;
+	struct Sitem* nextptr;
 	int data;
 
 } tStackItem;
