@@ -87,15 +87,18 @@ static void init_token()
 
 static void extend_token(int *i, int c)
 {
-	
-	token.data = (char*)realloc(token.data,(*i)*(sizeof(char)) + 2);
+
+	if(token.data == NULL)
+		token.data = malloc(sizeof(char) +2);
+	else
+		token.data = (char*)realloc(token.data,(*i)+2);
 	if(token.data == NULL){
 		error = INTERNAL_ERR;
 		return;
 	}
+	token.data[(*i) +1] = '\0';
 	token.data[(*i)]=c;
 	(*i)++;
-	token.data[(*i)] = '\0';
 	
 //	return token.data;
 }
@@ -163,6 +166,7 @@ Ttoken get_token(){
 				else if(c == '!')		stav = S_VYKR;
 				else if(c == '"'){		stav = S_STRING;break;}
 				else{
+					extend_token(&i,c);
 					fill_token(S_ERROR,LEXICAL_ERR);
 					stav = S_ERROR;
 					break;		
@@ -531,7 +535,7 @@ Ttoken get_token(){
 							oktal_num = strtol(pom,NULL,8);
 							c = oktal_num;
 							if(c <= 377){
-								extend_token(&i,c);
+								extend_token(&i,(char)c);
 								stav = S_STRING;	
 							}else{
 								while((c = getc(file)) != '"'){
