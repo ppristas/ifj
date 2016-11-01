@@ -18,6 +18,15 @@
 #include "scaner.h"
 #include "error.h"
 
+/*bool BI_readInt = false;
+bool BI_readDouble = false;
+bool BI_readString = false;
+bool BI_length = false;
+bool BI_substr = false;
+bool BI_compare = false;
+bool BI_find = false;
+bool BI_sort = false;*/
+
 tStack p_stack;
 
 bool fMain = false;  //bola uz najdena class Main? true = ano, false = nie
@@ -36,10 +45,35 @@ void expand(tStack *p_stack,int num,...)   //rozsiri neterminal na neterminaly-t
 }
 */
 
+int is_build_function() //ratam s tym ze token uz bol nacitany
+{
+   if(!(strcmp(token.data, "ifj16.print")))
+      return F_print;
+   else if(!(strcmp(token.data, "ifj16.readInt")))
+      return F_int;
+   else if(!(strcmp(token.data, "ifj16.readDouble")))
+      return F_double;
+   else if(!(strcmp(token.data, "ifj16.readString")))
+      return F_string;
+   else if(!(strcmp(token.data, "ifj16.length")))
+      return F_length;
+   else if(!(strcmp(token.data, "ifj16.substr")))
+      return F_substr;
+   else if(!(strcmp(token.data, "ifj16.compare")))
+      return F_compare;
+   else if(!(strcmp(token.data, "ifj16.find")))
+      return F_find;
+   else if(!(strcmp(token.data, "ifj16.sort")))
+      return F_sort;
+   else
+      return F_NbIF;
+}
+
 int parser()
 {
    error = SUCCESS;
    get_token();
+
    error = prog();
       
    if(error != SUCCESS)
@@ -176,12 +210,12 @@ int after_class()
             return SYNTAX_ERR;
 
          error = params_after(); //riadenie predane params_after  
-                                 
+
          if(error != SUCCESS)
             return error;
 
          if(token.stav != S_PZAT)
-            return FILIP_ERR;
+            return SYNTAX_ERR;
 
          get_token();   //musi byt {
          if(token.stav != S_L_KOSZ)
@@ -216,9 +250,8 @@ int after_class()
    {
       get_token();
       if(token.stav != S_ID)
-         return SYNTAX_ERR;             
-      get_token();
-
+         return SYNTAX_ERR; 
+      get_token();          
 
       switch(token.stav)
       {
@@ -291,13 +324,12 @@ int after_class()
                if((strcmp(token.data, "String"))&&(strcmp(token.data, "int"))&&(strcmp(token.data, "double")))
                   return SYNTAX_ERR;
 
-               error = params_after(); //riadenie predane params_after  
-                                       
+               error = params_after(); //riadenie predane params_after                   
                if(error != SUCCESS)
                   return error;
 
                if(token.stav != S_PZAT)
-                  return FILIP_ERR;
+                  return SYNTAX_ERR;
 
                get_token();   //musi byt {
                if(token.stav != S_L_KOSZ)
@@ -368,27 +400,7 @@ int main_body()   //pravidlo <MB> -> <SL> <MB>
    if(error != SUCCESS)
       return error;
 
-   if(!(strcmp(token.data, "ifj16")))  //skumany token bol nacitany pred volanim main_body
-   {  
-      get_token();
-      if(strcmp(token.data, "print"))
-      {   
-         error = build_function_call();  
-         if(error != SUCCESS)
-            return error;
-      }
-      else if(!(strcmp(token.data, "print")))
-      {
-         error =  build_print();
-         if(error != SUCCESS)
-            return error;
-      }
-      else
-         return SYNTAX_ERR;
-      if(error != SUCCESS)
-         return error;
-   }
-   else if(!(strcmp(token.data, "while")))  //pravidlo <SL> -> while ( <E> ) { main body }
+   if(!(strcmp(token.data, "while")))  //pravidlo <SL> -> while ( <E> ) { main body }
    {
       get_token();   //cakam (
       if(token.stav != S_LZAT)
@@ -439,7 +451,7 @@ int main_body()   //pravidlo <MB> -> <SL> <MB>
          return SYNTAX_ERR;
       get_token();
 
-      if(strcmp(token.data, "else"))   /*******************************************************************NEFUNGUJE PRAZDNY ELSE************************************************/
+      if(strcmp(token.data, "else")) 
          return SYNTAX_ERR;      
 
       get_token();
@@ -457,23 +469,70 @@ int main_body()   //pravidlo <MB> -> <SL> <MB>
    }
    else if(token.stav == S_ID)
    {
+      int i = is_build_function();
       get_token();
-      if(token.stav == S_PRIR)
-      {
-
+      if(token.stav == S_PRIR)    //priradenie do premennej
+      {  
+         //provizorne
+         get_token();
+         if(token.stav != S_SEMICOLON)
+            return SYNTAX_ERR;
       }
-      else if(token.stav == S_LZAT)
+      else if(token.stav == S_LZAT)    //lubovalna ina funckia
       {
+         if(i > 0)
+         {
+            error = build_function_call(i);
+            if(error != SUCCESS)
+               return error;
+         }
+         else 
+         {
+            /***********VYRAZ**************/
+            get_token();
+            if(token.stav != S_PZAT)
+               return SYNTAX_ERR;
 
+            get_token();
+            if(token.stav != S_SEMICOLON)
+               return SYNTAX_ERR;
+         }
       }
       else
          return SYNTAX_ERR;
+   }
+   else if(!((strcmp(token.data, "String"))&&(strcmp(token.data, "int"))&&(strcmp(token.data, "double"))))  //pravidlo <SL> -> <PARS> <VD>
+   {  
+      get_token();
+      if(token.stav != S_ID)
+         return SYNTAX_ERR;
+
+      get_token();
+      if(token.stav == S_PRIR)
+      {
+         /**********************ZAVOLAT OVERENIE VYRAZU***************************/
+         get_token();
+         if(token.stav != S_SEMICOLON)
+            return SYNTAX_ERR;
+      }
+      else if(token.stav == S_SEMICOLON)
+         ;
+      else
+         return SYNTAX_ERR;
+   }
+   else if(!(strcmp(token.data, "return")))
+   {
+         //zatial takto inak tu bude vyraz      
+         get_token();
+         if(token.stav != S_SEMICOLON)
+            return SYNTAX_ERR;
    }
 
    if(error != SUCCESS)
       return error;
 
    get_token();
+   printf("%s\n", token.data); 
   
    if(token.stav != S_P_KOSZ)
       error = main_body();
@@ -486,13 +545,12 @@ int main_body()   //pravidlo <MB> -> <SL> <MB>
    return error;
 }
 
-int build_function_call()
+int build_function_call(int decider)
 {
    if(error != SUCCESS)
-      return error;
-   if(!(strcmp(token.data, "readInt") && strcmp(token.data, "readDouble") && strcmp(token.data, "readString")))    //pravidlo <SL> -> <FC> -> read...();
+      return error;   
+   if(decider == F_string || decider == F_double || decider == F_int)   //pravidlo <SL> -> <FC> -> read...();
    {
-      get_token();   //musi byt (
       if(token.stav != S_LZAT)
          return SYNTAX_ERR;
       get_token();   //musi byt )
@@ -503,9 +561,8 @@ int build_function_call()
          return SYNTAX_ERR;
       return error;  
    }
-   else if(!(strcmp(token.data, "sort") && strcmp(token.data, "length")))
+   else if(decider == F_length || decider == F_sort)
    {
-      get_token();   //musi byt (
       if(token.stav != S_LZAT)
          return SYNTAX_ERR;
       /************TU MUSI BYT SPRACOVANIE VYRAZU*******************/
@@ -519,9 +576,8 @@ int build_function_call()
          return SYNTAX_ERR; 
       return error;                       
    }
-   else if(!(strcmp(token.data, "find") && strcmp(token.data, "compare")))
+   else if(decider == F_find || decider == F_compare)
    {
-      get_token();   //musi byt (
       if(token.stav != S_LZAT)
          return SYNTAX_ERR;
       /************TU MUSI BYT SPRACOVANIE VYRAZU*******************/
@@ -540,9 +596,8 @@ int build_function_call()
          return SYNTAX_ERR;
       return error;    
    }
-   else if(!(strcmp(token.data, "substr")))
+   else if(decider == F_substr)
    {
-      get_token();   //musi byt (
       if(token.stav != S_LZAT)
          return SYNTAX_ERR;
 
@@ -568,6 +623,13 @@ int build_function_call()
          return SYNTAX_ERR;
       return error;  
    }
+   else if(decider == F_print)
+   {
+      error = build_print();
+      if(error != SUCCESS)
+         return error;
+   }
+   
    else
       return SYNTAX_ERR;
    return error;
@@ -577,7 +639,7 @@ int build_print()
 {
    if(error != SUCCESS)
       return error;
-   get_token();
+
    if(token.stav != S_LZAT)
       return SYNTAX_ERR;
 
