@@ -271,7 +271,7 @@ char* heapsort(char *ptr,unsigned int n)
         stifDown(ptr,i,right);
     }
 
-    unsigned int i=0;
+    //unsigned int i=0;
 
     for(right = n;right > 1; --right)
     {
