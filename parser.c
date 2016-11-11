@@ -3,7 +3,7 @@
    *    Projekt:        Interpret zjednoduseneho jazyka Java SE                 *
    *    Variant:        b/2/II                                                  *
    *    Tim:            092                                                     *
-   *    Subor:          main.c                                                  *
+   *    Subor:          parser.c                                                  *
    *    Riesitelia:     Filip Mik       (xmikfi00@stud.fit.vutbr.cz)            *
    *                    Peter Ziska     (xziska02@stud.fit.vutbr.cz)            *
    *                    Peter Pristas   (xprist05@stud.fit.vutbr.cz)            *
@@ -127,7 +127,6 @@ int class()
    get_token();   //ocakavam {
    if(token.stav != S_L_KOSZ)
       return SYNTAX_ERR;
-   stackPop(&p_stack);    //vrchol je {, token { rovnako
 
    get_token();
    error = after_class();
@@ -542,8 +541,6 @@ int main_body()   //pravidlo <MB> -> <SL> <MB>
 }
 
 
-/*-------------------------------------------------------------------------------------------------------------------------*/
-
 int main_body_riadiace()   //pravidlo <MB> -> <SL> <MB>
 {
    if(error != SUCCESS)
@@ -679,7 +676,6 @@ int main_body_riadiace()   //pravidlo <MB> -> <SL> <MB>
    return error;
 }
 
-/*-------------------------------------------------------------------------------------------------------------------------*/
 
 int build_function_call(int decider)
 {
@@ -852,14 +848,12 @@ int print_params()
    if(error != SUCCESS)
       return error;
 
-
-   /*******************SPRACOVANIE VYRAZU***************/
-
    get_token();
-   if(token.stav != S_INT)
-      return SYNTAX_ERR;
-
-   /*****************ZATIAL FAKE, LEN INT***************/
+   if(token.stav == S_ID)
+      error = SUCCESS;
+   else if(token.stav == S_STRING)
+      error = SUCCESS;
+   else return error;
 
    get_token();
    if(token.stav == S_PZAT)
