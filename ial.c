@@ -232,7 +232,11 @@ char* heapsort(char *ptr,unsigned int n)
         stifDown(ptr,i,right);
     }
 
+<<<<<<< HEAD
 //    unsigned int i=0;
+=======
+    //unsigned int i=0;
+>>>>>>> f0c0e1c802a8bb681ab770f3f083fb2f4ae79474
 
     for(right = n;right > 1; --right)
     {
