@@ -19,6 +19,7 @@
    int after_class();
    int params_after();
    int main_body();
+   int main_body_riadiace();
    int build_print();
    int print_params();
    int build_function_call(int decider);

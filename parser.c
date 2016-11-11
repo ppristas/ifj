@@ -29,8 +29,6 @@ bool BI_sort = false;*/
 
 tStack p_stack;
 
-bool fMain = false;  //bola uz najdena class Main? true = ano, false = nie
-
 /*
 void expand(tStack *p_stack,int num,...)   //rozsiri neterminal na neterminaly-terminaly
 {  
@@ -121,11 +119,9 @@ int class()
    if(error != SUCCESS)
       return error;
    get_token();   //ocakavam id
-   if(!(strcmp(token.data, "Main")))
-      fMain = true;
-   if((token.stav != S_ID) || ((strcmp(token.data, "Main"))&&(!fMain))) //Main musi byt prvy class
-      return SEMANTIC_PROG_ERR;
-   if(!(strcmp(token.data, "ifj16")))  //class ifj 16 nemoze byt definovany
+   if(token.stav != S_ID) //Main musi byt prvy class
+      return SYNTAX_ERR;
+   if(!(strcmp(token.data, "ifj16")))  //class ifj16 nemoze byt definovany
       return SEMANTIC_PROG_ERR;
 
    get_token();   //ocakavam {
@@ -204,7 +200,7 @@ int after_class()
          return error;
 
       }  
-      else if(token.stav == S_KEY)
+      else if(token.stav == S_KEY)  //funckia ma nejake parametre
       {
          if((strcmp(token.data, "String"))&&(strcmp(token.data, "int"))&&(strcmp(token.data, "double")))
             return SYNTAX_ERR;
@@ -414,7 +410,7 @@ int main_body()   //pravidlo <MB> -> <SL> <MB>
       if(token.stav != S_L_KOSZ)
          return SYNTAX_ERR;
 
-      error = main_body();    // v tele whilu moze byt hocico, preto volame main_body
+      error = main_body_riadiace();    // v tele whilu moze byt hocico, preto volame main_body
       
       if(error != SUCCESS)
             return error;
@@ -442,7 +438,7 @@ int main_body()   //pravidlo <MB> -> <SL> <MB>
          return SYNTAX_ERR;
 
       get_token();
-      error = main_body();
+      error = main_body_riadiace();
      
       if(error != SUCCESS)
          return error;
@@ -460,7 +456,7 @@ int main_body()   //pravidlo <MB> -> <SL> <MB>
 
       get_token();
       if(token.stav != S_P_KOSZ)
-         error = main_body();
+         error = main_body_riadiace();
 
       if(error != SUCCESS)
          return error;
@@ -545,6 +541,146 @@ int main_body()   //pravidlo <MB> -> <SL> <MB>
    return error;
 }
 
+
+/*-------------------------------------------------------------------------------------------------------------------------*/
+
+int main_body_riadiace()   //pravidlo <MB> -> <SL> <MB>
+{
+   if(error != SUCCESS)
+      return error;
+
+   if(!(strcmp(token.data, "while")))  //pravidlo <MBr> -> while ( <E> ) { main body }
+   {
+      get_token();   //cakam (
+      if(token.stav != S_LZAT)
+         return SYNTAX_ERR;
+      /********************************VYRAZ*********************************/
+
+      get_token();   //cakam )
+      if(token.stav != S_PZAT)
+         return SYNTAX_ERR;
+      get_token();   //za while je povinne {
+      if(token.stav != S_L_KOSZ)
+         return SYNTAX_ERR;
+
+      error = main_body_riadiace();    // v tele whilu moze byt hocico az na lokalnu deklaraciu, preto volame main_body
+      
+      if(error != SUCCESS)
+            return error;
+
+      if(token.stav != S_P_KOSZ)
+         return SYNTAX_ERR;
+   }
+   else if(!(strcmp(token.data, "if")))  //pravidlo <MBr> -> if ( <E> ) { <MB> } else { <MB> }
+   {
+      get_token();
+      if(token.stav != S_LZAT)
+         return SYNTAX_ERR;
+      /****************VYHODNOTENIE VYRAZU*******************/
+
+      get_token();
+      if(token.stav != S_INT)
+         return FILIP_ERR;
+
+      /*************************ZATIAL INT FAKE**************/
+      get_token();
+      if(token.stav != S_PZAT)
+         return SYNTAX_ERR;
+      get_token();
+      if(token.stav != S_L_KOSZ)
+         return SYNTAX_ERR;
+
+      get_token();
+      error = main_body_riadiace();
+     
+      if(error != SUCCESS)
+         return error;
+
+      if(token.stav != S_P_KOSZ)
+         return SYNTAX_ERR;
+      get_token();
+
+      if(strcmp(token.data, "else")) 
+         return SYNTAX_ERR;      
+
+      get_token();
+      if(token.stav != S_L_KOSZ)
+         return SYNTAX_ERR;
+
+      get_token();
+      if(token.stav != S_P_KOSZ)
+         error = main_body_riadiace();
+
+      if(error != SUCCESS)
+         return error;
+      if(token.stav != S_P_KOSZ)
+         return SYNTAX_ERR;
+   }
+   else if(token.stav == S_ID)
+   {
+      int i = is_build_function();
+      get_token();
+      if(token.stav == S_PRIR)    //priradenie do premennej
+      {  
+         //provizorne
+         get_token();
+         if(token.stav != S_SEMICOLON)
+            return SYNTAX_ERR;
+      }
+      else if(token.stav == S_LZAT)    //lubovalna ina funckia
+      {
+         if(i > 0)
+         {
+            error = build_function_call(i);
+            if(error != SUCCESS)
+               return error;
+         }
+         else 
+         {
+            /***********VYRAZ**************/
+            get_token();
+            if(token.stav != S_PZAT)
+               return SYNTAX_ERR;
+
+            get_token();
+            if(token.stav != S_SEMICOLON)
+               return SYNTAX_ERR;
+         }
+      }
+      else
+         return SYNTAX_ERR;
+   }
+   else if(!((strcmp(token.data, "String"))&&(strcmp(token.data, "int"))&&(strcmp(token.data, "double"))))  //pravidlo <SL> -> <PARS> <VD>
+   {  
+         return SYNTAX_ERR;
+   }
+   else if(!(strcmp(token.data, "return")))
+   {
+         //zatial takto inak tu bude vyraz      
+         get_token();
+         if(token.stav != S_SEMICOLON)
+            return SYNTAX_ERR;
+   }
+
+   if(error != SUCCESS)
+      return error;
+
+   get_token();
+   printf("%s\n", token.data); 
+  
+   if(token.stav != S_P_KOSZ)
+      error = main_body_riadiace();
+
+   if(error != SUCCESS)
+      return error;
+
+   if(token.stav == S_P_KOSZ)
+      return error;   
+   return error;
+}
+
+/*-------------------------------------------------------------------------------------------------------------------------*/
+
 int build_function_call(int decider)
 {
    if(error != SUCCESS)
@@ -565,7 +701,17 @@ int build_function_call(int decider)
    {
       if(token.stav != S_LZAT)
          return SYNTAX_ERR;
-      /************TU MUSI BYT SPRACOVANIE VYRAZU*******************/
+      
+      get_token();
+      switch(token.stav)
+      {
+         case S_STRING:    //pripad sort("awadawdawdaw");
+             break;
+         case S_ID:        //pripad sort(s);
+            //overenie v TS ci je dany ID string
+             break;
+         default: return SEMANTIC_PROG_ERR;
+      }  
 
          return SYNTAX_ERR;
       get_token();   //musi byt )
@@ -580,13 +726,32 @@ int build_function_call(int decider)
    {
       if(token.stav != S_LZAT)
          return SYNTAX_ERR;
-      /************TU MUSI BYT SPRACOVANIE VYRAZU*******************/
+      
+      get_token();
+      switch(token.stav)
+      {
+         case S_STRING:    //pripad find("awadawdawdaw", .....);
+             break;
+         case S_ID:        //pripad compare(s, .....);
+            //overenie v TS ci je dany ID string
+             break;
+         default: return SEMANTIC_PROG_ERR;
+      }  
 
       get_token();
       if(token.stav != S_CIARKA) //musi byt ciarka medzi argumentami
          return SYNTAX_ERR;
 
-      /************TU MUSI BYT SPRACOVANIE VYRAZU*******************/
+      get_token();
+      switch(token.stav)
+      {
+         case S_STRING:    //pripad find("awadawdawdaw", "awda");
+             break;
+         case S_ID:        //pripad compare(s, p);
+            //overenie v TS ci je dany ID string
+             break;
+         default: return SEMANTIC_PROG_ERR;
+      } 
 
       get_token();   //musi byt )
       if(token.stav != S_PZAT)
@@ -601,19 +766,46 @@ int build_function_call(int decider)
       if(token.stav != S_LZAT)
          return SYNTAX_ERR;
 
-      /************TU MUSI BYT SPRACOVANIE VYRAZU*******************/
+      get_token();
+      switch(token.stav)
+      {
+         case S_STRING:    //pripad substr("awadawdawdaw", ...., .....);
+             break;
+         case S_ID:        //pripad substr(s, ...., .....);
+            //overenie v TS ci je dany ID string
+             break;
+         default: return SEMANTIC_PROG_ERR;
+      } 
 
       get_token();
       if(token.stav != S_CIARKA) //musi byt ciarka medzi argumentami
          return SYNTAX_ERR;
 
-      /************TU MUSI BYT SPRACOVANIE VYRAZU*******************/
+      get_token();
+      switch(token.stav)
+      {
+         case S_INT:    //pripad substr("awadawdawdaw", 2, .....);
+             break;
+         case S_ID:        //pripad substr("awadawdawdaw", smf, .....);
+             break;
+            //overenie v TS ci je dany ID string
+         default: return SEMANTIC_PROG_ERR;
+      } 
 
       get_token();
       if(token.stav != S_CIARKA) //musi byt ciarka medzi argumentami
          return SYNTAX_ERR;
 
-      /************TU MUSI BYT SPRACOVANIE VYRAZU*******************/
+      get_token();
+      switch(token.stav)
+      {
+         case S_INT:    //pripad substr("awadawdawdaw", 2, 9);
+            break;
+         case S_ID:        //pripad substr("awadawdawdaw", mi,lf);
+             break;
+            //overenie v TS ci je dany ID string
+         default: return SEMANTIC_PROG_ERR;
+      } 
 
       get_token();   //musi byt )
       if(token.stav != S_PZAT)
