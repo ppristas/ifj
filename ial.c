@@ -99,9 +99,8 @@ iSymbol* sym_variable_init(char *data, int stype, bool isinit) {
     ptrsym->init = false;
     ptrsym->nextptr = NULL;
     
-    (void) data;(void) stype;
     return ptrsym;
-}*/
+} */
 
 tHTable *HTab_init() {
 
@@ -143,9 +142,15 @@ void Htab_insert(tHTable* tab, iSymbol* newsymbol , char *data)
             strcpy(newsymbol->data,data);
             newsymbol->data[strlen(data)+1] = '\0';
         }else{
+            int length_new = strlen(data);
+            int length_prev = strlen(newsymbol->data);
 
-            strcpy(newsymbol->data,data);
-            newsymbol->data[strlen(data)+1] = '\0';
+            if(length_new > length_prev) {
+                newsymbol->data = myrealloc(newsymbol->data,sizeof(char)*length_new);    
+                strcpy(newsymbol->data,data);
+                newsymbol->data[strlen(data)+1] = '\0';
+            }
+
         }
 
     }else{
@@ -231,12 +236,7 @@ char* heapsort(char *ptr,unsigned int n)
     {
         stifDown(ptr,i,right);
     }
-
-<<<<<<< HEAD
-//    unsigned int i=0;
-=======
     //unsigned int i=0;
->>>>>>> f0c0e1c802a8bb681ab770f3f083fb2f4ae79474
 
     for(right = n;right > 1; --right)
     {
