@@ -545,6 +545,9 @@ Ttoken get_token(){
 		case S_STRING:
 			{
 				if( c == '"'){
+					if(token.data == NULL){
+						extend_token(&i,'\0');
+					}
 					fill_token(stav,SUCCESS);
 					stav = S_END;
 					Queue_Up();
