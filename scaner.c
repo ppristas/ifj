@@ -16,14 +16,14 @@
 #include "scaner.h"
 #include <stdbool.h>
 #include "error.h"
-
+#include "cleaner.h"
 //pocet klucovych slov
 #define	num_key_words  17
 
 //globalna deklaracia struktury Ttoken
 Ttoken token;
-
-
+Ttoken token2;
+tQueue Queue_tok;
 //klucove slova
 char *key_words[num_key_words] = {	"boolean\0",
 									"break\0",
@@ -109,8 +109,55 @@ static void fill_token(TStav status,int err)
 	error = err;
 }
 
+// rada na druhy prechod
+static void Queue_Up()
+{
+	tQuElem *pom;
+	pom = mymalloc(sizeof(struct QElem));
+	if(pom == NULL){
+		error = INTERNAL_ERR;
+        clearAll();
+        return;
+	}
+	signed length = strlen(token.data);
+	pom->node.data = mymalloc(length*sizeof(char) + 2);
+	if(pom->node.data == NULL){
+		error = INTERNAL_ERR;
+		clearAll();
+		return;
+	}
+	strcpy(pom->node.data,token.data);
+	pom->node.data[length + 1] = '\0';
+	pom->node.stav = token.stav;
+	pom->node.column = token.column;
+	pom->node.line = token.line;
+	pom->nextptr = NULL;
 
+	if(Queue_tok.Front == NULL){
+		Queue_tok.Front = pom;
+		Queue_tok.Back = pom;
+		Queue_tok.Front->nextptr = NULL;
+		Queue_tok.Back->nextptr = NULL;
+	}else{
+		Queue_tok.Back->nextptr = pom;
+		Queue_tok.Back = pom;
+	}
+	
+}
 
+void front_token()
+{
+	tQuElem *pom;
+	if(Queue_tok.Front != NULL){
+			pom = Queue_tok.Front;
+			Queue_tok.Front = pom->nextptr;
+			token2 = pom->node;
+	//		myfree(pom->node.data);
+	//		myfree(pom);
+		
+	}
+	
+}
 				
 /**
   * Identifikuje jednotlive lexemy a vracia Token
@@ -196,6 +243,7 @@ Ttoken get_token(){
 					stav = S_END;
 					ungetc(c,file);
 					column--;
+					Queue_Up();
 					return token;
 				}
 
@@ -210,6 +258,7 @@ Ttoken get_token(){
 					stav = S_END;
 					ungetc(c,file);
 					column--;
+					Queue_Up();
 					return token;
 				}
 				break;
@@ -236,6 +285,7 @@ Ttoken get_token(){
 					c = ungetc(c,file);
 					column--;
 					fill_token(stav,SUCCESS);
+					Queue_Up();
 					return token;
 				}
 				break;
@@ -292,6 +342,7 @@ Ttoken get_token(){
 					stav = S_END;
 					c=ungetc(c,file);
 					column--;
+					Queue_Up();
 					return token;
 				}
 				break;
@@ -435,6 +486,8 @@ Ttoken get_token(){
 					fill_token(stav,SUCCESS);
 					stav = S_END;
 					c = ungetc(c,file);
+					column--;
+					Queue_Up();
 					return token;	
 				}
 				break;
@@ -449,6 +502,7 @@ Ttoken get_token(){
 					fill_token(stav,SUCCESS);
 					stav = S_END;
 					return_char(c);
+					column--;
 				}
 				break;
 			}
@@ -476,6 +530,7 @@ Ttoken get_token(){
 				}else{
 					stav = S_ERROR;
 					return_char((char)c);
+					column--;
 				}
 				break;
 	
@@ -492,6 +547,7 @@ Ttoken get_token(){
 				if( c == '"'){
 					fill_token(stav,SUCCESS);
 					stav = S_END;
+					Queue_Up();
 					return token;
 				}
 				else if(c == 92){
@@ -590,6 +646,8 @@ Ttoken get_token(){
 			{
 				fill_token(stav,SUCCESS);
 				c = ungetc(c,file);
+				column--;
+				Queue_Up();
 				return token;
 				/*
 				printf("---%c---\n",c);
@@ -624,7 +682,19 @@ Ttoken get_token(){
 		//printf("column:%d line:%d char:%c\n",line,column,c);
 	}while((c = getc(file)) && (end_cycle));
 
-
+	Queue_Up();
 //	printf("<==============KONIEC VOLANIA FUNKCIE=============>\n");
 	return token;			
 }
+
+
+
+void init_Queue(tQueue *queue)
+{
+	queue->Front = NULL;
+	queue->Back = NULL;	
+	printf("Queueu\n");
+}
+
+
+
