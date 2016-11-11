@@ -14,55 +14,58 @@
 #ifndef IAL_H
 #define IAL_H
 
+
+#define Hash_table_size 256
 #include "scaner.h"
-typedef struct HTab_listitem_sym {
-   Ttoken token;
-   struct HTab_listitem_sym* ptrnext;
-} HTab_listitem;
+#include <stdbool.h>
 
-typedef struct HTab_table {
-	unsigned htable_size;
-	struct HTab_listitem_sym *list[];
-} HTab_t;
+////////////////////////////////////////////////////////////
+///////////nova struktura tabulky symbolov//////////////////
+////////////////////////////////////////////////////////////
 
-HTab_t* HTab_init(unsigned size);
-HTab_listitem* HTab_insert(HTab_t* ptrht, Ttoken token);
-unsigned hash_function(unsigned size, Ttoken token);
-void HTab_free(HTab_t* ptrht);
-void HTab_clear(HTab_t* ptrht);
-void HTab_remove(HTab_t* ptrht,Ttoken token);
+typedef enum{
+	tNan,
+	tInt,
+	tDouble,
+	tString,
+}symbolType;
 
-//HTab_listitem* HTab_insert(HTab_t* ptrht, Ttoken token);
+typedef struct Sym_item{
+	char *name;			//treba naalokovat sizeof(char)*strlen(token.data) + 2)
+	symbolType type;	//typ ---moze byt aj navratova hodnota
+	char *data;			//data napr i = 50 v datach bude char "50";
+	bool fce;			//true - je funkcia, false - je premenna	
+	void *args;			//argumenty je potreba robit jednosmerne viazany zoznam
+	bool init;
+	struct Sym_item *nextptr;
+}iSymbol;
 
-/*typedef enum {
-   type_variable,
-   //type_function,
-   //type_class
-} item_type;
 
-//list item of symbols
-typedef struct HTab_listitem_sym {
-   item_type type;
-   char* key;//-------may be in str.h
-   struct HTab_listitem_sym *ptrnext;
-   union {
-      struct TsymbolVariable *ptr_variable;
-      //struct TsymbolFunction *ptr_function;
-      //struct TsymbolClass *ptr_class;
-   } ptr;
-} HTab_listitem;
+typedef struct Hash_table{
 
-//Hash table
-typedef struct HTab {
-   unsigned HTab_size;
-   struct HTab_listitem_sym *list[];
-} HTab_t;
+	iSymbol *ptr;
+}Hash_item;	
 
-//Functions to be used ------TODO
-HTab_t* HTab_init(HTab_t* ptrht);
-unsigned int hash_function(HTab_t* ptrht,char* data)
-void HTab_free(HTab_t* ptrht);*/
+typedef Hash_item tHTable[Hash_table_size];
 
+
+extern tHTable *Main_table;
+
+//symbol
+symbolType sym_type(Ttoken token);
+iSymbol* sym_variable_init(char *data, int stype, bool isinit);
+iSymbol* sym_function_init(char *data, int stype);
+//table
+void Htab_insert(tHTable* tab, iSymbol* newsymbol,char *data);
+tHTable* HTab_init();
+unsigned hash_function(char *data);
+iSymbol* Htab_search(tHTable *ST, char *id);
+
+/**********************************************************/
+
+//void HTab_free(HTab_t* ptrht);
+//void HTab_clear(HTab_t* ptrht);
+//void HTab_remove(HTab_t* ptrht,Ttoken token);
 
 char* heapsort(char *ptr,unsigned int n);
 int boyer_moore(const char *str, const char *pattern);
