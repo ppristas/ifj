@@ -56,6 +56,7 @@ bool arguments( int argc, char *argv[]){
 int main(int argc, char *argv[])
 {
 	initCleaner();
+	init_Queue(&Queue_tok);
 	token.stav = SUCCESS;
 	//Ttoken test;
 	if( !(arguments(argc, argv)) )
@@ -77,19 +78,30 @@ int main(int argc, char *argv[])
 
 
 
-	stackInit(&stack);
+//	stackInit(&stack);
 
 	
-	for(int i = 0; i<10; i++){
-		stackPush(&stack,i);
+//	for(int i = 0; i<10; i++){
+//		stackPush(&stack,i);
+//	}
+
+//	while(stack.top != NULL){
+//		printf("\t[ %d ]\n",stack.top->data);
+//		stackPop(&stack);
+	
+//	}
+
+	tQuElem *pom;
+	pom = Queue_tok.Front;
+	while(pom != NULL){
+//		printf("rada: %s\n",pom->node.data);
+		pom = pom->nextptr;
+	}	
+	
+	while(Queue_tok.Front != NULL){
+		front_token();
+		printf("iqueue: %s %d\n",token2.data,token2.stav);
 	}
-	while(stack.top != NULL){
-		printf("\t[ %d ]\n",stack.top->data);
-		stackPop(&stack);
-	
-	}
-	
-	
 	errorFce();
 
 	

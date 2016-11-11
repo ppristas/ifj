@@ -1,3 +1,8 @@
-class Main()
-
+class main(){
+		int a = 45
+		//petoooo
+		static run(){
+			a = printf("");
+		}
+}
 
