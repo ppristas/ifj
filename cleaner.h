@@ -6,7 +6,8 @@
 typedef struct tAdr{
 	void *data;
 	int size;
-	struct tAdr *nextPtr;
+	struct tAdr *rPtr;
+	struct tAdr *lPtr;
 } *tAdrPtr;
 
 
@@ -21,3 +22,4 @@ void *mymalloc( unsigned int size);
 void *myrealloc( void *adress, unsigned int size);
 void clearAll();
 void initCleaner();
+void myfree(void *uk);
