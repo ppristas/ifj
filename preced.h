@@ -12,9 +12,9 @@
    *                                                                            *               
    ********************************************************************************/
 
-#include "scaner.h"
+//#include "scaner.h"
 
-int expression_parser();
+int expresion_parser();
 
 typedef enum Cikundex { 
    PLUS,    //0 +
