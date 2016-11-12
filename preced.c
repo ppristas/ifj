@@ -42,105 +42,156 @@
 };
 
 
-int catch_index(int *count){
-	int prem;	
+int catch_index(SAData *pom,int *count){
+	
 	switch(token.stav){
 		case S_PLUS:
-			prem = PLUS;
+			pom->indexibus = PLUS;
 			break;
 		case S_MINUS:
-			prem = MINUS;
+			pom->indexibus = MINUS;
 			break;
 		case S_MULTI:
-			prem = KRAT;
+			pom->indexibus = KRAT;
 			break;
 		case S_DIV:
-			prem = DELENE;
+			pom->indexibus = DELENE;
 			break;
 		case S_MEN:
-			prem = MENSIE;
+			pom->indexibus = MENSIE;
 			break;
 		case S_MENROV:
-			prem = MENROV;
+			pom->indexibus = MENROV;
 			break;
 		case S_VAC:
-			prem = VACSIE;
+			pom->indexibus = VACSIE;
 			break;
 		case S_VACROV:
-			prem = VACROV;
+			pom->indexibus = VACROV;
 			break;
 		case S_ROVNY:
-			prem = EQUAL;
+			pom->indexibus = EQUAL;
 			break;
 		case S_NEROV:
-			prem = NEQUAL;
+			pom->indexibus = NEQUAL;
 			break;
 		case S_LZAT:
-			prem = LZATV;
+			pom->indexibus = LZATV;
 			(*count)++;
 			break;
 		case S_PZAT:
-			prem = PZATV;
+			pom->indexibus = PZATV;
 			(*count)--;
 			break;
 		case S_ID:
-			prem = ID;
+			pom->indexibus = ID;
 	
 		
 			break;
 		case S_DOUBLE:
 		case S_INT:
 		case S_EXP:
-			prem = ID;
+			pom->indexibus = ID;
 
 			break;
 		case S_STRING:
 			break;
 		case S_CIARKA:
 		case S_SEMICOLON:
-			prem = DOLAR;
+			pom->indexibus = DOLAR;
+			printf("ke\n");
 			break;
 		default:
 			error = SYNTAX_ERR;
 			clearAll();
 			break;
 	}
-	printf("%d\n",prem);
-	return prem;
+	printf("%d\n",pom->indexibus);
+	return pom->indexibus;
 }
+
+
+void show_stacks(tStack *s1,tStack *s2)
+{
+    SAData pom1, pom2;
+    printf("\t1.zasobnik\t2.zasobnik\n");
+	int i = 0;
+	int a = 0;
+
+	stackTop(s1,&pom1);
+	stackTop(s2,&pom2);
+    while((!(stackEmpty(s1)) || (!(stackEmpty(s2))))){
+     		
+	    stackTopPop(s1,&pom1);
+        stackTopPop(s2,&pom2);
+		if(!stackEmpty(s1)){
+			printf("\t[ %d ]",pom1.indexibus);
+		}else{
+			i++;
+			if(i == 1)
+	            printf("\t[ %d ]",pom1.indexibus);
+			else
+			printf("\t");
+		}
+		if(!stackEmpty(s2)){
+			printf("\t\t[ %d ]\n",pom2.indexibus);
+		}else{
+			a++;
+			if(a == 1)
+	            printf("\t\t[ %d ]",pom2.indexibus);
+			printf("\n");
+		}   	
+	 }
+}
+
+
 
 int expresion_parser()
 {
-//   int bracket_counter = 0;
+   int bracket_counter = 0;
+	
+	//oba zasobniky
 	tStack Stack1;
 	stackInit(&Stack1);  //zasobnik pre terminaly
 	tStack Stack2;
 	stackInit(&Stack2);
 
+	//ci mam citat dalsi token alebo nie
 	bool readToken = true;
+
+	//pravy index;
+	SAData right_index, left_index;
 	SAData pom;
+
 	pom.sym_data.name = NULL;
 	pom.indexibus = DOLAR;
+
 	stackPush(&Stack1,&pom);
-
-	SAData pom1;
-	stackTopPop(&Stack1, &pom1);
-
-	printf("vypushovali sme %d\n",pom1.indexibus); 
+	get_token();
 	
-   
-//	int a = stackTopPop(&Stack1);
-	/*
-	do{
+	catch_index(&right_index,&bracket_counter);
+	
+//	do{
 		if(readToken){
+			catch_index(&right_index,&bracket_counter);
 			
 		}
-		switch (precedense_table[][]){	//case by takto fakci uz "len" doplnit :D
+		stackTop(&Stack1,&left_index);
+			
+
+		switch (precedense_table[left_index.indexibus][right_index.indexibus]){	//case by takto fakci uz "len" doplnit :D
 			case '=':
-			//	stackPush(&Stack1, ) // premenna ktora bude aktualna
+				readToken = true;
+				stackPush(&Stack1,&right_index) 
 				break;
 			case '<':
+				readToken = true;
+												//zatial bez druheho stacku
+				pom.indexibus = L_HANDLE;
+				pushStack(&Stack1,&pom);
+				pushStack(&Stack1,&right_index);
 				printf("kk\n");
+
 				break;
 			case '>':
 				printf("kkk\n");
@@ -150,8 +201,14 @@ int expresion_parser()
 				clearAll();
 				break;
 		}
-	}while();*/
-   (void)readToken;
+
+		
+
+
+
+//	}while();*/
+//   (void)readToken;
    return 420;
 }
+
 

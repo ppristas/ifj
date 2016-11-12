@@ -66,13 +66,13 @@ int main(int argc, char *argv[])
 		return INTERNAL_ERR;
 	}
 
-	
+/*	
 	while(token.stav != S_EOF){
 		get_token();
 		printf("%s :%d:%d: vrateny token:  |%s| | stav = %d error = %d\n\n",filename,token.line,token.column,token.data,token.stav,error);
 	}
 
-
+*/
 	if(error == SUCCESS)
 		printf("-----error: E_OK\n");		
 
