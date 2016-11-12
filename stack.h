@@ -37,7 +37,7 @@ void stackInit(tStack* s);
 void stackPush(tStack* s, int dat);
 bool stackEmpty(tStack* s);
 void stackPop(tStack* s);
-
+int stackTopPop(tStack *s);
 
 int stackTop(tStack* s);		//navratovy typ zmenit podla data ;
 void stackPrint(tStack* s);

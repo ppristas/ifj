@@ -47,9 +47,19 @@ void stackPop(tStack *s){
 
 int stackTop(tStack *s){
 	if(!stackEmpty(s)){
+		error = SUCCESS;
 		return s->top->data;
 	}
 	error = INTERNAL_ERR;
+	return error;
+}
+
+int stackTopPop(tStack *s){
+	if(!(stackEmpty(s))){
+		int pom = stackTop(s);
+		stackPop(s);
+		return pom;
+	}
 	return error;
 }
 
