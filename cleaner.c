@@ -130,6 +130,7 @@ void clearAll(){
 		error = INTERNAL_ERR;
 	free(filename);
 	free(token.data);	
+	errorFce();
 	exit(error);
 }
 

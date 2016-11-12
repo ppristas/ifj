@@ -306,7 +306,7 @@ Ttoken get_token(){
 				}
 				else{
 					stav = S_ERROR;
-					fill_token(stav,LEXICAL_ERR);
+					fill_token(S_DOUBLE,LEXICAL_ERR);
 					c = ungetc(c,file);
 					column--;
 				
@@ -422,7 +422,7 @@ Ttoken get_token(){
                     column--;
 
 				}else{
-					fill_token(stav,SUCCESS);
+					fill_token(S_EXP,SUCCESS);
 					c = ungetc(c,file);
 					column--;
 					stav = S_END;

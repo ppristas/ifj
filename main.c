@@ -20,6 +20,7 @@
 #include "stack.h"
 #include "cleaner.h"
 #include "ial.h"
+#include "preced.h"
 
 char *filename = NULL;
 tStack stack;
@@ -76,7 +77,7 @@ int main(int argc, char *argv[])
 		printf("-----error: E_OK\n");		
 
 
-
+	expresion_parser();
 
 //	stackInit(&stack);
 
@@ -91,20 +92,6 @@ int main(int argc, char *argv[])
 	
 //	}
 
-	tQuElem *pom;
-	pom = Queue_tok.Front;
-	while(pom != NULL){
-//		printf("rada: %s\n",pom->node.data);
-		pom = pom->nextptr;
-	}	
-	
-	while(Queue_tok.Front != NULL){
-		front_token();
-		printf("iqueue: %s %d\n",token2.data,token2.stav);
-	}
-	errorFce();
-
-	
 	clearAll();
 	return error;
 
