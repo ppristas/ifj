@@ -25,7 +25,8 @@ bool stackEmpty(tStack* s){
 	return(s->top == NULL);
 }
 
-void stackPush(tStack *s, int dat){
+
+void stackPush(tStack *s, SAData *data){
 	tStackItem *pom;
 	pom = mymalloc(sizeof(struct Sitem));	
 	if( pom == NULL){
@@ -33,7 +34,7 @@ void stackPush(tStack *s, int dat){
 		return;
 	}
 	pom->nextptr = s->top;
-	pom->data = dat;
+	pom->item = (*data);
 	s->top = pom;
 }
 
@@ -45,22 +46,20 @@ void stackPop(tStack *s){
 	}	
 }
 
-int stackTop(tStack *s){
+void stackTop(tStack *s, SAData *send){
 	if(!stackEmpty(s)){
 		error = SUCCESS;
-		return s->top->data;
+		(*send) = s->top->item;
 	}
-	error = INTERNAL_ERR;
-	return error;
+	
 }
 
-int stackTopPop(tStack *s){
+void stackTopPop(tStack *s, SAData *send){
 	if(!(stackEmpty(s))){
-		int pom = stackTop(s);
+		stackTop(s, send);
 		stackPop(s);
-		return pom;
 	}
-	return error;
+
 }
 
 void stackFree(tStack *s){
@@ -75,7 +74,7 @@ void stackPrint(tStack* s){
 		printf("Je inicializovany bez polozky\n");
 	}
 	while(s->top != NULL){
-		printf("[ %d ]\n",s->top->data);
+	
 		stackPop(s);
 	}
 }

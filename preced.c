@@ -43,7 +43,7 @@
 
 
 int catch_index(int *count){
-	
+	int prem;	
 	switch(token.stav){
 		case S_PLUS:
 			prem = PLUS;
@@ -82,7 +82,7 @@ int catch_index(int *count){
 		case S_PZAT:
 			prem = PZATV;
 			(*count)--;
-			break
+			break;
 		case S_ID:
 			prem = ID;
 	
@@ -105,11 +105,13 @@ int catch_index(int *count){
 			clearAll();
 			break;
 	}
+	printf("%d\n",prem);
+	return prem;
 }
 
 int expresion_parser()
 {
-   int bracket_counter = 0;
+//   int bracket_counter = 0;
    tStack Stack1;
    stackInit(&Stack1);  //zasobnik pre terminaly
    tStack Stack2;
@@ -117,7 +119,7 @@ int expresion_parser()
 
    bool readToken = true;
 
-   stackPush(&Stack1, DOLAR); 
+//   stackPush(&Stack1, DOLAR); 
 	
    
 //	int a = stackTopPop(&Stack1);

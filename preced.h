@@ -3,7 +3,7 @@
    *    Projekt:        Interpret zjednoduseneho jazyka Java SE                 *
    *    Variant:        b/2/II                                                  *
    *    Tim:            092                                                     *
-   *    Subor:          preced.h                                                  *
+   *    Subor:          preced.h                                                *
    *    Riesitelia:     Filip Mik       (xmikfi00@stud.fit.vutbr.cz)            *
    *                    Peter Ziska     (xziska02@stud.fit.vutbr.cz)            *
    *                    Peter Pristas   (xprist05@stud.fit.vutbr.cz)            *
@@ -12,8 +12,13 @@
    *                                                                            *               
    ********************************************************************************/
 
-//#include "scaner.h"
+#include "scaner.h"
 
+#ifndef PRECED_H
+	
+#define PRECED_H
+	
+	#include "ial.h"
 int expresion_parser();
 
 typedef enum Cikundex { 
@@ -39,3 +44,11 @@ typedef enum Cikundex {
    NETERM,     // neterminal
    ERROR,      // chyba
 } tPrec_enum;
+
+
+typedef struct{
+	iSymbol sym_data;
+	tPrec_enum indexibus;
+}SAData;
+
+#endif //PRECED_H

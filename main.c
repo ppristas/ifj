@@ -17,13 +17,13 @@
 //#include "scaner.h"
 #include <stdbool.h>
 #include "error.h"
-#include "stack.h"
+//#include "stack.h"
 #include "cleaner.h"
-#include "ial.h"
+
 #include "preced.h"
 
 char *filename = NULL;
-tStack stack;
+
 
 
 bool arguments( int argc, char *argv[]){
@@ -77,20 +77,7 @@ int main(int argc, char *argv[])
 		printf("-----error: E_OK\n");		
 
 
-	expresion_parser();
-
-//	stackInit(&stack);
-
-	
-//	for(int i = 0; i<10; i++){
-//		stackPush(&stack,i);
-//	}
-
-//	while(stack.top != NULL){
-//		printf("\t[ %d ]\n",stack.top->data);
-//		stackPop(&stack);
-	
-//	}
+//	expresion_parser();
 
 	clearAll();
 	return error;

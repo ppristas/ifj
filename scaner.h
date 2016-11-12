@@ -12,6 +12,8 @@
    *																			*		
    ******************************************************************************/
 
+#ifndef SCANER_H
+#define SCANER_H
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -88,3 +90,5 @@ extern Ttoken token;
 void init_Queue();
 void front_token();
 Ttoken get_token();
+
+#endif

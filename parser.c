@@ -15,7 +15,7 @@
 #include <stdarg.h>
 #include "stack.h"
 #include "parser.h"
-#include "scaner.h"
+//#include "scaner.h"
 #include "error.h"
 
 /*bool BI_readInt = false;
