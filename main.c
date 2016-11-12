@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
 		printf("-----error: E_OK\n");		
 
 
-//	expresion_parser();
+	expresion_parser();
 
 	clearAll();
 	return error;

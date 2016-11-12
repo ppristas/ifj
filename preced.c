@@ -112,14 +112,21 @@ int catch_index(int *count){
 int expresion_parser()
 {
 //   int bracket_counter = 0;
-   tStack Stack1;
-   stackInit(&Stack1);  //zasobnik pre terminaly
-   tStack Stack2;
-   stackInit(&Stack2);
+	tStack Stack1;
+	stackInit(&Stack1);  //zasobnik pre terminaly
+	tStack Stack2;
+	stackInit(&Stack2);
 
-   bool readToken = true;
+	bool readToken = true;
+	SAData pom;
+	pom.sym_data.name = NULL;
+	pom.indexibus = DOLAR;
+	stackPush(&Stack1,&pom);
 
-//   stackPush(&Stack1, DOLAR); 
+	SAData pom1;
+	stackTopPop(&Stack1, &pom1);
+
+	printf("vypushovali sme %d\n",pom1.indexibus); 
 	
    
 //	int a = stackTopPop(&Stack1);
