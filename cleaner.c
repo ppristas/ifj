@@ -78,7 +78,7 @@ void *myrealloc(void *adress,unsigned int size){
 	tAdrPtr tmpPtr = Mem->First;
 	while(tmpPtr != NULL){
 		if( tmpPtr->data == adress){
-			tmpPtr->size +=size;
+			tmpPtr->size = size;
 			tmpPtr->data = realloc(tmpPtr->data,tmpPtr->size);
 			return tmpPtr->data;
 		}
