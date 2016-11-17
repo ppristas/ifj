@@ -4,6 +4,12 @@ Tento projekt je to, na čo sme všetci čakali celý prvák. Psychicky sa pripr
 
 ### What is this repository for? ###
 
+# TODO # 
+
+* Naplnit globalnu tabulku symbolov build in funkciami
+* Vytvorit globalnu a  lokalnu  sym. tab
+
+
 * Compiler of imperative programming language IFJ16, based on Java SE 8.
 * 0.0.0.0.0.0.1
 
