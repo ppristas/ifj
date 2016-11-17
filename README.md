@@ -8,14 +8,12 @@ Tento projekt je to, na čo sme všetci čakali celý prvák. Psychicky sa pripr
 
 * Naplnit globalnu tabulku symbolov build in funkciami
 * Vytvorit globalnu a  lokalnu  sym. tab
+*asi by to chcelo vymysliet globalnu strukturu na vracanie chyb (DONE)
 
 *****************************************
 
 * Compiler of imperative programming language IFJ16, based on Java SE 8.
 * 0.0.0.0.0.0.1
-
-*asi by to chcelo vymysliet globalnu strukturu na vracanie chyb
-
 
 *************GET_TOKEN******************
 *get_token vracia jeden token zo suboru... pri dalsom volani v maine sa vracia dalsi token
