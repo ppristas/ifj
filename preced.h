@@ -39,10 +39,10 @@ typedef enum Cikundex {
    CARKA,   //14 ,
    DOLAR,   //15 Koniec vyrazu - $ 
 
-   L_HANDLE,   // { zaciatok handlu
-   R_HANDLE,   // } koniec handlu
-   NETERM,     // neterminal
-   ERROR,      // chyba
+   L_HANDLE,   //16 { zaciatok handlu
+   R_HANDLE,   //17 } koniec handlu
+   NETERM,     //18 neterminal
+   ERROR,      //19 chyba
 } tPrec_enum;
 
 
