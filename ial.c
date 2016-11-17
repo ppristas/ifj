@@ -161,7 +161,6 @@ iSymbol* sym_variable_init(char *data, int stype, bool isinit, char *classname) 
     return ptrsym;
 }
 
-//TODO
 iSymbol* sym_function_init(char *data, int stype, char *classname) {
 
     iSymbol* ptrsym = NULL;

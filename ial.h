@@ -48,7 +48,7 @@ typedef struct Sym_item{
 	TList *args;		//argumenty je potreba robit jednosmerne viazany zoznam
 	bool init;
 	char *class_name;	//nazov triedy ,ktorej patri symbol
-	//bool isstatic;		//true - globalna, false - lokalna
+	//bool isstatic;		true - globalna, false - lokalna TODO
 	struct Sym_item *nextptr;
 }iSymbol;
 
