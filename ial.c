@@ -24,6 +24,64 @@
 
 tHTable* Main_table;
 
+void list_delete(TList *list) {
+	TNode *deletenode = NULL;
+
+	while(list->first != NULL) {
+		list->act = list->first;
+		list->first = list->first->next;
+		deletenode = list->act;
+		free(deletenode);
+	}
+	list->act = NULL;
+}
+
+void list_insert_first(TList *list, iSymbol *arg) {
+	TNode *tmp = mymalloc(sizeof(TNode));
+	if((tmp == NULL) || (list == NULL)) {
+		fprintf(stderr, "NULL pointer\n");
+		error = INTERNAL_ERR;
+		clearAll();
+		return;
+	}
+
+	tmp->symarg = arg;
+	tmp->next = list->first;
+	list->first = tmp;
+	//nastavenie aktivity
+	list->act = list->first;
+}
+
+void list_insert_next(TList *list, iSymbol *arg) {
+	//novy argument
+	TNode *addnode = NULL;
+	if(list->act != NULL) {
+		if((addnode = mymalloc(sizeof(TNode))) == NULL) {
+			error = INTERNAL_ERR;
+			clearAll();
+			return;
+		}
+		else {
+			addnode->symarg = arg;
+			addnode->next = list->act->next;
+			list->act->next = addnode;
+			list->act = list->act->next;
+		}
+	}
+}
+
+TList* linked_list_init() {
+      TList *list = mymalloc(sizeof(TList));
+      if(list == NULL) {
+         error = INTERNAL_ERR;
+         clearAll();
+         return NULL;
+      }
+      list->first = NULL;
+      list->act = NULL;
+
+      return list;
+}
 
 symbolType sym_type(Ttoken token) {
     if(strcmp(token.data,"int")==0) {
@@ -43,7 +101,31 @@ symbolType sym_type(Ttoken token) {
 
 }
 
-iSymbol* sym_variable_init(char *data, int stype, bool isinit) {
+/**
+ * copy data from ptrsym2 to ptrsym1
+ * @param      ptrsym1  destination
+ * @param      ptrsym2  source
+ */
+void sym_copy_variable(iSymbol* ptrsym1, iSymbol* ptrsym2) {
+	if(ptrsym1->init == true || ptrsym1->type != ptrsym2->type) {
+		error = SEMANTIC_PROG_ERR;
+		clearAll();
+		return;
+	}
+
+	int length_data1 = strlen(ptrsym1->data);
+	int length_data2 = strlen(ptrsym2->data);
+
+	if(length_data2 > length_data1) {
+		ptrsym1->data = myrealloc(ptrsym1->data,sizeof(char)*length_data2);
+	}
+	ptrsym1->data = ptrsym2->data;
+	ptrsym1->init = true;
+
+	return;
+}
+
+iSymbol* sym_variable_init(char *data, int stype, bool isinit, char *classname) {
     iSymbol* ptrsym = NULL;
     ptrsym = mymalloc(sizeof(struct Sym_item));
     if(ptrsym == NULL) {
@@ -60,6 +142,15 @@ iSymbol* sym_variable_init(char *data, int stype, bool isinit) {
     strcpy(ptrsym->name,data);
     ptrsym->name[strlen(data)+1] = '\0';
 
+	ptrsym->class_name = mymalloc(strlen(classname)*sizeof(char) + 2);
+    if(ptrsym->class_name == NULL) {
+    	error = INTERNAL_ERR;
+    	clearAll();
+    	return NULL;
+    }
+    strcpy(ptrsym->class_name, classname);
+    ptrsym->class_name[strlen(classname)+1] = '\0';
+
     ptrsym->type = stype;
     ptrsym->data = NULL;
     ptrsym->fce = false;
@@ -71,7 +162,7 @@ iSymbol* sym_variable_init(char *data, int stype, bool isinit) {
 }
 
 //TODO
-/*iSymbol* sym_function_init(char *data, int stype) {
+iSymbol* sym_function_init(char *data, int stype, char *classname) {
 
     iSymbol* ptrsym = NULL;
     ptrsym = mymalloc(sizeof(struct Sym_item));
@@ -82,15 +173,22 @@ iSymbol* sym_variable_init(char *data, int stype, bool isinit) {
     }
     int length = strlen(data);
     ptrsym->name = mymalloc(length*sizeof(char) + 2);
-    //ptrsym->name = mymalloc(strlen(data)*sizeof(char) + 2);
     if(ptrsym->name == NULL) {
         error = INTERNAL_ERR;
         clearAll();
         return NULL;
     }
-    
     strcpy(ptrsym->name,data);
     ptrsym->name[strlen(data)+1] = '\0';
+
+    ptrsym->class_name = mymalloc(strlen(classname)*sizeof(char) + 2);
+    if(ptrsym->class_name == NULL) {
+    	error = INTERNAL_ERR;
+    	clearAll();
+    	return NULL;
+    }
+    strcpy(ptrsym->class_name, classname);
+    ptrsym->class_name[strlen(classname)+1] = '\0';
 
     ptrsym->type = stype;
     ptrsym->data = NULL;
@@ -100,7 +198,62 @@ iSymbol* sym_variable_init(char *data, int stype, bool isinit) {
     ptrsym->nextptr = NULL;
     
     return ptrsym;
-} */
+} 
+
+void function_add_args(iSymbol* funcsym, iSymbol* arg, int counter) {
+
+    char str[15];
+    sprintf(str,"%d",counter);
+
+    if(funcsym->data == NULL) {
+        int length = strlen(str);
+        funcsym->data = mymalloc(length*sizeof(char) + 2);
+        if(funcsym->data == NULL) {
+            error = INTERNAL_ERR;
+            clearAll();
+            return;
+        }
+        strcpy(funcsym->data,str);
+        funcsym->data[strlen(str)+1] = '\0';
+
+        funcsym->args = mymalloc(sizeof(struct Sym_item));
+        if(funcsym->args == NULL) {
+            error = INTERNAL_ERR;
+            clearAll();
+            return;
+        }
+
+        //adds only first arguement
+        funcsym->args = linked_list_init();
+        list_insert_first(funcsym->args, arg);
+        printf("%s\n", funcsym->args->first->symarg->name);
+
+        
+    }
+    else {
+
+        int length_new = strlen(str);
+        int length_prev = strlen(funcsym->data);
+
+        if(length_new > length_prev) {
+            funcsym->data = myrealloc(funcsym->data,sizeof(char)*length_new);
+            if(funcsym->data == NULL) {
+                error = INTERNAL_ERR;
+                clearAll();
+                return;
+            }
+            strcpy(funcsym->data,str);
+            funcsym->data[strlen(str)+1] = '\0';
+        }
+        strcpy(funcsym->data,str);
+        funcsym->data[strlen(str)+1] = '\0';
+
+        //lets begin
+        list_insert_next(funcsym->args, arg);
+        printf("%s\n", funcsym->args->act->symarg->name);
+    } 
+
+}
 
 tHTable *HTab_init() {
 
@@ -127,15 +280,12 @@ unsigned hash_function(char *data) {
 }
 
 
-//namiesto char data dat Hash_item
-//char je len na test
-
 //vlozi symbol do tabulky ak sa nachadza tak prepise datovu cast
 void Htab_insert(tHTable* tab, iSymbol* newsymbol , char *data)
 {
     if(Htab_search(tab,newsymbol->name) != NULL){
         //prepisem data
-
+        
         if(newsymbol->data == NULL){
             int length = strlen(data);
             newsymbol->data = mymalloc(length*sizeof(char) + 2);
