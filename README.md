@@ -8,7 +8,7 @@ Tento projekt je to, na čo sme všetci čakali celý prvák. Psychicky sa pripr
 
 * Naplnit globalnu tabulku symbolov build in funkciami
 * Vytvorit globalnu a  lokalnu  sym. tab
-*asi by to chcelo vymysliet globalnu strukturu na vracanie chyb (DONE)
+* asi by to chcelo vymysliet globalnu strukturu na vracanie chyb (DONE)
 
 *****************************************
 
