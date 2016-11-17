@@ -43,12 +43,14 @@ void *mymalloc(unsigned int size){
 	if(tmp != NULL){
 		pom->data = tmp;
 		pom->size = size;
-		pom->nextPtr = NULL;
+		pom->rPtr = NULL;
+		pom->lPtr = NULL;
 		if( Mem->First == NULL){	
 			Mem->First = pom;
 			Mem->Last = pom;
 		}else{
-			Mem->Last->nextPtr = pom;
+			pom->lPtr = Mem->Last;
+			Mem->Last->rPtr = pom;
 			Mem->Last = pom;			
 		}
 	}else{
@@ -76,28 +78,47 @@ void *myrealloc(void *adress,unsigned int size){
 	tAdrPtr tmpPtr = Mem->First;
 	while(tmpPtr != NULL){
 		if( tmpPtr->data == adress){
-			tmpPtr->size +=size;
+			tmpPtr->size = size;
 			tmpPtr->data = realloc(tmpPtr->data,tmpPtr->size);
 			return tmpPtr->data;
 		}
-		tmpPtr = tmpPtr->nextPtr;
+		tmpPtr = tmpPtr->rPtr;
 	}
 	return NULL;
 	
 }
 
 /*
+ *	function: uvolni alokovanu pamat
+ *	params: uvolnovana pamat
+ *//*
+void myfree(void *uk){
+	if(Mem->First != NULL){
+		tAdrPtr pom = Mem->First;
+		while(pom != NULL){
+			if(pom->data == uk){
+				break;	
+			}
+			pom = pom->rPtr;	
+		}
+		if(pom != NULL){
+			if(Mem->First 
+		}
+	}
+}*/
+
+
+/*
  *	function: uvolni vsetku naalokovanu pamat
  *
  */
-
 void clearAll(){
 	tAdrPtr tmpPtr;
 
 	printf("tmp cleaned\n");
 	tmpPtr = Mem->First;
 	while(tmpPtr != NULL){
-		Mem->First = Mem->First->nextPtr;
+		Mem->First = Mem->First->rPtr;
 		if(tmpPtr->data != NULL)
 			free(tmpPtr->data);
 		free(tmpPtr);
@@ -109,6 +130,7 @@ void clearAll(){
 		error = INTERNAL_ERR;
 	free(filename);
 	free(token.data);	
+	errorFce();
 	exit(error);
 }
 

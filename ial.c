@@ -468,3 +468,4 @@ int boyer_moore(const char *str, const char *pattern){
     return -1;
 
 }
+

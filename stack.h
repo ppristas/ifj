@@ -11,16 +11,22 @@
    *                    Martin Grnac    (xgrnac00@stud.fit.vutbr.cz)            *
    *                                                                            *               
    ********************************************************************************/
+#include "preced.h"
+#ifndef STACK_H
+#define STACK_H
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <stdbool.h>
+//#include "preced.h"		//obsahuje ial.h>obsahuje scaner.h
 
 //data nahradit za typ ktory chceme davat do stacku da
 typedef struct Sitem{
 
 	struct Sitem* nextptr;
-	int data;
+	SAData item;
 
 } tStackItem;
 
@@ -34,11 +40,13 @@ typedef struct{
 
 
 void stackInit(tStack* s);
-void stackPush(tStack* s, int dat);
+void stackPush(tStack* s, SAData *data);
 bool stackEmpty(tStack* s);
 void stackPop(tStack* s);
+void stackTopPop(tStack *s,SAData *data);
 
-
-int stackTop(tStack* s);		//navratovy typ zmenit podla data ;
+void stackTop(tStack* s, SAData *data);		//navratovy typ zmenit podla data ;
 void stackPrint(tStack* s);
 void stackFree(tStack* s);
+
+#endif //STACK_H

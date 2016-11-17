@@ -12,6 +12,8 @@
    *																			*		
    ******************************************************************************/
 
+#ifndef SCANER_H
+#define SCANER_H
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -58,27 +60,35 @@ typedef enum{
 	S_NEROV,			// 32 != nerovna sa
 	S_STRING,			//string "gfdsgfg"
 	S_ESCAPE,			// escape sekvencia /n /t /ddd
-	
+		
 }TStav;
 
-/*
-typedef enum{
-	E_OK,
-	E_LEXICAL,
-	E_ESCAPE,
-	E_INTERNAL,
-}Enum_error;
-
-*/
+//structure of token
 typedef struct{
-        char *data;
-        TStav stav;	
+    char *data;
+    TStav stav;	
 	int column;
 	int line;
 }Ttoken;
 
-//extern Enum_error error; 
+//structure of queue element
+typedef struct QElem{
+	Ttoken node;
+	struct QElem *nextptr;
+}tQuElem;
+
+//structure of queue
+typedef struct Queue{
+	tQuElem *Front;
+	tQuElem *Back;
+}tQueue;
+
+extern tQueue Queue_tok;
+extern Ttoken token2;  
 extern Ttoken token;
 
-//bool test_reserved_words();i
+void init_Queue();
+void front_token();
 Ttoken get_token();
+
+#endif

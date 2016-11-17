@@ -17,12 +17,13 @@
 //#include "scaner.h"
 #include <stdbool.h>
 #include "error.h"
-#include "stack.h"
+//#include "stack.h"
 #include "cleaner.h"
-#include "ial.h"
+
+#include "preced.h"
 
 char *filename = NULL;
-tStack stack;
+
 
 
 bool arguments( int argc, char *argv[]){
@@ -56,6 +57,7 @@ bool arguments( int argc, char *argv[]){
 int main(int argc, char *argv[])
 {
 	initCleaner();
+	init_Queue(&Queue_tok);
 	token.stav = SUCCESS;
 	//Ttoken test;
 	if( !(arguments(argc, argv)) )
@@ -64,35 +66,19 @@ int main(int argc, char *argv[])
 		return INTERNAL_ERR;
 	}
 
-	
+/*	
 	while(token.stav != S_EOF){
 		get_token();
 		printf("%s :%d:%d: vrateny token:  |%s| | stav = %d error = %d\n\n",filename,token.line,token.column,token.data,token.stav,error);
 	}
 
-
+*/
 	if(error == SUCCESS)
 		printf("-----error: E_OK\n");		
 
 
+	expresion_parser();
 
-
-	stackInit(&stack);
-
-	
-	for(int i = 0; i<10; i++){
-		stackPush(&stack,i);
-	}
-	while(stack.top != NULL){
-		printf("\t[ %d ]\n",stack.top->data);
-		stackPop(&stack);
-	
-	}
-	
-	
-	errorFce();
-
-	
 	clearAll();
 	return error;
 
