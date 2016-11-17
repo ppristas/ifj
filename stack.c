@@ -38,6 +38,7 @@ void stackPush(tStack *s, SAData *data){
 	s->top = pom;
 }
 
+
 void stackPop(tStack *s){
 	
 	if(!stackEmpty(s)){
@@ -46,6 +47,7 @@ void stackPop(tStack *s){
 	}	
 }
 
+
 void stackTop(tStack *s, SAData *send){
 	if(!stackEmpty(s)){
 		error = SUCCESS;
@@ -53,6 +55,7 @@ void stackTop(tStack *s, SAData *send){
 	}
 	
 }
+
 
 void stackTopPop(tStack *s, SAData *send){
 	if(!(stackEmpty(s))){
