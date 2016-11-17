@@ -62,7 +62,7 @@ static void test_key_words(char *word)
 /**
   *  Vrati znak do bufferu
   *  
-  **/
+  **//*
 static void return_char(int c)
 {
     // vratime znak ak je neprazdny
@@ -72,7 +72,7 @@ static void return_char(int c)
 	if(isprint(c))
 		column--;
 }
-
+*/
 /**
   *inicializacia tokenu
   */
@@ -501,7 +501,7 @@ Ttoken get_token(){
 				}else{
 					fill_token(stav,SUCCESS);
 					stav = S_END;
-					return_char(c);
+					c=ungetc(c,file);
 					column--;
 				}
 				break;
@@ -529,7 +529,7 @@ Ttoken get_token(){
 					fill_token(stav,SUCCESS);
 				}else{
 					stav = S_ERROR;
-					return_char((char)c);
+					c = ungetc(c,file);
 					column--;
 				}
 				break;
@@ -665,8 +665,11 @@ Ttoken get_token(){
         case S_END:
 			{
 //				printf("===%c===\n",c);
+				//TODO fakt tomuto uz nechapem...
+				c = ungetc(c,file);
 				c = ungetc(c,file);
 				column--;
+				Queue_Up();
 				end_cycle = false;
 				break;
 	    	}
