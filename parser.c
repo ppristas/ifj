@@ -409,6 +409,7 @@ int main_body()   //pravidlo <MB> -> <SL> <MB>
       if(token.stav != S_L_KOSZ)
          return SYNTAX_ERR;
 
+      get_token();
       error = main_body_riadiace();    // v tele whilu moze byt hocico, preto volame main_body
       
       if(error != SUCCESS)
@@ -522,6 +523,31 @@ int main_body()   //pravidlo <MB> -> <SL> <MB>
          if(token.stav != S_SEMICOLON)
             return SYNTAX_ERR;
    }
+   else if(token.stav == S_L_KOSZ)
+   {
+      get_token();
+      error = main_body();
+
+      if(error != SUCCESS)
+         return error;
+
+      if(token.stav != S_P_KOSZ)
+         return error;
+   }
+   else if(token.stav == S_P_KOSZ)
+   {
+      return error;
+   }
+   else if(token.stav == S_SEMICOLON || token.stav == S_LZAT || token.stav == S_PZAT || token.stav == S_PLUS
+            || token.stav == S_INT || token.stav == S_DOUBLE || token.stav == S_MINUS || token.stav == S_MULTI
+            || token.stav == S_DIV || token.stav == S_EOF || token.stav == S_PRIR || token.stav == S_MEN
+            || token.stav == S_MENROV || token.stav == S_VAC || token.stav == S_VACROV || token.stav == S_ROVNY
+            || token.stav == S_CIARKA || token.stav == S_VYKR || token.stav == S_NEROV
+            || token.stav == S_STRING || token.stav == S_ESCAPE)
+   {
+      fprintf(stderr, "Syntax error, unexpeted token \"%s\"\n.", token.data);
+      return SYNTAX_ERR;
+   }   
 
    if(error != SUCCESS)
       return error;
@@ -560,6 +586,7 @@ int main_body_riadiace()   //pravidlo <MB> -> <SL> <MB>
       if(token.stav != S_L_KOSZ)
          return SYNTAX_ERR;
 
+      get_token();
       error = main_body_riadiace();    // v tele whilu moze byt hocico az na lokalnu deklaraciu, preto volame main_body
       
       if(error != SUCCESS)
@@ -657,6 +684,31 @@ int main_body_riadiace()   //pravidlo <MB> -> <SL> <MB>
          get_token();
          if(token.stav != S_SEMICOLON)
             return SYNTAX_ERR;
+   }
+   else if(token.stav == S_L_KOSZ)
+   {
+      get_token();
+      error = main_body_riadiace();
+
+      if(error != SUCCESS)
+         return error;
+
+      if(token.stav != S_P_KOSZ)
+         return error;
+   }
+   else if(token.stav == S_P_KOSZ)
+   {
+      return error;
+   }
+   else if(token.stav == S_SEMICOLON || token.stav == S_LZAT || token.stav == S_PZAT || token.stav == S_PLUS
+            || token.stav == S_INT || token.stav == S_DOUBLE || token.stav == S_MINUS || token.stav == S_MULTI
+            || token.stav == S_DIV || token.stav == S_EOF || token.stav == S_PRIR || token.stav == S_MEN
+            || token.stav == S_MENROV || token.stav == S_VAC || token.stav == S_VACROV || token.stav == S_ROVNY
+            || token.stav == S_CIARKA || token.stav == S_VYKR || token.stav == S_NEROV
+            || token.stav == S_STRING || token.stav == S_ESCAPE)
+   {
+      fprintf(stderr, "Syntax error, unexpeted token \"%s\"\n.", token.data);
+      return SYNTAX_ERR;
    }
 
    if(error != SUCCESS)
