@@ -255,11 +255,11 @@ Ttoken get_token(){
 					stav = S_CLASS;
 					extend_token(&i,c);
 				}else{
-					stav = S_END;
+					stav = S_ERROR;
 					ungetc(c,file);
 					column--;
 					Queue_Up();
-					return token;
+					//return token;
 				}
 				break;
 			}	
@@ -537,6 +537,7 @@ Ttoken get_token(){
 			}
         case S_ERROR:
 			{
+				error = LEXICAL_ERR;
 				c = ungetc(c,file);
 				column--;
 				end_cycle = false;
