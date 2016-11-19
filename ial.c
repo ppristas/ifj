@@ -22,8 +22,74 @@
 #include "cleaner.h"
 #include "error.h"
 
-tHTable* Main_table;
+//tHTable* Main_table;
+clHTable* Class_table;
 
+
+Hash_class* class_search(clHTable *clptr,char *classname) {
+	unsigned index = hash_function(classname);
+	Hash_class *findclass = (*clptr)[index].next;
+
+	while(findclass != NULL) {
+		if(strcmp(findclass->classname,classname)== 0) {
+			return findclass;
+		}
+		findclass = findclass->next;
+	}
+	return NULL;
+}
+
+Hash_class* make_class(tHTable* tab, char *classname) {
+	Hash_class* result = mymalloc(sizeof(Hash_class));
+	if(result == NULL) {
+		error = INTERNAL_ERR;
+		clearAll();
+		return NULL;
+	}
+	int classname_len = strlen(classname);
+	result->classname = mymalloc(classname_len*sizeof(char) + 2);
+	if(result->classname == NULL) {
+		error = INTERNAL_ERR;
+		clearAll();
+		return NULL;
+	}
+	strcpy(result->classname,classname);
+	result->classname[strlen(classname)+1] = '\0';
+	result->ptr = tab;
+	result->next = NULL;
+
+	return result;
+
+}
+
+void class_insert(clHTable *clptr, Hash_class *ptrclass) {
+
+		unsigned index = hash_function(ptrclass->classname);
+		Hash_class *pom = (*clptr)[index].next;
+		if(pom != NULL) {
+			pom->next = (*clptr)[index].next;
+			(*clptr)[index].next = pom;
+		}
+		else {
+			(*clptr)[index].next = pom;
+		}
+
+
+}
+
+clHTable* class_init() {
+	clHTable* result = mymalloc(sizeof(Hash_class) * Hash_table_size);
+
+	if(result == NULL) {
+		return NULL;
+	}
+	for(unsigned i = 0; i < Hash_table_size; i++) {
+		(*result)[i].next = NULL;
+	}
+	return result;
+}
+
+//------------------------------------------------------------------------------
 void list_delete(TList *list) {
 	TNode *deletenode = NULL;
 
@@ -107,7 +173,7 @@ symbolType sym_type(Ttoken token) {
  * @param      ptrsym2  source
  */
 void sym_copy_variable(iSymbol* ptrsym1, iSymbol* ptrsym2) {
-	if(ptrsym1->init == true || ptrsym1->type != ptrsym2->type) {
+	if(ptrsym1->init == true) {
 		error = SEMANTIC_PROG_ERR;
 		clearAll();
 		return;
@@ -125,7 +191,7 @@ void sym_copy_variable(iSymbol* ptrsym1, iSymbol* ptrsym2) {
 	return;
 }
 
-iSymbol* sym_variable_init(char *data, int stype, bool isinit, char *classname) {
+iSymbol* sym_variable_init(char *data, int stype, bool isinit, char *classname, bool isstat) {
     iSymbol* ptrsym = NULL;
     ptrsym = mymalloc(sizeof(struct Sym_item));
     if(ptrsym == NULL) {
@@ -133,7 +199,8 @@ iSymbol* sym_variable_init(char *data, int stype, bool isinit, char *classname) 
         clearAll();
         return NULL;
     }
-    ptrsym->name = mymalloc(strlen(data)*sizeof(char) + 2);
+    int len_name = strlen(data);
+    ptrsym->name = mymalloc(len_name*sizeof(char) + 2);
     if(ptrsym->name == NULL) {
         error = INTERNAL_ERR;
         clearAll();
@@ -142,7 +209,8 @@ iSymbol* sym_variable_init(char *data, int stype, bool isinit, char *classname) 
     strcpy(ptrsym->name,data);
     ptrsym->name[strlen(data)+1] = '\0';
 
-	ptrsym->class_name = mymalloc(strlen(classname)*sizeof(char) + 2);
+    int len_classname = strlen(classname);
+	ptrsym->class_name = mymalloc(len_classname*sizeof(char) + 2);
     if(ptrsym->class_name == NULL) {
     	error = INTERNAL_ERR;
     	clearAll();
@@ -156,6 +224,7 @@ iSymbol* sym_variable_init(char *data, int stype, bool isinit, char *classname) 
     ptrsym->fce = false;
     ptrsym->args = NULL;
     ptrsym->init = isinit;
+    ptrsym->isstatic = isstat;
     ptrsym->nextptr = NULL;//(*tab)[index].ptr;
 
     return ptrsym;
@@ -180,7 +249,8 @@ iSymbol* sym_function_init(char *data, int stype, char *classname) {
     strcpy(ptrsym->name,data);
     ptrsym->name[strlen(data)+1] = '\0';
 
-    ptrsym->class_name = mymalloc(strlen(classname)*sizeof(char) + 2);
+    int len_classname = strlen(classname);
+    ptrsym->class_name = mymalloc(len_classname*sizeof(char) + 2);
     if(ptrsym->class_name == NULL) {
     	error = INTERNAL_ERR;
     	clearAll();
@@ -193,6 +263,7 @@ iSymbol* sym_function_init(char *data, int stype, char *classname) {
     ptrsym->data = NULL;
     ptrsym->fce = true;
     ptrsym->args = NULL;
+    ptrsym->isstatic = false;
     ptrsym->init = false;
     ptrsym->nextptr = NULL;
     

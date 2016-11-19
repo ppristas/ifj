@@ -48,7 +48,7 @@ typedef struct Sym_item{
 	TList *args;		//argumenty je potreba robit jednosmerne viazany zoznam
 	bool init;
 	char *class_name;	//nazov triedy ,ktorej patri symbol
-	//bool isstatic;		true - globalna, false - lokalna TODO
+	bool isstatic;		//true - globalna, false - lokalna
 	struct Sym_item *nextptr;
 }iSymbol;
 
@@ -60,9 +60,23 @@ typedef struct Hash_table{
 
 typedef Hash_item tHTable[Hash_table_size];
 
+//----------------------------------------------------------
+typedef struct Class_table {
+	char *classname;
+	tHTable *ptr;
+	struct Class_table *next;
+}Hash_class;
 
-extern tHTable *Main_table;
+typedef Hash_class clHTable[Hash_table_size];
 
+
+//extern tHTable *Main_table;
+extern clHTable *Class_table;
+
+clHTable* class_init();
+Hash_class* class_search(clHTable *clptr,char *classname);
+void class_insert(clHTable *clptr, Hash_class *ptrclass);
+Hash_class* make_class(tHTable* tab, char *classname);
 //linked list
 TList* linked_list_init();
 void list_insert_first(TList *list, iSymbol *arg);
@@ -71,7 +85,7 @@ void list_insert_next(TList *list, iSymbol *arg);
 symbolType sym_type(Ttoken token);
 void sym_copy_variable(iSymbol* ptrsym1, iSymbol* ptrsym2);
 void function_add_args(iSymbol* funcsym, iSymbol* arg, int counter);
-iSymbol* sym_variable_init(char *data, int stype, bool isinit, char *classname);
+iSymbol* sym_variable_init(char *data, int stype, bool isinit, char *classname, bool isstat);
 iSymbol* sym_function_init(char *data, int stype, char *classname);
 //table
 void Htab_insert(tHTable* tab, iSymbol* newsymbol,char *data);
