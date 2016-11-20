@@ -23,7 +23,7 @@
 #include "error.h"
 
 //tHTable* Main_table;
-clHTable* Class_table;
+//clHTable* Class_table;
 
 
 Hash_class* class_search(clHTable *clptr,char *classname) {
@@ -32,6 +32,7 @@ Hash_class* class_search(clHTable *clptr,char *classname) {
 
 	while(findclass != NULL) {
 		if(strcmp(findclass->classname,classname)== 0) {
+			printf("%s\n", findclass->classname);
 			return findclass;
 		}
 		findclass = findclass->next;
@@ -67,13 +68,12 @@ void class_insert(clHTable *clptr, Hash_class *ptrclass) {
 		unsigned index = hash_function(ptrclass->classname);
 		Hash_class *pom = (*clptr)[index].next;
 		if(pom != NULL) {
-			pom->next = (*clptr)[index].next;
-			(*clptr)[index].next = pom;
+			ptrclass->next = (*clptr)[index].next;
+			(*clptr)[index].next = ptrclass;
 		}
 		else {
-			(*clptr)[index].next = pom;
+			(*clptr)[index].next = ptrclass;
 		}
-
 
 }
 

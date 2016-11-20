@@ -71,7 +71,7 @@ typedef Hash_class clHTable[Hash_table_size];
 
 
 //extern tHTable *Main_table;
-extern clHTable *Class_table;
+//extern clHTable *Class_table;
 
 clHTable* class_init();
 Hash_class* class_search(clHTable *clptr,char *classname);
