@@ -59,6 +59,7 @@ int main(int argc, char *argv[])
 	initCleaner();
 	init_Queue(&Queue_tok);
 	token.stav = SUCCESS;
+	token2.stav = SUCCESS;
 	//Ttoken test;
 	if( !(arguments(argc, argv)) )
 	{
@@ -66,18 +67,25 @@ int main(int argc, char *argv[])
 		return INTERNAL_ERR;
 	}
 
-/*	
+	
 	while(token.stav != S_EOF){
 		get_token();
 		printf("%s :%d:%d: vrateny token:  |%s| | stav = %d error = %d\n\n",filename,token.line,token.column,token.data,token.stav,error);
 	}
-*/
+
+//front_token();
+	while(token2.stav != S_EOF){
+	front_token();
+		printf("%s :%d:%d: vrateny token2:  |%s| | stav = %d error = %d\n\n",filename,token2.line,token2.column,token2.data,token2.stav,error);
+	//front_token();
+    }
+
 
 	if(error == SUCCESS)
 		printf("-----error: E_OK\n");		
 
 
-	expresion_parser();
+	//expresion_parser();
 
 	clearAll();
 	return error;

@@ -60,6 +60,7 @@ typedef enum{
 	S_NEROV,			// 32 != nerovna sa
 	S_STRING,			//string "gfdsgfg"
 	S_ESCAPE,			// escape sekvencia /n /t /ddd
+	S_POMCLASS,
 		
 }TStav;
 

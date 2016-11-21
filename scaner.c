@@ -252,14 +252,28 @@ Ttoken get_token(){
 	case S_CLASS: ////rozdelit class.ID na tri tokeny alebo nie?
 			{
 				if((isalpha(c)) || (c == '$') || (c == '_')){
-					stav = S_CLASS;
+					stav = S_POMCLASS;
 					extend_token(&i,c);
 				}else{
+					fill_token(S_ERROR,LEXICAL_ERR);
 					stav = S_ERROR;
 					ungetc(c,file);
 					column--;
 					Queue_Up();
 					//return token;
+				}
+				break;
+			}
+	case S_POMCLASS:
+			{
+				if((isalpha(c)) || (isdigit(c)) || (c == '$') || (c == '_')){
+					stav = S_POMCLASS;
+					extend_token(&i,c);
+				}else{
+					stav = S_END;
+					ungetc(c,file);
+					column--;
+				//	Queue_Up();
 				}
 				break;
 			}	
@@ -689,7 +703,7 @@ Ttoken get_token(){
 		//printf("column:%d line:%d char:%c\n",line,column,c);
 	}while((c = getc(file)) && (end_cycle));
 
-	Queue_Up();
+//	Queue_Up();
 //	printf("<==============KONIEC VOLANIA FUNKCIE=============>\n");
 	return token;			
 }
