@@ -24,6 +24,18 @@
    int print_params();
    int build_function_call(int decider);
 
+   /*-----------Na druhy priechod-----------*/
+   int is_build_function_scnd();
+   int prog_scnd();
+   int class_scnd();
+   int after_class_scnd();
+   int params_after_scnd();
+   int main_body_scnd();
+   int main_body_riadiace_scnd();
+   int build_print_scnd();
+   int print_params_scnd();
+   int build_function_call_scnd(int decider);
+
    /*void expand(tStack *p_stack, int num,...); */
 
    typedef enum{

@@ -49,7 +49,7 @@
  */
 int catch_index(SAData *pom,int *count){
 	
-	switch(token.stav){
+	switch(token2.stav){
 		case S_PLUS:
 			pom->indexibus = PLUS;
 			break;
@@ -346,7 +346,7 @@ int expresion_parser()
    int bracket_counter = 0;
 
 	/// TODO treba po nasadanie zmazat get_token - sluzi len na testovanie
-	get_token();	
+	//get_token();	
 	//oba zasobniky
 	tStack Stack1;
 	stackInit(&Stack1);  //zasobnik pre terminaly
@@ -457,7 +457,7 @@ int expresion_parser()
 		
 		if(readToken){
 //			printf("token: |%s|\n",token.data);
-			get_token();
+			front_token();
 			if(error != SUCCESS){
 				errorFce();
 				clearAll();			
