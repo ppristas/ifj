@@ -494,8 +494,8 @@ Ttoken get_token(){
 					extend_token(&i,c);	
 					stav = S_ROVNY;
 					fill_token(stav,SUCCESS);
-					c = ungetc(c,file);
-					column--;
+					//c = ungetc(c,file);
+					//column--;
 				}else{
 					fill_token(stav,SUCCESS);
 					stav = S_END;
