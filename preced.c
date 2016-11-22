@@ -105,6 +105,7 @@ int catch_index(SAData *pom,int *count){
 			//preconvertovat cez atoi
 			break;
 		case S_STRING:
+			pom->indexibus = ID;
 			//TODO
 			//vlozit do tabulky symbolov
 			//TOKNOW konkatenaciu zistime az v interprete?
@@ -344,7 +345,7 @@ int reduction(tStack *stack1,tStack *stack2){
 int expresion_parser()
 {
    int bracket_counter = 0;
-
+	front_token();
 	/// TODO treba po nasadanie zmazat get_token - sluzi len na testovanie
 	//get_token();	
 	//oba zasobniky
