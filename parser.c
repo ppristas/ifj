@@ -29,6 +29,7 @@ bool BI_find = false;
 bool BI_sort = false;*/
 
 tStack p_stack;
+int bracket_counter = 0;
 
 /*
 void expand(tStack *p_stack,int num,...)   //rozsiri neterminal na neterminaly-terminaly
@@ -409,9 +410,24 @@ int main_body()   //pravidlo <MB> -> <SL> <MB>
       get_token();   //cakam (
       if(token.stav != S_LZAT)
          return SYNTAX_ERR;
-      /********************************VYRAZ*********************************/
+      
+      bracket_counter = 0;
 
-      get_token();   //cakam )
+      while(bracket_counter != -1)  //preskakujeme vyrazy
+      {
+         get_token();
+         if(token.stav == S_LZAT)
+            bracket_counter++;
+         else if(token.stav == S_PZAT)
+            bracket_counter--;
+         if(error != SUCCESS)
+            return error;
+
+         if(token.stav == S_P_KOSZ || token.stav == S_EOF)  //aby sme sa pri errore nezacykli
+            break;
+      }
+
+      //get_token();   //cakam )
       if(token.stav != S_PZAT)
          return SYNTAX_ERR;
       get_token();   //za while je povinne {
@@ -432,15 +448,23 @@ int main_body()   //pravidlo <MB> -> <SL> <MB>
       get_token();
       if(token.stav != S_LZAT)
          return SYNTAX_ERR;
-      /****************VYHODNOTENIE VYRAZU*******************/
+     
+     bracket_counter = 0;
 
-      get_token();
-      if(token.stav != S_INT)
-         return FILIP_ERR;
+      while(bracket_counter != -1)  //preskakujeme vyrazy
+      {
+         get_token();
+         if(token.stav == S_LZAT)
+            bracket_counter++;
+         else if(token.stav == S_PZAT)
+            bracket_counter--;
+         if(error != SUCCESS)
+            return error;
 
+         if(token.stav == S_P_KOSZ || token.stav == S_EOF)  //aby sme sa pri errore nezacykli
+            break;
+      }
 
-      /*************************ZATIAL INT FAKE**************/
-      get_token();
       if(token.stav != S_PZAT)
          return SYNTAX_ERR;
       get_token();
@@ -589,9 +613,23 @@ int main_body_riadiace()   //pravidlo <MB> -> <SL> <MB>
       get_token();   //cakam (
       if(token.stav != S_LZAT)
          return SYNTAX_ERR;
-      /********************************VYRAZ*********************************/
+      
+      bracket_counter = 0;
 
-      get_token();   //cakam )
+      while(bracket_counter != -1)  //preskakujeme vyrazy
+      {
+         get_token();
+         if(token.stav == S_LZAT)
+            bracket_counter++;
+         else if(token.stav == S_PZAT)
+            bracket_counter--;
+         if(error != SUCCESS)
+            return error;
+
+         if(token.stav == S_P_KOSZ || token.stav == S_EOF)  //aby sme sa pri errore nezacykli
+            break;
+      }
+
       if(token.stav != S_PZAT)
          return SYNTAX_ERR;
       get_token();   //za while je povinne {
@@ -612,14 +650,23 @@ int main_body_riadiace()   //pravidlo <MB> -> <SL> <MB>
       get_token();
       if(token.stav != S_LZAT)
          return SYNTAX_ERR;
-      /****************VYHODNOTENIE VYRAZU*******************/
 
-      get_token();
-      if(token.stav != S_INT)
-         return FILIP_ERR;
+      bracket_counter = 0;
 
-      /*************************ZATIAL INT FAKE**************/
-      get_token();
+      while(bracket_counter != -1)  //preskakujeme vyrazy
+      {
+         get_token();
+         if(token.stav == S_LZAT)
+            bracket_counter++;
+         else if(token.stav == S_PZAT)
+            bracket_counter--;
+
+         if(error != SUCCESS)
+            return error;
+         if(token.stav == S_P_KOSZ || token.stav == S_EOF)  //aby sme sa pri errore nezacykli
+            break;
+      }
+
       if(token.stav != S_PZAT)
          return SYNTAX_ERR;
       get_token();
@@ -1001,7 +1048,7 @@ int class_scnd()
    if(error != SUCCESS)
       return error;
    front_token();   //ocakavam id
-   if(token2.stav != S_ID) //Main musi byt prvy class
+   if(token2.stav != S_ID)
       return SYNTAX_ERR;
    if(!(strcmp(token2.data, "ifj16")))  //class ifj16 nemoze byt definovany
       return SEMANTIC_PROG_ERR;
@@ -1128,6 +1175,7 @@ int after_class_scnd()
       front_token();
       if(token2.stav != S_ID)
          return SYNTAX_ERR; 
+
       front_token();          
 
       switch(token2.stav)
@@ -1284,9 +1332,12 @@ int main_body_scnd()   //pravidlo <MB> -> <SL> <MB>
       front_token();   //cakam (
       if(token2.stav != S_LZAT)
          return SYNTAX_ERR;
-      /********************************VYRAZ*********************************/
 
-      front_token();   //cakam )
+      front_token();
+      error = expresion_parser();
+      if(error != SUCCESS)
+         return error;
+
       if(token2.stav != S_PZAT)
          return SYNTAX_ERR;
       front_token();   //za while je povinne {
@@ -1307,15 +1358,12 @@ int main_body_scnd()   //pravidlo <MB> -> <SL> <MB>
       front_token();
       if(token2.stav != S_LZAT)
          return SYNTAX_ERR;
-      /****************VYHODNOTENIE VYRAZU*******************/
+      
+      front_token(); //vyhdnotenie vyrazu
+      error = expresion_parser();
+      if(error != SUCCESS)
+         return error;
 
-      front_token();
-      if(token2.stav != S_INT)
-         return FILIP_ERR;
-
-
-      /*************************ZATIAL INT FAKE**************/
-      front_token();
       if(token2.stav != S_PZAT)
          return SYNTAX_ERR;
 
@@ -1464,9 +1512,12 @@ int main_body_riadiace_scnd()   //pravidlo <MB> -> <SL> <MB>
       front_token();   //cakam (
       if(token2.stav != S_LZAT)
          return SYNTAX_ERR;
-      /********************************VYRAZ*********************************/
+      
+      front_token();
+      error = expresion_parser();
+      if(error != SUCCESS)
+         return error;
 
-      front_token();   //cakam )
       if(token2.stav != S_PZAT)
          return SYNTAX_ERR;
       front_token();   //za while je povinne {
@@ -1487,14 +1538,12 @@ int main_body_riadiace_scnd()   //pravidlo <MB> -> <SL> <MB>
       front_token();
       if(token2.stav != S_LZAT)
          return SYNTAX_ERR;
-      /****************VYHODNOTENIE VYRAZU*******************/
-
+      
       front_token();
-      if(token2.stav != S_INT)
-         return FILIP_ERR;
-
-      /*************************ZATIAL INT FAKE**************/
-      front_token();
+      error = expresion_parser();
+      if(error != SUCCESS)
+         return error;
+      
       if(token2.stav != S_PZAT)
          return SYNTAX_ERR;
       front_token();
