@@ -11,12 +11,12 @@ T_ClassHtab * global_table;
 
 void ClassHtab_init(T_ClassHtab **table)
 {
-    *table=(T_ClassHtab *)mymalloc(sizeof(T_ClassHtab)*1);
+   if ((*table=(T_ClassHtab *)mymalloc(sizeof(T_ClassHtab)*1)) == NULL )
+       return;
 
     for (int i=0;i< HTAB_SIZE ;++i)
     {
         (*table)->ClassHTab[i]=NULL;
-         printf("Init %d  na NULL: \n",i);
     }
 }
 
@@ -54,7 +54,7 @@ int ClassHtab_search_insert(char * key,T_ClassHtab * table)
 }
 
 //DEKLARACIA TRIEDY
-void ClassHtab_insert(char* key,T_ClassHtab *table)
+void ClassHtab_define(char* key,T_ClassHtab *table)
 {
     int index;
     if ((index=ClassHtab_search_insert(key,table)) == -1)
@@ -63,8 +63,12 @@ void ClassHtab_insert(char* key,T_ClassHtab *table)
     }
     else
     {
-        T_ClassItem * new_item=(T_ClassItem*)mymalloc(sizeof(T_ClassItem)*1);
-        new_item->class_key=(char*)mymalloc(sizeof(char)* ((int)strlen(key) + 1));
+        T_ClassItem * new_item;
+        if ((new_item=(T_ClassItem*)mymalloc(sizeof(T_ClassItem)*1)) == NULL)
+            return;
+        if ((new_item->class_key=(char*)mymalloc(sizeof(char)* ((int)strlen(key) + 1))) == NULL)
+            return;
+
         strcpy(new_item->class_key,key);
         new_item->next_class=table->ClassHTab[index];
         table->ClassHTab[index]=new_item;
@@ -101,11 +105,13 @@ void Static_Htab_init(char *class_name,T_ClassHtab *table)
         for (int i=0;i< HTAB_SIZE ;++i)
         {
             curr_class->StaticHTab[i]=NULL;
-            printf("Static %d of class %s  na NULL: \n",i,curr_class->class_key);
         }
     }
     else
+    {
        printf("Class %s nebola najdena\n",class_name);
+       return;
+    }
 }
 
 
@@ -145,6 +151,12 @@ void Static_Htab_insert(char* class_name,char* static_name,T_ClassHtab* table,Ps
     else
         class_ptr=ClassHtab_search(class_name,table);
 
+    if (class_ptr== NULL)
+    {
+        printf("Trieda nebola najdena\n");
+        return;
+    }
+
 
     //DEBUG PODMIENKA----------------------------
     char* DEBUG_class_name;
@@ -159,11 +171,15 @@ void Static_Htab_insert(char* class_name,char* static_name,T_ClassHtab* table,Ps
     if ((index=Static_Htab_search_insert(class_name,static_name,table))  == -1)
     {
         printf("Semantic error ! Static type %s of class %s already exists !\n",static_name,DEBUG_class_name);
+        return;
     }
     else
     {
-        T_Static_symbol* new_symbol=(T_Static_symbol*)mymalloc(sizeof(T_Static_symbol)*1);
-        new_symbol->static_key=(char*)mymalloc(sizeof(char)* ((int)strlen(static_name) + 1));
+        T_Static_symbol* new_symbol;
+        if ((new_symbol=(T_Static_symbol*)mymalloc(sizeof(T_Static_symbol)*1)) == NULL)
+            return;
+        if ((new_symbol->static_key=(char*)mymalloc(sizeof(char)* ((int)strlen(static_name) + 1))) == NULL)
+            return;
         strcpy(new_symbol->static_key,static_name);
         new_symbol->next_static=class_ptr->StaticHTab[index];
         class_ptr->StaticHTab[index]=new_symbol;
@@ -175,19 +191,21 @@ void Static_Htab_insert(char* class_name,char* static_name,T_ClassHtab* table,Ps
         // AK type je static funkcia alebo  static variable !!! TOKENY
         if (token.type == 'f')
         {
-            new_symbol->static_state.static_func=(T_Static_func*)mymalloc(sizeof(T_Static_func)*1);
+            if ((new_symbol->static_func=(T_Static_func*)mymalloc(sizeof(T_Static_func)*1)) == NULL)
+                return;
         }
         else if (token.type == 'v')
         {
-            new_symbol->static_state.static_var=(T_Static_var*)mymalloc(sizeof(T_Static_var)*1);
+            if ((new_symbol->static_var=(T_Static_var*)mymalloc(sizeof(T_Static_var)*1)) == NULL )
+                return;
 
 
             //inicializacia na 0 pre staticku premennu + string dat
 
             if (token.declared_type==1)
-                    new_symbol->static_state.static_var->value.i=0;
+                    new_symbol->static_var->value.i=0;
             else if(token.declared_type==2)
-                    new_symbol->static_state.static_var->value.dbl=0.0;
+                    new_symbol->static_var->value.dbl=0.0;
         }
     }
 }
@@ -200,6 +218,12 @@ T_Static_symbol* Static_Htab_search(char* class_name,char* static_name,T_ClassHt
         class_ptr=table->inClass;
     else
         class_ptr=ClassHtab_search(class_name,table);
+
+    if (class_ptr == NULL)
+    {
+        printf("Trieda nebola najdena\n");
+        return NULL;
+    }
 
     int index=hash_key(static_name);
     T_Static_symbol* tmp=class_ptr->StaticHTab[index];
@@ -231,11 +255,11 @@ void Static_Var_Add(char* class_name,char* static_name,T_ClassHtab* table,void* 
     {
         // KONTROLA TYPU + VKLADANIE TYPU !!!
         if (type == 1)
-            static_tmp->static_state.static_var->value.i=(*(int*)(value));
+            static_tmp->static_var->value.i=(*(int*)(value));
         else if (type == 2)
-            static_tmp->static_state.static_var->value.dbl=(*(double*)(value));
+            static_tmp->static_var->value.dbl=(*(double*)(value));
         else if (type == 3)
-            static_tmp->static_state.static_var->value.str=((char*)(value));
+            static_tmp->static_var->value.str=((char*)(value));
     }
 }
 
@@ -244,7 +268,7 @@ void Static_Var_Add(char* class_name,char* static_name,T_ClassHtab* table,void* 
 void Local_table_init(T_Static_symbol* static_func)
 {
     //context
-    T_Static_func* curr_static_func=static_func->static_state.static_func;
+    T_Static_func* curr_static_func=static_func->static_func;
 
     for (int i=0;i<HTAB_SIZE;++i)
     {
@@ -294,8 +318,13 @@ void Local_table_insert(char* local_var, T_ClassHtab* table, Pseudotoken token)
     }
     else
     {
-        T_local_data* local_tmp=(T_local_data*)mymalloc(sizeof(T_local_data)*1);
-        local_tmp->local_key=(char*)mymalloc(sizeof(char)*((int)strlen(local_var)+1));
+        T_local_data* local_tmp;
+
+        if ((local_tmp=(T_local_data*)mymalloc(sizeof(T_local_data)*1)) == NULL)
+            return;
+
+        if ((local_tmp->local_key=(char*)mymalloc(sizeof(char)*((int)strlen(local_var)+1))) == NULL)
+            return;
         strcpy(local_tmp->local_key,local_var);
         local_tmp->local_type=token.declared_type;
         local_tmp->next_local=table->inClass->inFunction->Local_Htab[index];
@@ -407,7 +436,7 @@ static void Print_local_chain(T_local_data* local_data)
 
 static void Print_local(T_Static_symbol* static_function)
 {
-    T_Static_func* tmp=static_function->static_state.static_func;
+    T_Static_func* tmp=static_function->static_func;
 
     for (int i=0; i<HTAB_SIZE; ++i )
     {
@@ -431,69 +460,17 @@ int main(int argc, char *argv[])
 
     Pseudotoken TOKEN;
 
-    printf("Hash key %u\n", hash_key("materina pica"));
-/*
-    ClassHtab_insert("class1",global_table);
-    ClassHtab_insert("class2",global_table);
-    ClassHtab_insert("ifj16",global_table);
-
-
-    Static_Htab_init("ifj16",global_table);
-    Static_Htab_init("class2",global_table);
-    Static_Htab_init("class1",global_table);
-
-
-    global_table->inClass=ClassHtab_search("ifj16",global_table);
-
-    Static_Htab_insert(NULL,"readString",global_table,Pseudotoken_init(&TOKEN,'f',1));
-    Static_Htab_insert(NULL,"sort",global_table,Pseudotoken_init(&TOKEN,'f',1));
-
-
-
-    global_table->inClass=ClassHtab_search("class2",global_table);
-
-    Static_Htab_insert(NULL,"f1",global_table,Pseudotoken_init(&TOKEN,'f',1));
-
-    global_table->inClass=ClassHtab_search("class1",global_table);
-
-
-    Static_Htab_insert(NULL,"f1",global_table,Pseudotoken_init(&TOKEN,'f',1));
-    Static_Htab_insert(NULL,"f2",global_table,Pseudotoken_init(&TOKEN,'f',1));
-    Static_Htab_insert(NULL,"f3",global_table,Pseudotoken_init(&TOKEN,'f',1));
-    Static_Htab_insert(NULL,"v3",global_table,Pseudotoken_init(&TOKEN,'v',1));
-    Static_Htab_insert(NULL,"v1",global_table,Pseudotoken_init(&TOKEN,'v',1));
-    Static_Htab_insert(NULL,"f584",global_table,Pseudotoken_init(&TOKEN,'f',1));
-
-    Static_Htab_insert("ifj16","sort",global_table,Pseudotoken_init(&TOKEN,'f',1));
-    Static_Htab_insert("ifj16","readString",global_table,Pseudotoken_init(&TOKEN,'f',1));
-    Static_Htab_insert("ifj16","readStrings",global_table,Pseudotoken_init(&TOKEN,'f',1));
-    Static_Htab_insert("ifj16","substr",global_table,Pseudotoken_init(&TOKEN,'f',1));
-
-    global_table->inClass=ClassHtab_search("class2",global_table);
-
-    Static_Htab_insert(NULL,"f1",global_table,Pseudotoken_init(&TOKEN,'f',1));
-    Static_Htab_insert(NULL,"v1",global_table,Pseudotoken_init(&TOKEN,'v',1));
-    Static_Htab_insert(NULL,"f4",global_table,Pseudotoken_init(&TOKEN,'f',1));
-    Static_Htab_insert("class1","v3",global_table,Pseudotoken_init(&TOKEN,'f',1));
-    Static_Htab_insert("class1","KOKOT",global_table,Pseudotoken_init(&TOKEN,'f',1));
-
-    global_table->inClass=ClassHtab_search("class1",global_table);
-
-    Static_Htab_insert(NULL,"f3",global_table,Pseudotoken_init(&TOKEN,'f',1));
-    Static_Htab_insert(NULL,"v3",global_table,Pseudotoken_init(&TOKEN,'v',1));
-
-*/
     double dval;
     int ival;
     T_Static_symbol * tmp;
 
-    ClassHtab_insert("class1",global_table);
+    ClassHtab_define("class1",global_table);
     Static_Htab_init("class1",global_table);
 
-    ClassHtab_insert("class2",global_table);
+    ClassHtab_define("class2",global_table);
     Static_Htab_init("class2",global_table);
 
-    ClassHtab_insert("class3",global_table);
+    ClassHtab_define("class3",global_table);
     Static_Htab_init("class3",global_table);
 
 
@@ -514,7 +491,7 @@ int main(int argc, char *argv[])
 
     //nastavenie contextu pre citanie z foo1
     T_Static_symbol* context=Static_Htab_search(NULL,"foo1",global_table);
-    global_table->inClass->inFunction=context->static_state.static_func;
+    global_table->inClass->inFunction=context->static_func;
     Local_table_insert("local_x",global_table,Pseudotoken_init(&TOKEN,0,1));
     ival=158;
     Local_table_add_var("local_x",global_table,&ival,2); // TYPE mismas
@@ -544,7 +521,7 @@ int main(int argc, char *argv[])
     dval=160;
     Static_Var_Add(NULL,"var42",global_table,&dval,1); //TYPE mismas
     tmp=Static_Htab_search(NULL,"var42",global_table);
-    printf("%s %f\n",tmp->static_key,tmp->static_state.static_var->value.dbl);
+    printf("%s %f\n",tmp->static_key,tmp->static_var->value.dbl);
     // POZOR  BERE TO NULL TAKZE IDE ERROR
 
 
@@ -575,29 +552,29 @@ int main(int argc, char *argv[])
     Static_Var_Add(NULL,"var2",global_table,&dval,2);
     tmp=Static_Htab_search(NULL,"var2",global_table);
 
-    printf("%s %f\n",tmp->static_key,tmp->static_state.static_var->value.dbl);
+    printf("%s %f\n",tmp->static_key,tmp->static_var->value.dbl);
 
 
 
     ival=10;
     Static_Var_Add("class1","var1",global_table,&ival,1);
     tmp=Static_Htab_search(NULL,"var1",global_table);
-    printf("%s %d\n",tmp->static_key,tmp->static_state.static_var->value.i);
+    printf("%s %d\n",tmp->static_key,tmp->static_var->value.i);
 
     dval=12.345;
     Static_Var_Add("class2","var3",global_table,&dval,2);
     tmp=Static_Htab_search("class2","var3",global_table);
-    printf("%s %f\n",tmp->static_key,tmp->static_state.static_var->value.dbl);
+    printf("%s %f\n",tmp->static_key,tmp->static_var->value.dbl);
 
     dval=12.42;
     Static_Var_Add("class2","var3",global_table,&dval,2);
     tmp=Static_Htab_search("class2","var3",global_table);
-    printf("%s %f\n",tmp->static_key,tmp->static_state.static_var->value.dbl);
+    printf("%s %f\n",tmp->static_key,tmp->static_var->value.dbl);
 
     dval=16;
     Static_Var_Add("class2","var3",global_table,&dval,2);
     tmp=Static_Htab_search("class2","var3",global_table);
-    printf("%s %f\n",tmp->static_key,tmp->static_state.static_var->value.dbl);
+    printf("%s %f\n",tmp->static_key,tmp->static_var->value.dbl);
 
 
 
@@ -606,7 +583,7 @@ int main(int argc, char *argv[])
 
     global_table->inClass=ClassHtab_search("class1",global_table);
     context=Static_Htab_search(NULL,"foo1",global_table);
-    global_table->inClass->inFunction=context->static_state.static_func;
+    global_table->inClass->inFunction=context->static_func;
 
     Print_local(context);
 
