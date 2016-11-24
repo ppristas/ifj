@@ -329,7 +329,7 @@ void sym_copy_variable(iSymbol* ptrsym1, iSymbol* ptrsym2) {
  *
  * @return     pointer to symbol
  */
-iSymbol* sym_variable_init(char *data, int stype, bool isinit, char *classname, bool isstat) {
+iSymbol* sym_variable_init(char *data, int stype, bool isinit, char *classname, bool isstat, bool isdecl) {
     iSymbol* ptrsym = NULL;
     ptrsym = mymalloc(sizeof(struct Sym_item));
     if(ptrsym == NULL) {
@@ -360,6 +360,7 @@ iSymbol* sym_variable_init(char *data, int stype, bool isinit, char *classname, 
     ptrsym->type = stype;
     ptrsym->data = NULL;
     ptrsym->fce = false;
+    ptrsym->decl = isdecl;
     ptrsym->args = NULL;
     ptrsym->ptr_loctable = NULL;
     ptrsym->init = isinit;

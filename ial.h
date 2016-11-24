@@ -47,6 +47,7 @@ typedef struct Loc_item {
 	bool fce;
 	TList *args;
 	bool init;
+	bool decl;
 	char *class_name;
 	struct Loc_item *nextptr;
 }locSymbol;
@@ -64,7 +65,7 @@ typedef struct Sym_item{
 	bool fce;						//true - je funkcia, false - je premenna	
 	TList *args;					//argumenty je potreba robit jednosmerne viazany zoznam
 	bool init;
-	//bool decl;
+	bool decl;
 	locTable *ptr_loctable; 	//tabulka pre lokalne symboly
 	char *class_name;				//nazov triedy ,ktorej patri symbol
 	bool isstatic;					//true - globalna, false - lokalna
@@ -111,7 +112,7 @@ void list_insert_next(TList *list, iSymbol *arg);
 symbolType sym_type(Ttoken token);
 void sym_copy_variable(iSymbol* ptrsym1, iSymbol* ptrsym2);
 void function_add_args(iSymbol* funcsym, iSymbol* arg, int counter);
-iSymbol* sym_variable_init(char *data, int stype, bool isinit, char *classname, bool isstat);
+iSymbol* sym_variable_init(char *data, int stype, bool isinit, char *classname, bool isstat, bool isdecl);
 iSymbol* sym_function_init(char *data, int stype, char *classname);
 //table for class e.g. Main
 void Htab_insert(tHTable* tab, iSymbol* newsymbol,char *data);
