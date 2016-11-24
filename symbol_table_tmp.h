@@ -43,7 +43,7 @@ typedef struct st_static_var
 
 typedef struct st_static_func
 {
-    int args_count;
+    int args_count; // doplnit parametre
     T_local_data* Local_Htab[HTAB_SIZE];
 
 }T_Static_func;
@@ -53,11 +53,8 @@ typedef struct st_static_symbol
     char* static_key;
     char type;              //moze byt is function
     int declared_type;
-    union
-    {
-        T_Static_var *static_var;
-        T_Static_func *static_func;
-    }static_state;
+    T_Static_var *static_var;
+    T_Static_func *static_func;
 
     struct st_static_symbol* next_static;
 
@@ -82,7 +79,7 @@ typedef struct st_classHtab
 
 void ClassHtab_init(T_ClassHtab **table);
 int hash_key(char *key);
-void ClassHtab_insert(char *key, T_ClassHtab *table); //ked parser vojde do triedy
+void ClassHtab_define(char *key, T_ClassHtab *table); //ked parser vojde do triedy
 int ClassHtab_search_insert(char * key, T_ClassHtab *table);
 T_ClassItem* ClassHtab_search(char *key, T_ClassHtab *table);
 void Static_Htab_init(char* class_name, T_ClassHtab *table); //ked uz parser je v triede
