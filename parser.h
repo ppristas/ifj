@@ -40,8 +40,8 @@
    int build_function_call_scnd(int decider);
 
    /*------------Ostatne-------------------*/
-   char* reverse(char *str);
-   char* get_substring(char *str);
+   char *return_class();
+   char *return_id();
 
    typedef enum{
    F_NbIF,        // 0 not build in function

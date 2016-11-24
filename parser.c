@@ -32,26 +32,29 @@ iSymbol* symbol = NULL;       //lubovolny symbol ............... funcsym = symbo
 Hash_class* ptrclass = NULL;  //drzi ukazatel tHtable* ukazatel na triedu + meno triedy
 char* classname;              //nazov classu
 
-/*char* reverse(char *str)
+char *return_class()
 {
-   static int i = 0;
-   static char rev[256];
-   if(*str)
+   if(token2.data != NULL)
    {
-      reverse(str + 1);
-      rev[i++] = *str;
+      char *search = "."; 
+      char *split_token = strtok(token2.data, search);
+      if(split_token != NULL)
+         return split_token;
    }
-   return rev;
+   return NULL;
 }
 
-char* get_substring(char *str)
+char *return_id()
 {
-   char *p = strchr(str, '.');
-   if(!p)
-      error = INTERNAL_ERR;  
-   *p = 0;
-   return str;
-}*/
+   if(token2.data != NULL)
+   {
+      char *search = ".";
+      char *split_token = strtok(NULL, search);
+      if(split_token != NULL)
+         return split_token;
+   }
+   return NULL;
+}
 
 int is_build_function() //ratam s tym ze token uz bol nacitany
 {
@@ -85,9 +88,11 @@ int parser()
    /************************PRVY PRIECHOD***********************/
    /************************************************************/
 
-
    error = SUCCESS;
    get_token();
+
+   if(token.stav == S_EOF)
+      return SUCCESS;
 
    error = prog();  
    if(error != SUCCESS)
@@ -115,20 +120,6 @@ int parser()
    error = prog_scnd();   
    if(error != SUCCESS)
       return error;
-
-   /*int counter = 0; 
-   while(counter < Hash_table_size) {
-      Hash_class *val = (*STable)[counter].next;
-      if(val == NULL) {
-         counter++;
-         continue;
-      }
-      else {
-         printf("%d.%s\n", counter, (*STable)[counter].next->classname);
-         //printf("%s\n", (*cl_table)[counter].classname);
-         counter++;
-      }
-   }*/
 
    return error;
 }
@@ -240,6 +231,12 @@ int after_class()
       get_token();   //ocakavam id
       if(token.stav != S_ID)
          return SYNTAX_ERR;
+
+      if(strchr(token.data, '.'))
+      {
+         fprintf(stderr, "Expected simple identiftier, \"%s\" is fully quialified ID.\n", token.data);
+         return SYNTAX_ERR;
+      }
 
       nazov_len = strlen(token.data); //vracia nazov statickeho symbolu
       nazov = mymalloc(nazov_len*sizeof(char) + 2);
@@ -353,6 +350,11 @@ int after_class()
       get_token();
       if(token.stav != S_ID)
          return SYNTAX_ERR; 
+      if(strchr(token.data, '.'))
+      {
+         fprintf(stderr, "Expected simple identiftier, \"%s\" is fully quialified ID.\n", token.data);
+         return SYNTAX_ERR;
+      }
 
       nazov_len = strlen(token.data); //vracia nazov statickeho symbolu
       nazov = mymalloc(nazov_len*sizeof(char) + 2);
@@ -492,7 +494,7 @@ int after_class()
       }
    }
 
-   return SEMANTIC_TYPE_ERR;
+   return SYNTAX_ERR;
 }
 
 int params_after()
@@ -1539,6 +1541,21 @@ int main_body_scnd()   //pravidlo <MB> -> <SL> <MB>
    }
    else if(token2.stav == S_ID)
    {
+
+
+      /********************************/  //bude sa overovat podla toho ci je plne kvalifikovane meno alebo to je lokalna premenna
+      if(strchr(token2.data, '.'))
+      {
+         char *str = token2.data;
+         char *str2 = token2.data;
+         str = return_class();
+         str2 = return_id();
+         printf("%s\n", str);
+         printf("%s\n", str2);
+      }
+      /********************************/
+
+
       int i = is_build_function_scnd();
       front_token();
       if(token2.stav == S_PRIR)    //priradenie do premennej
