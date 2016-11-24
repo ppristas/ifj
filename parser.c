@@ -13,37 +13,45 @@
    ********************************************************************************/
 
 #include <stdarg.h>
+#include <string.h>
+
 #include "stack.h"
 #include "parser.h"
-//#include "scaner.h"
+#include "cleaner.h"
 #include "error.h"
 #include "preced.h"
+#include "ial.h"
 
-/*bool BI_readInt = false;
-bool BI_readDouble = false;
-bool BI_readString = false;
-bool BI_length = false;
-bool BI_substr = false;
-bool BI_compare = false;
-bool BI_find = false;
-bool BI_sort = false;*/
 
-tStack p_stack;
 int bracket_counter = 0;
 
-/*
-void expand(tStack *p_stack,int num,...)   //rozsiri neterminal na neterminaly-terminaly
-{  
-   stackPop(p_stack);  //Pop neterminalu na vrchu
-   va_list valist;
-   va_start(valist, num);
-   for(int i = 0; i < num; i++)
+clHTable* STable = NULL;      //STable = Classes_table
+tHTable* ukazatel_na_triedu = NULL;  //ukazatel na triedu ............Class1 = ukazatel_na_triedu
+locTable* local_table = NULL; //ukazatel na lokalnu tabulku u funkcie .............same
+iSymbol* symbol = NULL;       //lubovolny symbol ............... funcsym = symbol
+Hash_class* ptrclass = NULL;  //drzi ukazatel tHtable* ukazatel na triedu + meno triedy
+char* classname;              //nazov classu
+
+/*char* reverse(char *str)
+{
+   static int i = 0;
+   static char rev[256];
+   if(*str)
    {
-      stackPush(p_stack, va_arg(valist, int));  //napushovanie terminalov-neterminalov
+      reverse(str + 1);
+      rev[i++] = *str;
    }
-   return;
+   return rev;
 }
-*/
+
+char* get_substring(char *str)
+{
+   char *p = strchr(str, '.');
+   if(!p)
+      error = INTERNAL_ERR;  
+   *p = 0;
+   return str;
+}*/
 
 int is_build_function() //ratam s tym ze token uz bol nacitany
 {
@@ -71,17 +79,57 @@ int is_build_function() //ratam s tym ze token uz bol nacitany
 
 int parser()
 {
+   STable = class_init();  //inicializacia tabulky symbolov
+   
+   /************************************************************/
+   /************************PRVY PRIECHOD***********************/
+   /************************************************************/
+
+
    error = SUCCESS;
    get_token();
 
-   error = prog();   //prvy priechod   
+   error = prog();  
    if(error != SUCCESS)
       return error;
 
+   Hash_class* class_table_symbol = class_search(STable, "Main");
+
+   if(class_table_symbol == NULL)   //overujeme, ci je definovana classa Main prave raz
+   {
+      fprintf(stderr, "SEMANTIC_PROG_ERR. Class Main must be used exactly once. No more, no less.\n");
+      return SEMANTIC_PROG_ERR;
+   }
+
+   if(Htab_search(class_table_symbol->ptr, "run") == NULL)
+   {
+      fprintf(stderr, "SEMANTIC_PROG_ERR. Class Main must contain one function called \"run\".\n");
+      return SEMANTIC_PROG_ERR;
+   }
+
+   /************************************************************/
+   /***********************DRUHY PRIECHOD***********************/
+   /************************************************************/
+
    front_token();
-   error = prog_scnd();    //druhy priechod
+   error = prog_scnd();   
    if(error != SUCCESS)
-      return error; 
+      return error;
+
+   /*int counter = 0; 
+   while(counter < Hash_table_size) {
+      Hash_class *val = (*STable)[counter].next;
+      if(val == NULL) {
+         counter++;
+         continue;
+      }
+      else {
+         printf("%d.%s\n", counter, (*STable)[counter].next->classname);
+         //printf("%s\n", (*cl_table)[counter].classname);
+         counter++;
+      }
+   }*/
+
    return error;
 }
 
@@ -128,11 +176,34 @@ int class()
    if(token.stav != S_ID) //Main musi byt prvy class
       return SYNTAX_ERR;
    if(!(strcmp(token.data, "ifj16")))  //class ifj16 nemoze byt definovany
+   {
+      fprintf(stderr, "SEMANTIC_PROG_ERR. Class \"ifj16\" cannot be defined.\n");
       return SEMANTIC_PROG_ERR;
+   }
+
+   int classname_len = strlen(token.data);      //spracovanie nazvu triedy
+   classname = mymalloc(classname_len*sizeof(char) + 2);
+   if(classname == NULL)
+   {
+      error = INTERNAL_ERR;
+      return error;
+   }
+   strcpy(classname,token.data);
+   classname[strlen(token.data)+1] = '\0';   //az potialto
 
    get_token();   //ocakavam {
    if(token.stav != S_L_KOSZ)
       return SYNTAX_ERR;
+
+   if(class_search(STable, classname) != NULL)
+   {
+      fprintf(stderr, "SEMANTIC_PROG_ERR. Class already defined.\n");
+      return SEMANTIC_PROG_ERR;
+   }
+
+   ukazatel_na_triedu = HTab_init();   //inicializuje tabulku pre konkretnu triedu
+   ptrclass = make_class(ukazatel_na_triedu, classname); //ukazatel na triedu + nazov triedy
+   class_insert(STable, ptrclass);  //(ukazatel na celu tabulku, ukazatel na tabulku triedy)
 
    get_token();
    error = after_class();
@@ -156,14 +227,39 @@ int after_class()
    if((strcmp(token.data, "static")))
       return SYNTAX_ERR;   
 
+   int nazov_len = 0;   //dlzka nazvu
+   char *nazov = NULL;  //samotny nazov
+   int symbol_type;
+
                 //ak pride void pravidlo: <SD> -> void id <SDA>      
    get_token(); //inak pravidlo: <SD> -> <PARS> <DECL>;
    if(!(strcmp(token.data, "void")))
    {
-      
+      symbol_type = sym_type(token);  //vrati typ statickeho symbolu
+                                      
       get_token();   //ocakavam id
       if(token.stav != S_ID)
          return SYNTAX_ERR;
+
+      nazov_len = strlen(token.data); //vracia nazov statickeho symbolu
+      nazov = mymalloc(nazov_len*sizeof(char) + 2);
+      if(nazov == NULL) 
+      {
+         error = INTERNAL_ERR;
+         clearAll();
+         return error;
+      }
+      strcpy(nazov,token.data);
+      nazov[strlen(token.data)+1] = '\0';
+
+      if(Htab_search(ukazatel_na_triedu,token.data))
+      {
+         fprintf(stderr, "SEMANTIC_PROG_ERR. Function \"%s\" already defined in \"%s\"\n.", token.data, classname);
+         return SEMANTIC_PROG_ERR;
+      }
+
+      symbol = sym_function_init(nazov, symbol_type, classname);
+      Htab_insert(ukazatel_na_triedu, symbol, NULL);
       
       //pouzite pravidlo <SDA> -> ( <PA> ) { <MB> }
       get_token(); //musi byt lava zatvorka
@@ -175,10 +271,13 @@ int after_class()
       if(token.stav == S_PZAT)   //prazdny pocet argumentov
       {
          // pravidlo: <PA> -> epsilon
+         
          get_token();   
          if(token.stav != S_L_KOSZ)
             return SYNTAX_ERR;
          
+         local_table = loc_table_init();  //inicializcia tabulky pre lokalne premenne vo funkcii
+
          get_token();
          error = main_body();
 
@@ -249,14 +348,31 @@ int after_class()
    }
    else if(!((strcmp(token.data, "String"))&&(strcmp(token.data, "int"))&&(strcmp(token.data, "double"))))  //pravidlo <SD> -> <Pars> <Decl>
    {
+      symbol_type = sym_type(token);  //vrati typ statickeho symbolu
+
       get_token();
       if(token.stav != S_ID)
          return SYNTAX_ERR; 
-      get_token();          
 
+      nazov_len = strlen(token.data); //vracia nazov statickeho symbolu
+      nazov = mymalloc(nazov_len*sizeof(char) + 2);
+      if(nazov == NULL) 
+      {
+         error = INTERNAL_ERR;
+         clearAll();
+         return error;
+      }
+      strcpy(nazov,token.data);
+      nazov[strlen(token.data)+1] = '\0';
+
+      get_token();          
       switch(token.stav)
       {
          case S_SEMICOLON:          //pravidlo <Decl> -> ;
+                                    //(Tmeno, typ symbolu, inici, nazov cls, static, deklarovana)
+            symbol = sym_variable_init(nazov, symbol_type, false, classname, true, true);
+            Htab_insert(ukazatel_na_triedu, symbol, NULL);
+
             get_token();
             if(!(strcmp(token.data, "static")))
             {
@@ -268,11 +384,17 @@ int after_class()
             break;
 
          case S_PRIR:               // pravidlo <Decl> ->
+                                    
+            symbol = sym_variable_init(nazov, symbol_type, true, classname, true, true);
+            Htab_insert(ukazatel_na_triedu, symbol, NULL);                
+                                    
             while(token.stav != S_SEMICOLON)
             {
                get_token();
                if(error != SUCCESS)
                   return error;
+               if(token.stav == S_P_KOSZ || token.stav == S_EOF)
+                  break;
             }
 
             if(token.stav != S_SEMICOLON)
@@ -370,7 +492,7 @@ int after_class()
       }
    }
 
-   return error;
+   return SEMANTIC_TYPE_ERR;
 }
 
 int params_after()
@@ -505,10 +627,14 @@ int main_body()   //pravidlo <MB> -> <SL> <MB>
       get_token();
       if(token.stav == S_PRIR)    //priradenie do premennej
       {  
-         //provizorne
-         get_token();
-         if(token.stav != S_SEMICOLON)
-            return SYNTAX_ERR;
+         while(token.stav != S_SEMICOLON)
+         {
+            get_token();
+            if(error != SUCCESS)
+               return error;
+            if(token.stav == S_EOF || token.stav == S_P_KOSZ)
+               break;
+         }
       }
       else if(token.stav == S_LZAT)    //lubovalna ina funckia
       {
@@ -554,8 +680,14 @@ int main_body()   //pravidlo <MB> -> <SL> <MB>
    }
    else if(!(strcmp(token.data, "return")))
    {
-         //zatial takto inak tu bude vyraz      
-         get_token();
+         while(token.stav != S_SEMICOLON)      
+         {
+            get_token();
+            if(error != SUCCESS)
+               return error;
+            if(token.stav == S_P_KOSZ || token.stav == S_EOF)
+               break;
+         }
          if(token.stav != S_SEMICOLON)
             return SYNTAX_ERR;
    }
@@ -739,8 +871,14 @@ int main_body_riadiace()   //pravidlo <MB> -> <SL> <MB>
    }
    else if(!(strcmp(token.data, "return")))
    {
-         //zatial takto inak tu bude vyraz      
-         get_token();
+         while(token.stav != S_SEMICOLON)      
+         {
+            get_token();
+            if(error != SUCCESS)
+               return error;
+            if(token.stav == S_P_KOSZ || token.stav == S_EOF)
+               break;
+         }
          if(token.stav != S_SEMICOLON)
             return SYNTAX_ERR;
    }
@@ -1405,8 +1543,12 @@ int main_body_scnd()   //pravidlo <MB> -> <SL> <MB>
       front_token();
       if(token2.stav == S_PRIR)    //priradenie do premennej
       {  
-         //provizorne
          front_token();
+         error = expresion_parser();
+
+         if(error != SUCCESS)
+            return error;
+
          if(token2.stav != S_SEMICOLON)
             return SYNTAX_ERR;
       }
@@ -1453,9 +1595,11 @@ int main_body_scnd()   //pravidlo <MB> -> <SL> <MB>
          return SYNTAX_ERR;
    }
    else if(!(strcmp(token2.data, "return")))
-   {
-         //zatial takto inak tu bude vyraz      
+   {     
          front_token();
+         error = expresion_parser();
+         if(error != SUCCESS)
+            return error;
          if(token2.stav != S_SEMICOLON)
             return SYNTAX_ERR;
    }
@@ -1618,8 +1762,10 @@ int main_body_riadiace_scnd()   //pravidlo <MB> -> <SL> <MB>
    }
    else if(!(strcmp(token2.data, "return")))
    {
-         //zatial takto inak tu bude vyraz      
          front_token();
+         error = expresion_parser();
+         if(error != SUCCESS)
+            return error;
          if(token2.stav != S_SEMICOLON)
             return SYNTAX_ERR;
    }

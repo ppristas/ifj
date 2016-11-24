@@ -12,6 +12,9 @@
    *                                                                            *               
    ********************************************************************************/
 
+   #ifndef PAR_H
+   #define PAR_H
+
    int is_build_function();
    int parser();
    int prog();
@@ -36,7 +39,9 @@
    int print_params_scnd();
    int build_function_call_scnd(int decider);
 
-   /*void expand(tStack *p_stack, int num,...); */
+   /*------------Ostatne-------------------*/
+   char* reverse(char *str);
+   char* get_substring(char *str);
 
    typedef enum{
    F_NbIF,        // 0 not build in function
@@ -50,3 +55,5 @@
    F_find,        // 8 compare
    F_sort,        // 9 sort
 }BI_Funkce;
+
+   #endif
