@@ -19,31 +19,29 @@ typedef struct
     VAR_TYPE declared_type;
 }Pseudotoken;
 
+// TAKTO SI TO DANO PREDSTAVUJE
+// ZAPUZDRIT DATA DO Struktury
+typedef struct
+{
+    VAR_TYPE type;
+    union {
+        int INT;
+        double DOUBLE;
+        char* STRING;
+    }value;
+}T_Data;
 
 typedef struct st_local_data
 {
     char* local_key;
-    VAR_TYPE local_type;
-
-    union
-    {
-        int loc_i;
-        double loc_dbl;
-        char* loc_str;
-    }local_value;
-
+    T_Data* data;           // STRUKTURA DATA PRE INTERPRET | DATA V LOKAL. DATA
     struct st_local_data* next_local;
 }T_local_data;
 
 
 typedef struct st_static_var
 {
-    union
-    {
-        int i;
-        double dbl;
-        char *str;
-    }value;
+    T_Data* data;       // STRUKTURA DATA V STATIC VAR
 }T_Static_var;
 
 
