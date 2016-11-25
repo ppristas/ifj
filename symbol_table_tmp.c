@@ -178,8 +178,10 @@ void Static_Htab_define(char* class_name,char* static_name,T_ClassHtab* table,Ps
         T_Static_symbol* new_symbol;
         if ((new_symbol=(T_Static_symbol*)mymalloc(sizeof(T_Static_symbol)*1)) == NULL)
             return;
+
         if ((new_symbol->static_key=(char*)mymalloc(sizeof(char)* ((int)strlen(static_name) + 1))) == NULL)
             return;
+
         strcpy(new_symbol->static_key,static_name);
         new_symbol->next_static=class_ptr->StaticHTab[index];
         class_ptr->StaticHTab[index]=new_symbol;
@@ -200,12 +202,17 @@ void Static_Htab_define(char* class_name,char* static_name,T_ClassHtab* table,Ps
                 return;
 
 
+            if ((new_symbol->static_var->data=(T_Data*)mymalloc(sizeof(T_Data)*1)) == NULL )
+                return;
+
+            new_symbol->static_var->data->type=token.declared_type;
+
             //inicializacia na 0 pre staticku premennu + string dat
 
             if (token.declared_type==T_INT)
-                    new_symbol->static_var->value.i=0;
+                    new_symbol->static_var->data->value.INT=0;
             else if(token.declared_type==T_DOUBLE)
-                    new_symbol->static_var->value.dbl=0.0;
+                    new_symbol->static_var->data->value.DOUBLE=0.0;
         }
     }
 }
@@ -255,11 +262,11 @@ void Static_Var_Add(char* class_name,char* static_name,T_ClassHtab* table,void* 
     {
         // KONTROLA TYPU + VKLADANIE TYPU !!!
         if (type == T_INT)
-            static_tmp->static_var->value.i=(*(int*)(value));
+            static_tmp->static_var->data->value.INT=(*(int*)(value));
         else if (type == T_DOUBLE)
-            static_tmp->static_var->value.dbl=(*(double*)(value));
+            static_tmp->static_var->data->value.DOUBLE=(*(double*)(value));
         else if (type == T_STRING)
-            static_tmp->static_var->value.str=((char*)(value));
+            static_tmp->static_var->data->value.STRING=((char*)(value));
     }
 }
 
@@ -332,16 +339,22 @@ void Local_table_insert(char* local_var, T_ClassHtab* table, Pseudotoken token)
 
         if ((local_tmp->local_key=(char*)mymalloc(sizeof(char)*((int)strlen(local_var)+1))) == NULL)
             return;
+
         strcpy(local_tmp->local_key,local_var);
-        local_tmp->local_type=token.declared_type;
         local_tmp->next_local=table->inClass->inFunction->Local_Htab[index];
         table->inClass->inFunction->Local_Htab[index]=local_tmp;
 
+
+        if ((local_tmp->data=(T_Data*)mymalloc(sizeof(T_Data)*1)) == NULL)
+            return;
+
+        local_tmp->data->type=token.declared_type;
+
         //inicializacia hodnot na nuly + doplnit string
         if (token.declared_type==T_INT)
-            local_tmp->local_value.loc_i=0;
+            local_tmp->data->value.INT=0;
         else if (token.declared_type==T_DOUBLE)
-            local_tmp->local_value.loc_dbl=0.0;
+            local_tmp->data->value.DOUBLE=0.0;
     }
 }
 
@@ -353,7 +366,7 @@ void Local_table_add_var(char* local_var,T_ClassHtab* table,void* value,int type
     {
         printf("Local variable exist!\n");
     }
-    else if (local_tmp->local_type != type)
+    else if (local_tmp->data->type != type)
     {
         printf("Local variable: Type mišmaš!\n");
     }
@@ -361,11 +374,11 @@ void Local_table_add_var(char* local_var,T_ClassHtab* table,void* value,int type
     {
         // TYPOVA KONTROLA !!!
         if (type==T_INT)
-            local_tmp->local_value.loc_i=(*(int*)(value));
+            local_tmp->data->value.INT=(*(int*)(value));
         else if (type == T_DOUBLE)
-            local_tmp->local_value.loc_dbl=(*(double*)(value));
+            local_tmp->data->value.DOUBLE=(*(double*)(value));
         else if (type == T_STRING)
-            local_tmp->local_value.loc_str=((char*)(value));
+            local_tmp->data->value.STRING=((char*)(value));
     }
 }
 
@@ -432,12 +445,12 @@ static void Print_local_chain(T_local_data* local_data)
     {
         printf(" (%s -  ",tmp->local_key);
 
-        if (tmp->local_type==T_INT)
-            printf("%d) ",tmp->local_value.loc_i);
-        else if (tmp->local_type==T_DOUBLE)
-            printf("%f) ",tmp->local_value.loc_dbl);
-        else if (tmp->local_type==T_STRING)
-            printf("%s) ",tmp->local_value.loc_str);
+        if (tmp->data->type==T_INT)
+            printf("%d) ",tmp->data->value.INT);
+        else if (tmp->data->type==T_DOUBLE)
+            printf("%f) ",tmp->data->value.DOUBLE);
+        else if (tmp->data->type==T_STRING)
+            printf("%s) ",tmp->data->value.STRING);
 
         tmp=tmp->next_local;
     }
@@ -612,10 +625,10 @@ int main(int argc, char *argv[])
     printf("VYPIS HODNOT\n");
 
     tmp=Static_Htab_search("MyClass","var1",global_table);
-    printf("var1 z MyClass = %d\n",tmp->static_var->value.i);
+    printf("var1 z MyClass = %d\n",tmp->static_var->data->value.INT);
 
     tmp=Static_Htab_search("MyClass","var2",global_table);
-    printf("var2 z MyClass = %d\n",tmp->static_var->value.i);
+    printf("var2 z MyClass = %d\n",tmp->static_var->data->value.INT);
 
     printf("funk2 z MyClass lokalne\n");
     Print_local(Static_Htab_search("MyClass","funk2",global_table));
@@ -625,7 +638,7 @@ int main(int argc, char *argv[])
 
 
     tmp=Static_Htab_search("Main","Mvar",global_table);
-    printf("Mvar z Main = %d\n",tmp->static_var->value.i);
+    printf("Mvar z Main = %d\n",tmp->static_var->data->value.INT);
 
     printf("run z Main lokalne\n");
     Print_local(Static_Htab_search("Main","run",global_table));
