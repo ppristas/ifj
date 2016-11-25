@@ -23,15 +23,7 @@
 ///////////nova struktura tabulky symbolov//////////////////
 ////////////////////////////////////////////////////////////
 
-typedef struct _TNode {
-   struct Sym_item *symarg;
-   struct _TNode *next;
-} TNode;
 
-typedef struct _TList {
-   TNode *first;
-   TNode *act;
-} TList;
 
 typedef enum{
 	tNan,
@@ -40,13 +32,31 @@ typedef enum{
 	tString,
 }symbolType;
 
-typedef struct Loc_item {
-	char *name;
-	symbolType type;
+typedef struct _TNode {
+   symbolType type;
+   char *name;
+   struct _TNode *next;
+} TNode;
+
+typedef struct _TList {
+   TNode *first;
+   TNode *act;
+} TList;
+
+typedef struct sym_Data {
 	char *data;
-	bool fce;
 	TList *args;
+	symbolType type;
+	item* instrPtr;
+} symData;
+
+typedef struct Loc_item {
+	symData *data;
+	//TODO UNION
+	char *name;
+	bool fce;
 	bool init;
+	bool decl;
 	char *class_name;
 	struct Loc_item *nextptr;
 }locSymbol;
@@ -58,16 +68,15 @@ typedef struct local_table{
 typedef Hash_local_item locTable[Hash_table_size];
 
 typedef struct Sym_item{
-	char *name;						//treba naalokovat sizeof(char)*strlen(token.data) + 2)
-	symbolType type;				//typ ---moze byt aj navratova hodnota
-	char *data;						//data napr i = 50 v datach bude char "50";
-	bool fce;						//true - je funkcia, false - je premenna	
-	TList *args;					//argumenty je potreba robit jednosmerne viazany zoznam
+	symData *data;
+	//TODO UNION
+	char *name;
+	bool fce;
 	bool init;
-	//bool decl;
-	locTable *ptr_loctable; 	//tabulka pre lokalne symboly
-	char *class_name;				//nazov triedy ,ktorej patri symbol
-	bool isstatic;					//true - globalna, false - lokalna
+	bool decl;
+	locTable *ptr_loctable;
+	char *class_name;
+	bool isstatic;
 	struct Sym_item *nextptr;
 }iSymbol;
 
@@ -93,9 +102,12 @@ typedef Hash_class clHTable[Hash_table_size];
 //extern clHTable *Class_table;
 
 //local table
+void local_function_add_args(locSymbol* locfuncsym, char *name, int typ_s, int counter);
 void sym_function_add_locals(iSymbol* funcsym,locTable* ptrloctable);
 locTable* loc_table_init();
-locSymbol* loc_symbol_init(char *data,int stype, bool isinit, char *classname);
+void loc_sym_copy(locSymbol* local1, locSymbol* local2);
+locSymbol* loc_symbol_init(char *data, int stype, bool isinit, char *classname);
+locSymbol* loc_symbol_function_init(char *data, int stype, char *classname);
 void loc_table_insert(locTable* ptrloctable,locSymbol* new_locsymbol, char *data);
 locSymbol* loc_symbol_search(locTable* ptrloctable,char *data);
 //table containing classes
@@ -105,13 +117,13 @@ void class_insert(clHTable *clptr, Hash_class *ptrclass);
 Hash_class* make_class(tHTable* tab, char *classname);
 //linked list
 TList* linked_list_init();
-void list_insert_first(TList *list, iSymbol *arg);
-void list_insert_next(TList *list, iSymbol *arg);
+void list_insert_first(TList *list, char *name, int typ_s);
+void list_insert_next(TList *list, char *name, int typ_s);
 //symbol
 symbolType sym_type(Ttoken token);
 void sym_copy_variable(iSymbol* ptrsym1, iSymbol* ptrsym2);
-void function_add_args(iSymbol* funcsym, iSymbol* arg, int counter);
-iSymbol* sym_variable_init(char *data, int stype, bool isinit, char *classname, bool isstat);
+void function_add_args(iSymbol* funcsym, char *name, int typ_s,int counter);
+iSymbol* sym_variable_init(char *data, int stype, bool isinit, char *classname, bool isstat, bool isdecl);
 iSymbol* sym_function_init(char *data, int stype, char *classname);
 //table for class e.g. Main
 void Htab_insert(tHTable* tab, iSymbol* newsymbol,char *data);

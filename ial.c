@@ -25,6 +25,14 @@
 //tHTable* Main_table;
 //clHTable* Class_table;
 
+/**
+ *      searches for symbol
+ *
+ * @param      ptrloctable  pointer to local table
+ * @param      data         name of symbol
+ *
+ * @return     if found then returns pointer to symbol
+ */
 locSymbol* loc_symbol_search(locTable* ptrloctable,char *data) {
 	unsigned index = hash_function(data);
 	locSymbol* findlocsym = (*ptrloctable)[index].ptr;
@@ -38,26 +46,33 @@ locSymbol* loc_symbol_search(locTable* ptrloctable,char *data) {
 	return NULL;
 }
 
+/**
+ *       inserts symbol into local table 
+ *
+ * @param      ptrloctable    pointer to local table
+ * @param      new_locsymbol  symbol to be inserted
+ * @param      data           additional data for symbol
+ */
 void loc_table_insert(locTable* ptrloctable,locSymbol* new_locsymbol, char *data) {
 	if(loc_symbol_search(ptrloctable,new_locsymbol->name) != NULL) {
 		//rewrite data
-		if(new_locsymbol->data == NULL) {
+		if(new_locsymbol->data->data == NULL) {
 			int length = strlen(data);
-			new_locsymbol->data = mymalloc(length*sizeof(char) + 2);
-			strcpy(new_locsymbol->data,data);
-			new_locsymbol->data[strlen(data)+1] = '\0';
+			new_locsymbol->data->data = mymalloc(length*sizeof(char) + 2);
+			strcpy(new_locsymbol->data->data,data);
+			new_locsymbol->data->data[strlen(data)+1] = '\0';
 		}
 		else {
 			int length_new = strlen(data);
-			int length_prev = strlen(new_locsymbol->data);
+			int length_prev = strlen(new_locsymbol->data->data);
 
 			if(length_new > length_prev) {
-				new_locsymbol->data = myrealloc(new_locsymbol->data,sizeof(char)*length_new);
-				strcpy(new_locsymbol->data,data);
-				new_locsymbol->data[strlen(data)+1] = '\0';
+				new_locsymbol->data->data = myrealloc(new_locsymbol->data->data,sizeof(char)*length_new);
+				strcpy(new_locsymbol->data->data,data);
+				new_locsymbol->data->data[strlen(data)+1] = '\0';
 			}
 			else 
-				strcpy(new_locsymbol->data,data);
+				strcpy(new_locsymbol->data->data,data);
 		}
 	}
 	else {
@@ -73,8 +88,157 @@ void loc_table_insert(locTable* ptrloctable,locSymbol* new_locsymbol, char *data
 	}
 }
 
-locSymbol* loc_symbol_init(char *data,int stype, bool isinit, char *classname) {
+/**
+ *       linked list of arguements
+ *
+ * @param      locfuncsym  pointer to function
+ * @param      name        name of arguement
+ * @param      typ_s       type of arguement
+ * @param      counter     counter of arguement
+ */
+void local_function_add_args(locSymbol* locfuncsym, char *name, int typ_s, int counter) {
+	char str[15];
+    sprintf(str,"%d",counter);
+
+    if(locfuncsym->data->data == NULL) {
+        int length = strlen(str);
+        locfuncsym->data->data = mymalloc(length*sizeof(char) + 2);
+        if(locfuncsym->data->data == NULL) {
+            error = INTERNAL_ERR;
+            clearAll();
+            return;
+        }
+        strcpy(locfuncsym->data->data,str);
+        locfuncsym->data->data[strlen(str)+1] = '\0';
+
+        locfuncsym->data->args = mymalloc(sizeof(struct _TList));
+        if(locfuncsym->data->args == NULL) {
+            error = INTERNAL_ERR;
+            clearAll();
+            return;
+        }
+
+        //adds only first arguement
+        locfuncsym->data->args = linked_list_init();
+        list_insert_first(locfuncsym->data->args, name, typ_s);
+
+        
+    }
+    else {
+
+        int length_new = strlen(str);
+        int length_prev = strlen(locfuncsym->data->data);
+
+        if(length_new > length_prev) {
+            locfuncsym->data->data = myrealloc(locfuncsym->data,sizeof(char)*length_new);
+            if(locfuncsym->data->data == NULL) {
+                error = INTERNAL_ERR;
+                clearAll();
+                return;
+            }
+            strcpy(locfuncsym->data->data,str);
+            locfuncsym->data->data[strlen(str)+1] = '\0';
+        }
+        strcpy(locfuncsym->data->data,str);
+        locfuncsym->data->data[strlen(str)+1] = '\0';
+
+        //lets begin
+        list_insert_next(locfuncsym->data->args, name, typ_s);
+    }
+}
+
+void loc_sym_copy(locSymbol* local1, locSymbol* local2) {
+	if(local1->init == true) {
+		error = SEMANTIC_PROG_ERR;
+		clearAll();
+		return;
+	}
+
+	int length_data1 = strlen(local1->data->data);
+	int length_data2 = strlen(local2->data->data);
+
+	if(length_data2 > length_data1) {
+		local1->data->data = myrealloc(local1->data->data,sizeof(char)*length_data2);
+	}
+	local1->data->data = local2->data->data;
+	local1->init = true;
+
+	return;
+}
+
+/**
+ *       initialization of local function symbol
+ *
+ * @param      data        name of symbol
+ * @param      ptrsymdata  pointer to strucuture for additional data
+ * @param      stype       type of symbol
+ * @param      classname   name of class
+ *
+ * @return     pointer to symbol
+ */
+locSymbol* loc_symbol_function_init(char *data,  int stype, char *classname) {
 	locSymbol* locsym = NULL;
+	symData *ptrsymdata = NULL;
+	locsym = mymalloc(sizeof(struct Loc_item));
+	if(locsym == NULL) {
+		error = INTERNAL_ERR;
+		clearAll();
+		return NULL;
+	}
+
+	int len_name = strlen(data);
+	locsym->name = mymalloc(sizeof(char) + 2);
+	if(locsym->name == NULL) {
+		error = INTERNAL_ERR;
+		clearAll();
+		return NULL;
+	}
+	strcpy(locsym->name,data);
+	locsym->name[strlen(data)+1] = '\0';
+
+	int len_classname = strlen(classname);
+	locsym->class_name = mymalloc(len_classname*sizeof(char) + 2);
+	if(locsym->class_name == NULL) {
+		error = INTERNAL_ERR;
+		clearAll();
+		return NULL;
+	}
+	strcpy(locsym->class_name,classname);
+	locsym->class_name[strlen(classname)+1] = '\0';
+
+	ptrsymdata = mymalloc(sizeof(symData));
+	if(ptrsymdata == NULL) {
+		error = INTERNAL_ERR;
+		clearAll();
+		return error;
+	}
+	locsym->data = ptrsymdata;
+	locsym->data->type = stype;
+	locsym->data->data = NULL;
+	locsym->fce = true;
+	locsym->data->args = NULL;
+	locsym->data->instrPtr = NULL;
+	locsym->init = false;
+	locsym->decl = true;
+	locsym->nextptr = NULL;
+	return locsym;
+
+}
+
+/**
+ *       initializatioon of local symbol variable
+ *
+ * @param      data        name of symbol
+ * @param      ptrsymdata  pointer to structure for additional data
+ * @param      stype       type of symbol
+ * @param      isinit      bool init
+ * @param      classname   name of class
+ *
+ * @return     pointer to symbol
+ */
+locSymbol* loc_symbol_init(char *data, int stype, bool isinit, char *classname) {
+	locSymbol* locsym = NULL;
+	symData* ptrsymdata = NULL;
 	locsym = mymalloc(sizeof(struct Loc_item));
 	if(locsym == NULL) {
 		error = INTERNAL_ERR;
@@ -101,16 +265,31 @@ locSymbol* loc_symbol_init(char *data,int stype, bool isinit, char *classname) {
 	}
 	strcpy(locsym->class_name,classname);
 	locsym->class_name[strlen(classname)+1] = '\0';
-	locsym->type = stype;
-	locsym->data = NULL;
+
+	ptrsymdata = mymalloc(sizeof(symData));
+	if(ptrsymdata == NULL) {
+		error = INTERNAL_ERR;
+		clearAll();
+		return error;
+	}
+	
+	locsym->data = ptrsymdata;
+	locsym->data->type = stype;
+	locsym->data->data = NULL;
 	locsym->fce = NULL;
-	locsym->args = NULL;
+	locsym->data->args = NULL;
+	locsym->data->instrPtr = NULL;
 	locsym->init = isinit;
 	locsym->nextptr = NULL;
 
 	return locsym;
 }
 
+/**
+ *       initialization of local table
+ *
+ * @return     pointer to the local table
+ */
 locTable* loc_table_init() {
 	locTable* result = mymalloc(sizeof(Hash_local_item) * Hash_table_size);
 
@@ -125,6 +304,14 @@ locTable* loc_table_init() {
 	return result;
 }
 
+/**
+ *       searches for class
+ *
+ * @param      clptr      table of classes
+ * @param      classname  name of class
+ *
+ * @return     pointer to the class with name
+ */
 Hash_class* class_search(clHTable *clptr,char *classname) {
 	unsigned index = hash_function(classname);
 	Hash_class *findclass = (*clptr)[index].next;
@@ -138,6 +325,14 @@ Hash_class* class_search(clHTable *clptr,char *classname) {
 	return NULL;
 }
 
+/**
+ *      links name of the class with the pointer for the class
+ *
+ * @param      tab        pointer for the  class
+ * @param      classname  name of class
+ *
+ * @return     pointer for the class with name
+ */
 Hash_class* make_class(tHTable* tab, char *classname) {
 	Hash_class* result = mymalloc(sizeof(Hash_class));
 	if(result == NULL) {
@@ -161,6 +356,12 @@ Hash_class* make_class(tHTable* tab, char *classname) {
 
 }
 
+/**
+ *      inserts class into table
+ *
+ * @param      clptr     pointer to to table for classes
+ * @param      ptrclass  pointer to the class
+ */
 void class_insert(clHTable *clptr, Hash_class *ptrclass) {
 
 		unsigned index = hash_function(ptrclass->classname);
@@ -175,6 +376,11 @@ void class_insert(clHTable *clptr, Hash_class *ptrclass) {
 
 }
 
+/**
+ *      initialization of table for classes
+ *
+ * @return     pointer to the table of classes
+ */
 clHTable* class_init() {
 	clHTable* result = mymalloc(sizeof(Hash_class) * Hash_table_size);
 
@@ -210,7 +416,7 @@ void list_delete(TList *list) {
  * @param      list  pointer to list
  * @param      arg   pointer to arguement
  */
-void list_insert_first(TList *list, iSymbol *arg) {
+void list_insert_first(TList *list, char *name, int typ_s) {
 	TNode *tmp = mymalloc(sizeof(TNode));
 	if((tmp == NULL) || (list == NULL)) {
 		fprintf(stderr, "NULL pointer\n");
@@ -219,8 +425,8 @@ void list_insert_first(TList *list, iSymbol *arg) {
 		return;
 	}
 
-	tmp->symarg = arg;
-	tmp->next = list->first;
+	tmp->name = name;
+	tmp->type = typ_s;
 	list->first = tmp;
 	//nastavenie aktivity
 	list->act = list->first;
@@ -232,7 +438,7 @@ void list_insert_first(TList *list, iSymbol *arg) {
  * @param      list  pointer to list
  * @param      arg   pointer to arguement
  */
-void list_insert_next(TList *list, iSymbol *arg) {
+void list_insert_next(TList *list, char *name, int typ_s) {
 	//new argument
 	TNode *addnode = NULL;
 	if(list->act != NULL) {
@@ -242,7 +448,8 @@ void list_insert_next(TList *list, iSymbol *arg) {
 			return;
 		}
 		else {
-			addnode->symarg = arg;
+			addnode->name = name;
+			addnode->type = typ_s;
 			addnode->next = list->act->next;
 			list->act->next = addnode;
 			list->act = list->act->next;
@@ -305,13 +512,13 @@ void sym_copy_variable(iSymbol* ptrsym1, iSymbol* ptrsym2) {
 		return;
 	}
 
-	int length_data1 = strlen(ptrsym1->data);
-	int length_data2 = strlen(ptrsym2->data);
+	int length_data1 = strlen(ptrsym1->data->data);
+	int length_data2 = strlen(ptrsym2->data->data);
 
 	if(length_data2 > length_data1) {
-		ptrsym1->data = myrealloc(ptrsym1->data,sizeof(char)*length_data2);
+		ptrsym1->data->data = myrealloc(ptrsym1->data->data,sizeof(char)*length_data2);
 	}
-	ptrsym1->data = ptrsym2->data;
+	ptrsym1->data->data = ptrsym2->data->data;
 	ptrsym1->init = true;
 
 	return;
@@ -320,7 +527,7 @@ void sym_copy_variable(iSymbol* ptrsym1, iSymbol* ptrsym2) {
 /**
  * initializes symbol variable from given data
  *
- * @param      name		  name of symbol
+ * @param      name		  name of symbo
  * @param      data       additional info e.g. data = "50"
  * @param	   stype      type of symbol
  * @param      isinit     bool value true-initialized false-not initialized
@@ -329,8 +536,9 @@ void sym_copy_variable(iSymbol* ptrsym1, iSymbol* ptrsym2) {
  *
  * @return     pointer to symbol
  */
-iSymbol* sym_variable_init(char *data, int stype, bool isinit, char *classname, bool isstat) {
+iSymbol* sym_variable_init(char *data, int stype, bool isinit, char *classname, bool isstat, bool isdecl) {
     iSymbol* ptrsym = NULL;
+    symData* ptrsymdata = NULL;
     ptrsym = mymalloc(sizeof(struct Sym_item));
     if(ptrsym == NULL) {
         error = INTERNAL_ERR;
@@ -357,10 +565,19 @@ iSymbol* sym_variable_init(char *data, int stype, bool isinit, char *classname, 
     strcpy(ptrsym->class_name, classname);
     ptrsym->class_name[strlen(classname)+1] = '\0';
 
-    ptrsym->type = stype;
-    ptrsym->data = NULL;
+    ptrsymdata = mymalloc(sizeof(symData));
+	if(ptrsymdata == NULL) {
+		error = INTERNAL_ERR;
+		clearAll();
+		return error;
+	}
+    ptrsym->data = ptrsymdata;
+    ptrsym->data->type = stype;
+    ptrsym->data->data = NULL;
     ptrsym->fce = false;
-    ptrsym->args = NULL;
+    ptrsym->decl = isdecl;
+    ptrsym->data->args = NULL;
+    ptrsym->data->instrPtr = NULL;
     ptrsym->ptr_loctable = NULL;
     ptrsym->init = isinit;
     ptrsym->isstatic = isstat;
@@ -386,6 +603,7 @@ void sym_function_add_locals(iSymbol* funcsym,locTable* ptrloctable) {
 iSymbol* sym_function_init(char *data, int stype, char *classname) {
 
     iSymbol* ptrsym = NULL;
+    symData* ptrsymdata = NULL;
     ptrsym = mymalloc(sizeof(struct Sym_item));
     if(ptrsym == NULL) {
         error = INTERNAL_ERR;
@@ -412,11 +630,19 @@ iSymbol* sym_function_init(char *data, int stype, char *classname) {
     strcpy(ptrsym->class_name, classname);
     ptrsym->class_name[strlen(classname)+1] = '\0';
 
-    ptrsym->type = stype;
-    ptrsym->data = NULL;
+    ptrsymdata = mymalloc(sizeof(symData));
+	if(ptrsymdata == NULL) {
+		error = INTERNAL_ERR;
+		clearAll();
+		return error;
+	}
+    ptrsym->data = ptrsymdata;
+    ptrsym->data->type = stype;
+    ptrsym->data->data = NULL;
     ptrsym->ptr_loctable = NULL;
     ptrsym->fce = true;
-    ptrsym->args = NULL;
+    ptrsym->data->args = NULL;
+    ptrsym->data->instrPtr = NULL;
     ptrsym->isstatic = false;
     ptrsym->init = false;
     ptrsym->nextptr = NULL;
@@ -428,60 +654,59 @@ iSymbol* sym_function_init(char *data, int stype, char *classname) {
  * adds arguements into list for symbol of function
  *
  * @param      funcsym  pointer to symbol of function
- * @param      arg      arguement
+ * @param      name     name of arguement
+ * @param 	   typ_s	type of arguement
  * @param      counter  count of arguements
  */
-void function_add_args(iSymbol* funcsym, iSymbol* arg, int counter) {
+void function_add_args(iSymbol* funcsym, char *name, int typ_s,int counter) {
 
     char str[15];
     sprintf(str,"%d",counter);
 
-    if(funcsym->data == NULL) {
+    if(funcsym->data->data == NULL) {
         int length = strlen(str);
-        funcsym->data = mymalloc(length*sizeof(char) + 2);
-        if(funcsym->data == NULL) {
+        funcsym->data->data = mymalloc(length*sizeof(char) + 2);
+        if(funcsym->data->data == NULL) {
             error = INTERNAL_ERR;
             clearAll();
             return;
         }
-        strcpy(funcsym->data,str);
-        funcsym->data[strlen(str)+1] = '\0';
+        strcpy(funcsym->data->data,str);
+        funcsym->data->data[strlen(str)+1] = '\0';
 
-        funcsym->args = mymalloc(sizeof(struct Sym_item));
-        if(funcsym->args == NULL) {
+        funcsym->data->args = mymalloc(sizeof(struct _TList));
+        if(funcsym->data->args == NULL) {
             error = INTERNAL_ERR;
             clearAll();
             return;
         }
 
         //adds only first arguement
-        funcsym->args = linked_list_init();
-        list_insert_first(funcsym->args, arg);
-        printf("%s\n", funcsym->args->first->symarg->name);
+        funcsym->data->args = linked_list_init();
+        list_insert_first(funcsym->data->args, name, typ_s);
 
         
     }
     else {
 
         int length_new = strlen(str);
-        int length_prev = strlen(funcsym->data);
+        int length_prev = strlen(funcsym->data->data);
 
         if(length_new > length_prev) {
-            funcsym->data = myrealloc(funcsym->data,sizeof(char)*length_new);
-            if(funcsym->data == NULL) {
+            funcsym->data->data = myrealloc(funcsym->data,sizeof(char)*length_new);
+            if(funcsym->data->data == NULL) {
                 error = INTERNAL_ERR;
                 clearAll();
                 return;
             }
-            strcpy(funcsym->data,str);
-            funcsym->data[strlen(str)+1] = '\0';
+            strcpy(funcsym->data->data,str);
+            funcsym->data->data[strlen(str)+1] = '\0';
         }
-        strcpy(funcsym->data,str);
-        funcsym->data[strlen(str)+1] = '\0';
+        strcpy(funcsym->data->data,str);
+        funcsym->data->data[strlen(str)+1] = '\0';
 
         //lets begin
-        list_insert_next(funcsym->args, arg);
-        printf("%s\n", funcsym->args->act->symarg->name);
+        list_insert_next(funcsym->data->args, name, typ_s);
     } 
 
 }
@@ -528,22 +753,22 @@ void Htab_insert(tHTable* tab, iSymbol* newsymbol , char *data)
     if(Htab_search(tab,newsymbol->name) != NULL){
         //rewrites data
         
-        if(newsymbol->data == NULL){
+        if(newsymbol->data->data == NULL){
             int length = strlen(data);
-            newsymbol->data = mymalloc(length*sizeof(char) + 2);
-            strcpy(newsymbol->data,data);
-            newsymbol->data[strlen(data)+1] = '\0';
+            newsymbol->data->data = mymalloc(length*sizeof(char) + 2);
+            strcpy(newsymbol->data->data,data);
+            newsymbol->data->data[strlen(data)+1] = '\0';
         }else{
             int length_new = strlen(data);
-            int length_prev = strlen(newsymbol->data);
+            int length_prev = strlen(newsymbol->data->data);
 
             if(length_new > length_prev) {
-                newsymbol->data = myrealloc(newsymbol->data,sizeof(char)*length_new);    
-                strcpy(newsymbol->data,data);
-                newsymbol->data[strlen(data)+1] = '\0';
+                newsymbol->data = myrealloc(newsymbol->data->data,sizeof(char)*length_new);    
+                strcpy(newsymbol->data->data,data);
+                newsymbol->data->data[strlen(data)+1] = '\0';
             }
             else
-            	strcpy(newsymbol->data,data);
+            	strcpy(newsymbol->data->data,data);
 
         }
 
