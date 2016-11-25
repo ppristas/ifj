@@ -52,29 +52,10 @@ locSymbol* loc_symbol_search(locTable* ptrloctable,char *data) {
  *
  * @param      ptrloctable    pointer to local table
  * @param      new_locsymbol  symbol to be inserted
- * @param      data           additional data for symbol
  */
-void loc_table_insert(locTable* ptrloctable,locSymbol* new_locsymbol, char *data) {
+void loc_table_insert(locTable* ptrloctable,locSymbol* new_locsymbol) {
 	if(loc_symbol_search(ptrloctable,new_locsymbol->name) != NULL) {
-		//rewrite data
-		if(new_locsymbol->data->data == NULL) {
-			int length = strlen(data);
-			new_locsymbol->data->data = mymalloc(length*sizeof(char) + 2);
-			strcpy(new_locsymbol->data->data,data);
-			new_locsymbol->data->data[strlen(data)+1] = '\0';
-		}
-		else {
-			int length_new = strlen(data);
-			int length_prev = strlen(new_locsymbol->data->data);
-
-			if(length_new > length_prev) {
-				new_locsymbol->data->data = myrealloc(new_locsymbol->data->data,sizeof(char)*length_new);
-				strcpy(new_locsymbol->data->data,data);
-				new_locsymbol->data->data[strlen(data)+1] = '\0';
-			}
-			else 
-				strcpy(new_locsymbol->data->data,data);
-		}
+		//do nothing
 	}
 	else {
 		unsigned index = hash_function(new_locsymbol->name);
@@ -98,19 +79,8 @@ void loc_table_insert(locTable* ptrloctable,locSymbol* new_locsymbol, char *data
  * @param      counter     counter of arguement
  */
 void local_function_add_args(locSymbol* locfuncsym, char *name, int typ_s, int counter) {
-	char str[15];
-    sprintf(str,"%d",counter);
 
-    if(locfuncsym->data->data == NULL) {
-        int length = strlen(str);
-        locfuncsym->data->data = mymalloc(length*sizeof(char) + 2);
-        if(locfuncsym->data->data == NULL) {
-            error = INTERNAL_ERR;
-            clearAll();
-            return;
-        }
-        strcpy(locfuncsym->data->data,str);
-        locfuncsym->data->data[strlen(str)+1] = '\0';
+    if(locfuncsym->data->arg_count == 0) {
 
         locfuncsym->data->args = mymalloc(sizeof(struct _TList));
         if(locfuncsym->data->args == NULL) {
@@ -122,49 +92,16 @@ void local_function_add_args(locSymbol* locfuncsym, char *name, int typ_s, int c
         //adds only first arguement
         locfuncsym->data->args = linked_list_init();
         list_insert_first(locfuncsym->data->args, name, typ_s);
+        locfuncsym->data->arg_count = counter;
 
         
     }
     else {
 
-        int length_new = strlen(str);
-        int length_prev = strlen(locfuncsym->data->data);
-
-        if(length_new > length_prev) {
-            locfuncsym->data->data = myrealloc(locfuncsym->data,sizeof(char)*length_new);
-            if(locfuncsym->data->data == NULL) {
-                error = INTERNAL_ERR;
-                clearAll();
-                return;
-            }
-            strcpy(locfuncsym->data->data,str);
-            locfuncsym->data->data[strlen(str)+1] = '\0';
-        }
-        strcpy(locfuncsym->data->data,str);
-        locfuncsym->data->data[strlen(str)+1] = '\0';
-
         //lets begin
         list_insert_next(locfuncsym->data->args, name, typ_s);
+        locfuncsym->data->arg_count = counter;
     }
-}
-
-void loc_sym_copy(locSymbol* local1, locSymbol* local2) {
-	if(local1->init == true) {
-		error = SEMANTIC_PROG_ERR;
-		clearAll();
-		return;
-	}
-
-	int length_data1 = strlen(local1->data->data);
-	int length_data2 = strlen(local2->data->data);
-
-	if(length_data2 > length_data1) {
-		local1->data->data = myrealloc(local1->data->data,sizeof(char)*length_data2);
-	}
-	local1->data->data = local2->data->data;
-	local1->init = true;
-
-	return;
 }
 
 /**
@@ -215,7 +152,7 @@ locSymbol* loc_symbol_function_init(char *data,  int stype, char *classname) {
 	}
 	locsym->data = ptrsymdata;
 	locsym->data->type = stype;
-	locsym->data->data = NULL;
+	locsym->data->arg_count = 0;
 	locsym->fce = true;
 	locsym->data->args = NULL;
 	locsym->data->instrPtr = NULL;
@@ -276,7 +213,7 @@ locSymbol* loc_symbol_init(char *data, int stype, bool isinit, char *classname) 
 	
 	locsym->data = ptrsymdata;
 	locsym->data->type = stype;
-	locsym->data->data = NULL;
+	locsym->data->arg_count = 0;
 	locsym->fce = NULL;
 	locsym->data->args = NULL;
 	locsym->data->instrPtr = NULL;
@@ -502,34 +439,9 @@ symbolType sym_type(Ttoken token) {
 }
 
 /**
- * copies data from ptrsym2 to ptrsym1
- * @param      ptrsym1  destination
- * @param      ptrsym2  source
- */
-void sym_copy_variable(iSymbol* ptrsym1, iSymbol* ptrsym2) {
-	if(ptrsym1->init == true) {
-		error = SEMANTIC_PROG_ERR;
-		clearAll();
-		return;
-	}
-
-	int length_data1 = strlen(ptrsym1->data->data);
-	int length_data2 = strlen(ptrsym2->data->data);
-
-	if(length_data2 > length_data1) {
-		ptrsym1->data->data = myrealloc(ptrsym1->data->data,sizeof(char)*length_data2);
-	}
-	ptrsym1->data->data = ptrsym2->data->data;
-	ptrsym1->init = true;
-
-	return;
-}
-
-/**
  * initializes symbol variable from given data
  *
- * @param      name		  name of symbo
- * @param      data       additional info e.g. data = "50"
+ * @param      name		  name of symbol
  * @param	   stype      type of symbol
  * @param      isinit     bool value true-initialized false-not initialized
  * @param      classname  name of class which belongs to
@@ -574,7 +486,7 @@ iSymbol* sym_variable_init(char *data, int stype, bool isinit, char *classname, 
 	}
     ptrsym->data = ptrsymdata;
     ptrsym->data->type = stype;
-    ptrsym->data->data = NULL;
+    ptrsym->data->arg_count = 0;
     ptrsym->fce = false;
     ptrsym->decl = isdecl;
     ptrsym->data->args = NULL;
@@ -639,7 +551,7 @@ iSymbol* sym_function_init(char *data, int stype, char *classname) {
 	}
     ptrsym->data = ptrsymdata;
     ptrsym->data->type = stype;
-    ptrsym->data->data = NULL;
+    ptrsym->data->arg_count = 0;
     ptrsym->ptr_loctable = NULL;
     ptrsym->fce = true;
     ptrsym->data->args = NULL;
@@ -661,19 +573,7 @@ iSymbol* sym_function_init(char *data, int stype, char *classname) {
  */
 void function_add_args(iSymbol* funcsym, char *name, int typ_s,int counter) {
 
-    char str[15];
-    sprintf(str,"%d",counter);
-
-    if(funcsym->data->data == NULL) {
-        int length = strlen(str);
-        funcsym->data->data = mymalloc(length*sizeof(char) + 2);
-        if(funcsym->data->data == NULL) {
-            error = INTERNAL_ERR;
-            clearAll();
-            return;
-        }
-        strcpy(funcsym->data->data,str);
-        funcsym->data->data[strlen(str)+1] = '\0';
+    if(funcsym->data->arg_count == 0) {
 
         funcsym->data->args = mymalloc(sizeof(struct _TList));
         if(funcsym->data->args == NULL) {
@@ -685,29 +585,13 @@ void function_add_args(iSymbol* funcsym, char *name, int typ_s,int counter) {
         //adds only first arguement
         funcsym->data->args = linked_list_init();
         list_insert_first(funcsym->data->args, name, typ_s);
-
-        
+        funcsym->data->arg_count = counter;        
     }
     else {
 
-        int length_new = strlen(str);
-        int length_prev = strlen(funcsym->data->data);
-
-        if(length_new > length_prev) {
-            funcsym->data->data = myrealloc(funcsym->data,sizeof(char)*length_new);
-            if(funcsym->data->data == NULL) {
-                error = INTERNAL_ERR;
-                clearAll();
-                return;
-            }
-            strcpy(funcsym->data->data,str);
-            funcsym->data->data[strlen(str)+1] = '\0';
-        }
-        strcpy(funcsym->data->data,str);
-        funcsym->data->data[strlen(str)+1] = '\0';
-
         //lets begin
         list_insert_next(funcsym->data->args, name, typ_s);
+        funcsym->data->arg_count = counter;
     } 
 
 }
@@ -747,45 +631,24 @@ unsigned hash_function(char *data) {
  *
  * @param      tab        pointer to table of symbols for class
  * @param      newsymbol  pointer to symbol which will be inserted
- * @param      data       if data is changed then rewrites data
  */
-void Htab_insert(tHTable* tab, iSymbol* newsymbol , char *data)
+void Htab_insert(tHTable* tab, iSymbol* newsymbol)
 {
     if(Htab_search(tab,newsymbol->name) != NULL){
-        //rewrites data
-        
-        if(newsymbol->data->data == NULL){
-            int length = strlen(data);
-            newsymbol->data->data = mymalloc(length*sizeof(char) + 2);
-            strcpy(newsymbol->data->data,data);
-            newsymbol->data->data[strlen(data)+1] = '\0';
-        }else{
-            int length_new = strlen(data);
-            int length_prev = strlen(newsymbol->data->data);
-
-            if(length_new > length_prev) {
-                newsymbol->data = myrealloc(newsymbol->data->data,sizeof(char)*length_new);    
-                strcpy(newsymbol->data->data,data);
-                newsymbol->data->data[strlen(data)+1] = '\0';
-            }
-            else
-            	strcpy(newsymbol->data->data,data);
-
-        }
-
-    }else{
-        unsigned index = hash_function(newsymbol->name);    
+        //do nothing
+    }
+    else {
+    	unsigned index = hash_function(newsymbol->name);    
         iSymbol *pom = (*tab)[index].ptr;
         if(pom != NULL){
 
 			newsymbol->nextptr = (*tab)[index].ptr;
 			(*tab)[index].ptr = newsymbol;
 		}
-		else{		
-		(*tab)[index].ptr = newsymbol;
+		else {		
+			(*tab)[index].ptr = newsymbol;
 		}
 	}
-
 
 }
 

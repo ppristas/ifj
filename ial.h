@@ -45,19 +45,19 @@ typedef struct _TList {
 } TList;
 
 typedef struct sym_Data {
-	char *data;
+	int arg_count;
 	TList *args;
 	symbolType type;
 	item* instrPtr;
-} symData;
-
-typedef struct Loc_item {
-	symData *data;
 	union {
 		int i;
 		double d;
 		char *str;
 	}ptr_union;
+} symData;
+
+typedef struct Loc_item {
+	symData *data;
 	char *name;
 	bool fce;
 	bool init;
@@ -74,11 +74,6 @@ typedef Hash_local_item locTable[Hash_table_size];
 
 typedef struct Sym_item{
 	symData *data;
-	union {
-		int i;
-		double d;
-		char *str;
-	}ptr_union;
 	char *name;
 	bool fce;
 	bool init;
@@ -114,10 +109,9 @@ typedef Hash_class clHTable[Hash_table_size];
 void local_function_add_args(locSymbol* locfuncsym, char *name, int typ_s, int counter);
 void sym_function_add_locals(iSymbol* funcsym,locTable* ptrloctable);
 locTable* loc_table_init();
-void loc_sym_copy(locSymbol* local1, locSymbol* local2);
 locSymbol* loc_symbol_init(char *data, int stype, bool isinit, char *classname);
 locSymbol* loc_symbol_function_init(char *data, int stype, char *classname);
-void loc_table_insert(locTable* ptrloctable,locSymbol* new_locsymbol, char *data);
+void loc_table_insert(locTable* ptrloctable,locSymbol* new_locsymbol);
 locSymbol* loc_symbol_search(locTable* ptrloctable,char *data);
 //table containing classes
 clHTable* class_init();
@@ -130,12 +124,11 @@ void list_insert_first(TList *list, char *name, int typ_s);
 void list_insert_next(TList *list, char *name, int typ_s);
 //symbol
 symbolType sym_type(Ttoken token);
-void sym_copy_variable(iSymbol* ptrsym1, iSymbol* ptrsym2);
 void function_add_args(iSymbol* funcsym, char *name, int typ_s,int counter);
 iSymbol* sym_variable_init(char *data, int stype, bool isinit, char *classname, bool isstat, bool isdecl);
 iSymbol* sym_function_init(char *data, int stype, char *classname);
 //table for class e.g. Main
-void Htab_insert(tHTable* tab, iSymbol* newsymbol,char *data);
+void Htab_insert(tHTable* tab, iSymbol* newsymbol);
 tHTable* HTab_init();
 unsigned hash_function(char *data);
 iSymbol* Htab_search(tHTable *ST, char *id);
