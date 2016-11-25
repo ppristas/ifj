@@ -3,21 +3,27 @@
 
 #define HTAB_SIZE 32
 
-
+typedef
+enum {
+    T_INT,
+    T_DOUBLE,
+    T_STRING,
+    T_VOID,
+}VAR_TYPE;
 
 // PSEUDOTOKEN
 
 typedef struct
 {
-    char type;
-    int declared_type;
+    bool type;
+    VAR_TYPE declared_type;
 }Pseudotoken;
 
 
 typedef struct st_local_data
 {
     char* local_key;
-    int local_type;
+    VAR_TYPE local_type;
 
     union
     {
@@ -51,8 +57,8 @@ typedef struct st_static_func
 typedef struct st_static_symbol
 {
     char* static_key;
-    char type;              //moze byt is function
-    int declared_type;
+    bool isFunction;              //moze byt is function
+    VAR_TYPE declared_type;
     T_Static_var *static_var;
     T_Static_func *static_func;
 
@@ -84,7 +90,7 @@ int ClassHtab_search_insert(char * key, T_ClassHtab *table);
 T_ClassItem* ClassHtab_search(char *key, T_ClassHtab *table);
 void Static_Htab_init(char* class_name, T_ClassHtab *table); //ked uz parser je v triede
 int Static_Htab_search_insert(char* class_name, char* static_name, T_ClassHtab *table);
-void Static_Htab_insert(char *class_name, char *static_name, T_ClassHtab *table, Pseudotoken token);
+void Static_Htab_define(char *class_name, char *static_name, T_ClassHtab *table, Pseudotoken token);
 T_Static_symbol *Static_Htab_search(char* class_name,char* static_name,T_ClassHtab* table);
 void Static_Var_Add(char* class_name, char* static_name, T_ClassHtab* table, void* value, int type);
 void Local_table_init(T_Static_symbol *static_func);
