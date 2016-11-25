@@ -53,7 +53,11 @@ typedef struct sym_Data {
 
 typedef struct Loc_item {
 	symData *data;
-	//TODO UNION
+	union {
+		int i;
+		double d;
+		char *str;
+	}ptr_union;
 	char *name;
 	bool fce;
 	bool init;
@@ -70,7 +74,11 @@ typedef Hash_local_item locTable[Hash_table_size];
 
 typedef struct Sym_item{
 	symData *data;
-	//TODO UNION
+	union {
+		int i;
+		double d;
+		char *str;
+	}ptr_union;
 	char *name;
 	bool fce;
 	bool init;
