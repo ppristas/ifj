@@ -17,6 +17,7 @@
 
 #define Hash_table_size 256
 #include "scaner.h"
+#include "ilist.h"
 #include <stdbool.h>
 
 ////////////////////////////////////////////////////////////

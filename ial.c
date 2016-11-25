@@ -21,6 +21,7 @@
 #include "buildin.h"
 #include "cleaner.h"
 #include "error.h"
+//#include "ilist.h"
 
 //tHTable* Main_table;
 //clHTable* Class_table;
@@ -187,7 +188,7 @@ locSymbol* loc_symbol_function_init(char *data,  int stype, char *classname) {
 	}
 
 	int len_name = strlen(data);
-	locsym->name = mymalloc(sizeof(char) + 2);
+	locsym->name = mymalloc(len_name*sizeof(char) + 2);
 	if(locsym->name == NULL) {
 		error = INTERNAL_ERR;
 		clearAll();
@@ -210,7 +211,7 @@ locSymbol* loc_symbol_function_init(char *data,  int stype, char *classname) {
 	if(ptrsymdata == NULL) {
 		error = INTERNAL_ERR;
 		clearAll();
-		return error;
+		return NULL;
 	}
 	locsym->data = ptrsymdata;
 	locsym->data->type = stype;
@@ -270,7 +271,7 @@ locSymbol* loc_symbol_init(char *data, int stype, bool isinit, char *classname) 
 	if(ptrsymdata == NULL) {
 		error = INTERNAL_ERR;
 		clearAll();
-		return error;
+		return NULL;
 	}
 	
 	locsym->data = ptrsymdata;
@@ -569,7 +570,7 @@ iSymbol* sym_variable_init(char *data, int stype, bool isinit, char *classname, 
 	if(ptrsymdata == NULL) {
 		error = INTERNAL_ERR;
 		clearAll();
-		return error;
+		return NULL;
 	}
     ptrsym->data = ptrsymdata;
     ptrsym->data->type = stype;
@@ -578,6 +579,7 @@ iSymbol* sym_variable_init(char *data, int stype, bool isinit, char *classname, 
     ptrsym->decl = isdecl;
     ptrsym->data->args = NULL;
     ptrsym->data->instrPtr = NULL;
+    ptrsym->data->args = NULL;
     ptrsym->ptr_loctable = NULL;
     ptrsym->init = isinit;
     ptrsym->isstatic = isstat;
@@ -634,7 +636,7 @@ iSymbol* sym_function_init(char *data, int stype, char *classname) {
 	if(ptrsymdata == NULL) {
 		error = INTERNAL_ERR;
 		clearAll();
-		return error;
+		return NULL;
 	}
     ptrsym->data = ptrsymdata;
     ptrsym->data->type = stype;
