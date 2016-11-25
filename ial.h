@@ -75,15 +75,9 @@ typedef struct Sym_item{
 	bool fce;
 	bool init;
 	bool decl;
-<<<<<<< HEAD
 	locTable *ptr_loctable;
 	char *class_name;
 	bool isstatic;
-=======
-	locTable *ptr_loctable; 	//tabulka pre lokalne symboly
-	char *class_name;				//nazov triedy ,ktorej patri symbol
-	bool isstatic;					//true - globalna, false - lokalna
->>>>>>> 7315f6c51279a691d7069c1e35f3639a0b5ae602
 	struct Sym_item *nextptr;
 }iSymbol;
 

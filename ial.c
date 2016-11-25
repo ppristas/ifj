@@ -578,7 +578,7 @@ iSymbol* sym_variable_init(char *data, int stype, bool isinit, char *classname, 
     ptrsym->fce = false;
     ptrsym->decl = isdecl;
     ptrsym->data->args = NULL;
-    ptrsym->data->instrPtr = NULL
+    ptrsym->data->instrPtr = NULL;
     ptrsym->ptr_loctable = NULL;
     ptrsym->init = isinit;
     ptrsym->isstatic = isstat;
