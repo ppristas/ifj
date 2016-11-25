@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 #include "symtab.h"
 #include "cleaner.h"
@@ -110,7 +111,6 @@ void Static_Htab_init(char *class_name,T_ClassHtab *table)
     else
     {
        printf("Class %s nebola najdena\n",class_name);
-       return;
     }
 }
 
@@ -141,7 +141,7 @@ int Static_Htab_search_insert(char* class_name,char* static_name,T_ClassHtab* ta
 
 // opat class name nemusi byt berieme direct
 //DEKLARACIA STATIC VARIABLE alebo FUNKCIE
-void Static_Htab_insert(char* class_name,char* static_name,T_ClassHtab* table,Pseudotoken token)
+void Static_Htab_define(char* class_name,char* static_name,T_ClassHtab* table,Pseudotoken token)
 {
     int index;
     T_ClassItem* class_ptr;
@@ -185,16 +185,16 @@ void Static_Htab_insert(char* class_name,char* static_name,T_ClassHtab* table,Ps
         class_ptr->StaticHTab[index]=new_symbol;
 
 
-        new_symbol->type=token.type;
+        new_symbol->isFunction=token.type;
         new_symbol->declared_type=token.declared_type;
 
         // AK type je static funkcia alebo  static variable !!! TOKENY
-        if (token.type == 'f')
+        if (token.type == true)
         {
             if ((new_symbol->static_func=(T_Static_func*)mymalloc(sizeof(T_Static_func)*1)) == NULL)
                 return;
         }
-        else if (token.type == 'v')
+        else if (token.type == false)
         {
             if ((new_symbol->static_var=(T_Static_var*)mymalloc(sizeof(T_Static_var)*1)) == NULL )
                 return;
@@ -202,9 +202,9 @@ void Static_Htab_insert(char* class_name,char* static_name,T_ClassHtab* table,Ps
 
             //inicializacia na 0 pre staticku premennu + string dat
 
-            if (token.declared_type==1)
+            if (token.declared_type==T_INT)
                     new_symbol->static_var->value.i=0;
-            else if(token.declared_type==2)
+            else if(token.declared_type==T_DOUBLE)
                     new_symbol->static_var->value.dbl=0.0;
         }
     }
@@ -243,7 +243,7 @@ void Static_Var_Add(char* class_name,char* static_name,T_ClassHtab* table,void* 
 {
     T_Static_symbol* static_tmp;
 
-    if ((static_tmp = Static_Htab_search(class_name,static_name,table)) == NULL || (static_tmp->type == 'f'))
+    if ((static_tmp = Static_Htab_search(class_name,static_name,table)) == NULL || (static_tmp->isFunction == true))
     {
         printf("Static Variable of class %s does not exist !\n",static_name);
     }
@@ -254,11 +254,11 @@ void Static_Var_Add(char* class_name,char* static_name,T_ClassHtab* table,void* 
     else
     {
         // KONTROLA TYPU + VKLADANIE TYPU !!!
-        if (type == 1)
+        if (type == T_INT)
             static_tmp->static_var->value.i=(*(int*)(value));
-        else if (type == 2)
+        else if (type == T_DOUBLE)
             static_tmp->static_var->value.dbl=(*(double*)(value));
-        else if (type == 3)
+        else if (type == T_STRING)
             static_tmp->static_var->value.str=((char*)(value));
     }
 }
@@ -270,9 +270,16 @@ void Local_table_init(T_Static_symbol* static_func)
     //context
     T_Static_func* curr_static_func=static_func->static_func;
 
-    for (int i=0;i<HTAB_SIZE;++i)
+    if (curr_static_func != NULL)
     {
-        curr_static_func->Local_Htab[i]=NULL;
+        for (int i=0;i<HTAB_SIZE;++i)
+        {
+            curr_static_func->Local_Htab[i]=NULL;
+        }
+    }
+    else
+    {
+        printf("Something went wrong in function pointer!\n");
     }
 }
 
@@ -331,9 +338,9 @@ void Local_table_insert(char* local_var, T_ClassHtab* table, Pseudotoken token)
         table->inClass->inFunction->Local_Htab[index]=local_tmp;
 
         //inicializacia hodnot na nuly + doplnit string
-        if (token.declared_type==1)
+        if (token.declared_type==T_INT)
             local_tmp->local_value.loc_i=0;
-        else if (token.declared_type==2)
+        else if (token.declared_type==T_DOUBLE)
             local_tmp->local_value.loc_dbl=0.0;
     }
 }
@@ -353,11 +360,11 @@ void Local_table_add_var(char* local_var,T_ClassHtab* table,void* value,int type
     else
     {
         // TYPOVA KONTROLA !!!
-        if (type==1)
+        if (type==T_INT)
             local_tmp->local_value.loc_i=(*(int*)(value));
-        else if (type == 2)
+        else if (type == T_DOUBLE)
             local_tmp->local_value.loc_dbl=(*(double*)(value));
-        else if (type == 3)
+        else if (type == T_STRING)
             local_tmp->local_value.loc_str=((char*)(value));
     }
 }
@@ -370,7 +377,7 @@ static void Print_static_chain(T_Static_symbol *static_item);
 static void Print_static_htab(T_ClassItem *class_item);
 static void Print_local(T_Static_symbol* static_function);
 static void Print_local_chain(T_local_data* local_data);
-static Pseudotoken Pseudotoken_init(Pseudotoken* token,char type,int declared_type);
+static Pseudotoken Pseudotoken_init(Pseudotoken* token,bool type,VAR_TYPE declared_type);
 
 static void Print_chain(T_ClassItem * class_item)
 {
@@ -389,7 +396,9 @@ static void ClassHtab_print(T_ClassHtab * table)
     for (int i=0;i< HTAB_SIZE ;++i)
     {
         Print_chain(table->ClassHTab[i]);
-        printf("\n");
+
+        if (table->ClassHTab[i] != NULL)
+            printf("\n");
     }
 }
 
@@ -423,11 +432,11 @@ static void Print_local_chain(T_local_data* local_data)
     {
         printf(" (%s -  ",tmp->local_key);
 
-        if (tmp->local_type==1)
+        if (tmp->local_type==T_INT)
             printf("%d) ",tmp->local_value.loc_i);
-        else if (tmp->local_type==2)
+        else if (tmp->local_type==T_DOUBLE)
             printf("%f) ",tmp->local_value.loc_dbl);
-        else if (tmp->local_type==3)
+        else if (tmp->local_type==T_STRING)
             printf("%s) ",tmp->local_value.loc_str);
 
         tmp=tmp->next_local;
@@ -441,12 +450,14 @@ static void Print_local(T_Static_symbol* static_function)
     for (int i=0; i<HTAB_SIZE; ++i )
     {
         Print_local_chain(tmp->Local_Htab[i]);
-        printf("\n");
+
+        if (tmp->Local_Htab[i] != NULL)
+            printf("\n");
     }
 
 }
 
-static Pseudotoken Pseudotoken_init(Pseudotoken* token,char type,int declared_type)
+static Pseudotoken Pseudotoken_init(Pseudotoken* token, bool type, VAR_TYPE declared_type)
 {
     token->declared_type=declared_type;
     token->type=type;
@@ -455,7 +466,9 @@ static Pseudotoken Pseudotoken_init(Pseudotoken* token,char type,int declared_ty
 
 int main(int argc, char *argv[])
 {
+
     initCleaner();
+    // inicializacia
     ClassHtab_init(&global_table);
 
     Pseudotoken TOKEN;
@@ -463,135 +476,163 @@ int main(int argc, char *argv[])
     double dval;
     int ival;
     T_Static_symbol * tmp;
-
-    ClassHtab_define("class1",global_table);
-    Static_Htab_init("class1",global_table);
-
-    ClassHtab_define("class2",global_table);
-    Static_Htab_init("class2",global_table);
-
-    ClassHtab_define("class3",global_table);
-    Static_Htab_init("class3",global_table);
+    T_Static_symbol* context;
 
 
-    //class class2 {
-    global_table->inClass=ClassHtab_search("class2",global_table);
-    Static_Htab_insert(NULL,"var3",global_table,Pseudotoken_init(&TOKEN,'v',2));
+    //pre parser
+    //JAVA KOD
 
-    // class class1 {
-    global_table->inClass=ClassHtab_search("class1",global_table);
+    /*
+     * class MyClass {
+     *      static int var1;
+     *      static void funk1(int a,int b);
+     *      static int funk2(void) {
+     *          int var1;
+     *          double var2=20.2;
+     *
+     *          var1=5;
+     *          MyClass.var1=200;
+     *          int var3;
+     *
+     *          MyClass.var2=50;
+     *      }
+     *      static int var2;
+     *      static void funk1(int a,int b){
+     *          int varX;
+     *          int varY;
+     *      }
+     * }
+     *
+     *
+     * class Main {
+     *      static int Mvar=50;
+     *      static void run(){
+     *          MyClass.funk2();
+     *          Mvar=80;
+     *      }
+     *  }
+     */
 
-    Static_Htab_insert(NULL,"var42",global_table,Pseudotoken_init(&TOKEN,'v',2));
-    Static_Htab_insert(NULL,"X",global_table,Pseudotoken_init(&TOKEN,'v',1));
+    // prvy priechod ??
+    ClassHtab_define("MyClass",global_table);
+    Static_Htab_init("MyClass",global_table);
+
+    Static_Htab_define("MyClass","var1",global_table,Pseudotoken_init(&TOKEN,false,T_INT));
+    Static_Htab_define("MyClass","funk1",global_table,Pseudotoken_init(&TOKEN,true,T_VOID));
+
+    if (Static_Htab_search("MyClass","funk2",global_table) == NULL)
+        Static_Htab_define("MyClass","funk2",global_table,Pseudotoken_init(&TOKEN,true,T_INT));
+
+    Static_Htab_define("MyClass","var2",global_table,Pseudotoken_init(&TOKEN,false,T_INT));
+
+    if (Static_Htab_search("MyClass","funk1",global_table) == NULL)
+        Static_Htab_define("MyClass","funk1",global_table,Pseudotoken_init(&TOKEN,true,T_INT));
 
 
-    //deklaracia funkcie a inicializacia jej tabulky symbolov
-    Static_Htab_insert(NULL,"foo1",global_table,Pseudotoken_init(&TOKEN,'f',1));
-    Local_table_init(Static_Htab_search(NULL,"foo1",global_table));
+    ClassHtab_define("Main",global_table);
+    Static_Htab_init("Main",global_table);
 
-    //nastavenie contextu pre citanie z foo1
-    T_Static_symbol* context=Static_Htab_search(NULL,"foo1",global_table);
+    Static_Htab_define("Main","Mvar",global_table,Pseudotoken_init(&TOKEN,false,T_INT));
+    Static_Htab_define("Main","run",global_table,Pseudotoken_init(&TOKEN,true,T_VOID));
+
+    // druhy priechod ??
+    // ulozena hodnota do global table - vie ze je v triede MyClass
+    global_table->inClass=ClassHtab_search("MyClass",global_table);
+
+    // Moze previest operacie Static_Htab_search aby sa zistilo ci su vsetky globalne premenne
+    // deklarovane s prveho priechodu hadam
+
+    // narazi na definiciu funkcie otvori lokalny kontext pre funkciu aby vedel v ktorej funkcii
+    // sa nachadza
+
+    context=Static_Htab_search(NULL,"funk2",global_table);
     global_table->inClass->inFunction=context->static_func;
-    Local_table_insert("local_x",global_table,Pseudotoken_init(&TOKEN,0,1));
-    ival=158;
-    Local_table_add_var("local_x",global_table,&ival,2); // TYPE mismas
-    Local_table_insert("local_y",global_table,Pseudotoken_init(&TOKEN,0,1));
 
+    // Do parametrov moze ist kludne aj Static_Htab_search lebo vracia pointer na Symbol
+    Local_table_init(context);
+    Local_table_insert("var1",global_table,Pseudotoken_init(&TOKEN,false,T_INT));
 
-    //TEST pre x z foo1 a x z class1
+    Local_table_insert("var2",global_table,Pseudotoken_init(&TOKEN,false,T_DOUBLE));
 
-    if (Local_table_search("X",global_table) != NULL  && Static_Htab_search(NULL,"X",global_table) != NULL )
-        printf("lokalny kontext pre hodnotu X\n");
-    else if (Local_table_search("X",global_table) == NULL  && Static_Htab_search(NULL,"X",global_table) != NULL )
-        printf("globalny kontext pre hodnotu X\n");
+    dval=20.2;
+    Local_table_add_var("var2",global_table,&dval,T_DOUBLE);
+    ival=5;
+    Local_table_add_var("var1",global_table,&ival,T_INT);
+    ival=200;
+    Static_Var_Add("MyClass","var1",global_table,&ival,T_INT);
 
-    Static_Htab_insert("class3","X",global_table,Pseudotoken_init(&TOKEN,'v',1));
+    Local_table_insert("var3",global_table,Pseudotoken_init(&TOKEN,false,T_INT));
+    ival=50;
+    Static_Var_Add("MyClass","var2",global_table,&ival,T_INT);
 
-    if (Static_Htab_search("class35","X25",global_table) == NULL)
-        printf("Staticka prem  z class3 neexistuje\n");
-    else
-        printf("Staticka prem  z class3 existuje\n");
-
-
-
-
-
-
-    //preinicializovanie statickej premennej inej existujucej funkcie
-    dval=160;
-    Static_Var_Add(NULL,"var42",global_table,&dval,1); //TYPE mismas
-    tmp=Static_Htab_search(NULL,"var42",global_table);
-    printf("%s %f\n",tmp->static_key,tmp->static_var->value.dbl);
-    // POZOR  BERE TO NULL TAKZE IDE ERROR
-
-
-    Local_table_insert("local_z",global_table,Pseudotoken_init(&TOKEN,0,1));
-    ival=87;
-    Local_table_add_var("local_z",global_table,&ival,1);
-
-    ival=871;
-    Local_table_add_var("local_y",global_table,&ival,1);
-
-
+    //koniec funkcie funk2
+    //odchadzam s kontextu funkcie funk2
 
     global_table->inClass->inFunction=NULL;
-    //ukoncenie contextu
 
-    printf("End of function foo1\n");
+    //...
 
+    //nastavim kontext funk1
+    context=Static_Htab_search(NULL,"funk1",global_table);
+    global_table->inClass->inFunction=context->static_func;
+    Local_table_init(context);
 
-    Static_Htab_insert(NULL,"var1",global_table,Pseudotoken_init(&TOKEN,'v',1));
-    Static_Htab_insert(NULL,"var2",global_table,Pseudotoken_init(&TOKEN,'v',2));
+    Local_table_insert("varX",global_table,Pseudotoken_init(&TOKEN,false,T_INT));
+    Local_table_insert("varY",global_table,Pseudotoken_init(&TOKEN,false,T_INT));
 
-    Static_Htab_insert(NULL,"foo2",global_table,Pseudotoken_init(&TOKEN,'f',1));
-    Local_table_init(Static_Htab_search(NULL,"foo2",global_table));
-
-    Static_Htab_insert(NULL,"var3",global_table,Pseudotoken_init(&TOKEN,'v',2));
-
-    dval=12.2;
-    Static_Var_Add(NULL,"var2",global_table,&dval,2);
-    tmp=Static_Htab_search(NULL,"var2",global_table);
-
-    printf("%s %f\n",tmp->static_key,tmp->static_var->value.dbl);
+    //koniec funkcie funk1
+    //odchadzam s kontextu funkcie funk1
+    global_table->inClass->inFunction=NULL;
+    // odchadzam s kontextu MyClass
 
 
+    global_table->inClass=ClassHtab_search("Main",global_table);
+    ival=50;
+    Static_Var_Add("Main","Mvar",global_table,&ival,T_INT);
+    // ak sme v kontexte kludne mozme pouzivat aj NULL namiesto mena classy
+    // berie to cestu z inClass -> Static_Var_Add(NULL,"Mvar",global_table,&ival,T_INT);
 
-    ival=10;
-    Static_Var_Add("class1","var1",global_table,&ival,1);
-    tmp=Static_Htab_search(NULL,"var1",global_table);
-    printf("%s %d\n",tmp->static_key,tmp->static_var->value.i);
+    context=Static_Htab_search(NULL,"run",global_table);
+    global_table->inClass->inFunction=context->static_func;
 
-    dval=12.345;
-    Static_Var_Add("class2","var3",global_table,&dval,2);
-    tmp=Static_Htab_search("class2","var3",global_table);
-    printf("%s %f\n",tmp->static_key,tmp->static_var->value.dbl);
+    // v tomto mieste este posetrit ak by bola Mvar ako lokalna tak lokalna ma vo funkci
+    // prednost pred globalnou
+    ival=80;
+    Static_Var_Add(NULL,"Mvar",global_table,&ival,T_INT);
 
-    dval=12.42;
-    Static_Var_Add("class2","var3",global_table,&dval,2);
-    tmp=Static_Htab_search("class2","var3",global_table);
-    printf("%s %f\n",tmp->static_key,tmp->static_var->value.dbl);
-
-    dval=16;
-    Static_Var_Add("class2","var3",global_table,&dval,2);
-    tmp=Static_Htab_search("class2","var3",global_table);
-    printf("%s %f\n",tmp->static_key,tmp->static_var->value.dbl);
+    //opustenie kontextu funkcie aj triedy
+    global_table->inClass->inFunction=NULL;
+    global_table->inClass=NULL;
 
 
-
+    printf("VYPIS TABULKY PRE PROGRAM\n");
 
     ClassHtab_print(global_table);
 
-    global_table->inClass=ClassHtab_search("class1",global_table);
-    context=Static_Htab_search(NULL,"foo1",global_table);
-    global_table->inClass->inFunction=context->static_func;
+    printf("VYPIS HODNOT\n");
 
-    Print_local(context);
+    tmp=Static_Htab_search("MyClass","var1",global_table);
+    printf("var1 z MyClass = %d\n",tmp->static_var->value.i);
+
+    tmp=Static_Htab_search("MyClass","var2",global_table);
+    printf("var2 z MyClass = %d\n",tmp->static_var->value.i);
+
+    printf("funk2 z MyClass lokalne\n");
+    Print_local(Static_Htab_search("MyClass","funk2",global_table));
+
+    printf("funk1 z MyClass lokalne\n");
+    Print_local(Static_Htab_search("MyClass","funk1",global_table));
+
+
+    tmp=Static_Htab_search("Main","Mvar",global_table);
+    printf("Mvar z Main = %d\n",tmp->static_var->value.i);
+
+    printf("run z Main lokalne\n");
+    Print_local(Static_Htab_search("Main","run",global_table));
+
+
 
     clearAll();
-
-
-
-
 
     return 0;
 }
