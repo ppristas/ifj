@@ -109,7 +109,7 @@ typedef Hash_class clHTable[Hash_table_size];
 void local_function_add_args(locSymbol* locfuncsym, char *name, int typ_s, int counter);
 void sym_function_add_locals(iSymbol* funcsym,locTable* ptrloctable);
 locTable* loc_table_init();
-locSymbol* loc_symbol_init(char *data, int stype, bool isinit, char *classname);
+locSymbol* loc_symbol_init(char *data, int stype, bool isinit, bool isdecl, char *classname);
 locSymbol* loc_symbol_function_init(char *data, int stype, char *classname);
 void loc_table_insert(locTable* ptrloctable,locSymbol* new_locsymbol);
 locSymbol* loc_symbol_search(locTable* ptrloctable,char *data);

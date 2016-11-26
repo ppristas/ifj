@@ -40,8 +40,7 @@
    int build_function_call_scnd(int decider);
 
    /*------------Ostatne-------------------*/
-   char *return_class();
-   char *return_id();
+   int return_class();
 
    typedef enum{
    F_NbIF,        // 0 not build in function

@@ -174,7 +174,7 @@ locSymbol* loc_symbol_function_init(char *data,  int stype, char *classname) {
  *
  * @return     pointer to symbol
  */
-locSymbol* loc_symbol_init(char *data, int stype, bool isinit, char *classname) {
+locSymbol* loc_symbol_init(char *data, int stype, bool isinit, bool isdecl, char *classname) {
 	locSymbol* locsym = NULL;
 	symData* ptrsymdata = NULL;
 	locsym = mymalloc(sizeof(struct Loc_item));
@@ -218,6 +218,7 @@ locSymbol* loc_symbol_init(char *data, int stype, bool isinit, char *classname) 
 	locsym->data->args = NULL;
 	locsym->data->instrPtr = NULL;
 	locsym->init = isinit;
+	locsym->decl = isdecl;
 	locsym->nextptr = NULL;
 
 	return locsym;
