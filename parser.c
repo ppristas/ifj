@@ -34,34 +34,39 @@ int funcname_len = 0;   //dlzka nazvu
 clHTable* STable = NULL;      //STable = Classes_table
 tHTable* ukazatel_na_triedu = NULL;  //ukazatel na triedu ............Class1 = ukazatel_na_triedu
 locTable* local_table = NULL; //ukazatel na lokalnu tabulku u funkcie .............same
+locSymbol* local_symbol = NULL;  //ukazatel na lokalny symbol
 iSymbol* symbol = NULL;       //lubovolny symbol ............... funcsym = symbol
+iSymbol* temp_symbol = NULL;  //docasny symbol
 Hash_class* ptrclass = NULL;  //drzi ukazatel tHtable* ukazatel na triedu + meno triedy
 char* classname;              //nazov classu
 char* funcname;               //nazov aktualnej funckie
                   
+char* class_part = NULL;   //pri zlozenom ID tato cast obsahuje class
+char* id_part = NULL;      //pri zlozenom ID tato cast obsahuje ID
 
-char *return_class()
-{
-   if(token2.data != NULL)
-   {
-      char *search = "."; 
-      char *split_token = strtok(token2.data, search);
-      if(split_token != NULL)
-         return split_token;
-   }
-   return NULL;
-}
-
-char *return_id()
+int return_class()   //CLASS.ID rozdeli na class -> class_part a id -> id_part
 {
    if(token2.data != NULL)
    {
       char *search = ".";
-      char *split_token = strtok(NULL, search);
-      if(split_token != NULL)
-         return split_token;
+      nazov_len = strlen(token2.data);
+      class_part = mymalloc(nazov_len*sizeof(char) + 2);
+      id_part = mymalloc(nazov_len*sizeof(char) + 2);
+
+      if(class_part == NULL || id_part == NULL)
+         return INTERNAL_ERR;
+      else
+      {
+         class_part = strtok(token2.data, search);
+         id_part = strtok(NULL, search);
+
+         if(class_part == NULL || id_part == NULL)
+            return INTERNAL_ERR;
+         return SUCCESS;
+      }
    }
-   return NULL;
+   else
+      return INTERNAL_ERR;
 }
 
 int is_build_function() //ratam s tym ze token uz bol nacitany
@@ -127,11 +132,10 @@ int parser()
       return SEMANTIC_PROG_ERR;
    }
 
-
    /************************************************************/
    /***********************DRUHY PRIECHOD***********************/
    /************************************************************/
-
+   
    front_token();
    error = prog_scnd();   
    if(error != SUCCESS)
@@ -182,6 +186,7 @@ int class()
    get_token();   //ocakavam id
    if(token.stav != S_ID) //Main musi byt prvy class
       return SYNTAX_ERR;
+
    if(!(strcmp(token.data, "ifj16")))  //class ifj16 nemoze byt definovany
    {
       fprintf(stderr, "SEMANTIC_PROG_ERR. Class \"ifj16\" cannot be defined.\n");
@@ -268,7 +273,7 @@ int after_class()
       }
 
       symbol = sym_function_init(funcname, symbol_type, classname);
-      Htab_insert(ukazatel_na_triedu, symbol, NULL);
+      Htab_insert(ukazatel_na_triedu, symbol);
       
       //pouzite pravidlo <SDA> -> ( <PA> ) { <MB> }
       get_token(); //musi byt lava zatvorka
@@ -391,7 +396,7 @@ int after_class()
          case S_SEMICOLON:          //pravidlo <Decl> -> ;
                                     //(Tmeno, typ symbolu, inici, nazov cls, static, deklarovana)
             symbol = sym_variable_init(nazov, symbol_type, false, classname, true, true);
-            Htab_insert(ukazatel_na_triedu, symbol, NULL);
+            Htab_insert(ukazatel_na_triedu, symbol);
 
             get_token();
             if(!(strcmp(token.data, "static")))
@@ -406,7 +411,7 @@ int after_class()
          case S_PRIR:               // pravidlo <Decl> ->
                                     
             symbol = sym_variable_init(nazov, symbol_type, true, classname, true, true);
-            Htab_insert(ukazatel_na_triedu, symbol, NULL);                
+            Htab_insert(ukazatel_na_triedu, symbol);                
                                     
             while(token.stav != S_SEMICOLON)
             {
@@ -433,7 +438,7 @@ int after_class()
          case S_LZAT:               // pravidlo <Decl> -> ( <PA> ) { <MB> }
                                     
             symbol = sym_function_init(nazov, symbol_type, classname);
-            Htab_insert(ukazatel_na_triedu, symbol, NULL);
+            Htab_insert(ukazatel_na_triedu, symbol);
 
             funcname_len = strlen(nazov); //vracia nazov statickeho symbolu
             funcname = mymalloc(funcname_len*sizeof(char) + 2);
@@ -626,7 +631,7 @@ int main_body()   //pravidlo <MB> -> <SL> <MB>
       if(token.stav != S_LZAT)
          return SYNTAX_ERR;
      
-     bracket_counter = 0;
+      bracket_counter = 0;
 
       while(bracket_counter != -1)  //preskakujeme vyrazy
       {
@@ -701,8 +706,14 @@ int main_body()   //pravidlo <MB> -> <SL> <MB>
          }
          else 
          {
-            /***********VYRAZ**************/
-            get_token();
+            while(token.stav != S_PZAT)
+            {
+               get_token();
+               if(error != SUCCESS)
+                  return error;
+               if(token.stav == S_EOF || token.stav == S_P_KOSZ)
+                  break;
+            }
             if(token.stav != S_PZAT)
                return SYNTAX_ERR;
 
@@ -723,8 +734,14 @@ int main_body()   //pravidlo <MB> -> <SL> <MB>
       get_token();
       if(token.stav == S_PRIR)
       {
-         /**********************ZAVOLAT OVERENIE VYRAZU***************************/
-         get_token();
+         while(token.stav != S_SEMICOLON)      
+         {
+            get_token();
+            if(error != SUCCESS)
+               return error;
+            if(token.stav == S_P_KOSZ || token.stav == S_EOF)
+               break;
+         }
          if(token.stav != S_SEMICOLON)
             return SYNTAX_ERR;
       }
@@ -768,7 +785,7 @@ int main_body()   //pravidlo <MB> -> <SL> <MB>
             || token.stav == S_CIARKA || token.stav == S_VYKR || token.stav == S_NEROV
             || token.stav == S_STRING || token.stav == S_ESCAPE)
    {
-      fprintf(stderr, "Syntax error, unexpeted token \"%s\"\n.", token.data);
+      fprintf(stderr, "Syntax error, unexpeted token \"%s\".\n", token.data);
       return SYNTAX_ERR;
    }   
 
@@ -776,7 +793,6 @@ int main_body()   //pravidlo <MB> -> <SL> <MB>
       return error;
 
    get_token();
-   //printf("%s\n", token.data); 
   
    if(token.stav != S_P_KOSZ)
       error = main_body();
@@ -892,10 +908,14 @@ int main_body_riadiace()   //pravidlo <MB> -> <SL> <MB>
       get_token();
       if(token.stav == S_PRIR)    //priradenie do premennej
       {  
-         //provizorne
-         get_token();
-         if(token.stav != S_SEMICOLON)
-            return SYNTAX_ERR;
+         while(token.stav != S_SEMICOLON)      
+         {
+            get_token();
+            if(error != SUCCESS)
+               return error;
+            if(token.stav == S_P_KOSZ || token.stav == S_EOF)
+               break;
+         }
       }
       else if(token.stav == S_LZAT)    //lubovalna ina funckia
       {
@@ -907,8 +927,14 @@ int main_body_riadiace()   //pravidlo <MB> -> <SL> <MB>
          }
          else 
          {
-            /***********VYRAZ**************/
-            get_token();
+            while(token.stav != S_PZAT)
+            {
+               get_token();
+               if(error != SUCCESS)
+                  return error;
+               if(token.stav == S_EOF || token.stav == S_P_KOSZ)
+                  break;
+            }
             if(token.stav != S_PZAT)
                return SYNTAX_ERR;
 
@@ -922,7 +948,7 @@ int main_body_riadiace()   //pravidlo <MB> -> <SL> <MB>
    }
    else if(!((strcmp(token.data, "String"))&&(strcmp(token.data, "int"))&&(strcmp(token.data, "double"))))  //pravidlo <SL> -> <PARS> <VD>
    {  
-         return SYNTAX_ERR;
+         return SEMANTIC_PROG_ERR;
    }
    else if(!(strcmp(token.data, "return")))
    {
@@ -959,7 +985,7 @@ int main_body_riadiace()   //pravidlo <MB> -> <SL> <MB>
             || token.stav == S_CIARKA || token.stav == S_VYKR || token.stav == S_NEROV
             || token.stav == S_STRING || token.stav == S_ESCAPE)
    {
-      fprintf(stderr, "Syntax error, unexpeted token \"%s\"\n.", token.data);
+      fprintf(stderr, "Syntax error, unexpeted token \"%s\".\n", token.data);
       return SYNTAX_ERR;
    }
 
@@ -1244,15 +1270,20 @@ int class_scnd()
    if(token2.stav != S_ID)
       return SYNTAX_ERR;
 
-   int classname_len = strlen(token.data);      //Odtialto sa uchovava nazov
+   int classname_len = strlen(token2.data);      //Odtialto sa uchovava nazov
    classname = mymalloc(classname_len*sizeof(char) + 2);
    if(classname == NULL)
    {
       error = INTERNAL_ERR;
       return error;
    }
-   strcpy(classname,token.data);
-   classname[strlen(token.data)+1] = '\0';  
+   strcpy(classname,token2.data);
+   classname[strlen(token2.data)+1] = '\0';  
+
+   ptrclass = class_search(STable, classname);  //ptrclass->classname obsahuje nazov classu
+                                                //ptrclass->ptr obsahuje ukazatel na tabulku danej classy
+   if(ptrclass == NULL)
+      return INTERNAL_ERR;
 
    front_token();   //ocakavam {
    if(token2.stav != S_L_KOSZ)
@@ -1289,7 +1320,7 @@ int after_class_scnd()
       if(token2.stav != S_ID)
          return SYNTAX_ERR;
 
-      /*funcname_len = strlen(token2.data);      //Odtialto sa uchovava nazov
+      funcname_len = strlen(token2.data);      //Odtialto sa uchovava nazov
       funcname = mymalloc(funcname_len*sizeof(char) + 2);
       if(funcname == NULL)
       {
@@ -1297,7 +1328,9 @@ int after_class_scnd()
          return error;
       }
       strcpy(funcname,token2.data);
-      funcname[strlen(token2.data)+1] = '\0';  */
+      funcname[strlen(token2.data)+1] = '\0'; 
+
+      symbol = Htab_search(ptrclass->ptr, funcname);  //symbol by mal teraz obsahovat nazov funkcie
       
       //pouzite pravidlo <SDA> -> ( <PA> ) { <MB> }
       front_token(); //musi byt lava zatvorka
@@ -1316,6 +1349,7 @@ int after_class_scnd()
          front_token();
 
          local_table = loc_table_init();  //inicializcia tabulky pre lokalne premenne vo funkcii
+         sym_function_add_locals(symbol, local_table);
 
          error = main_body_scnd();
 
@@ -1362,6 +1396,7 @@ int after_class_scnd()
          front_token(); 
 
          local_table = loc_table_init();  //inicializcia tabulky pre lokalne premenne vo funkcii
+         sym_function_add_locals(symbol, local_table);
 
          error = main_body_scnd();
 
@@ -1393,7 +1428,7 @@ int after_class_scnd()
       if(token2.stav != S_ID)
          return SYNTAX_ERR; 
 
-      /*nazov_len = strlen(token2.data);      //Odtialto sa uchovava nazov
+      nazov_len = strlen(token2.data);      //Odtialto sa uchovava nazov
       nazov = mymalloc(nazov_len*sizeof(char) + 2);
       if(nazov == NULL)
       {
@@ -1401,7 +1436,7 @@ int after_class_scnd()
          return error;
       }
       strcpy(nazov,token2.data);
-      nazov[strlen(token2.data)+1] = '\0';  */
+      nazov[strlen(token2.data)+1] = '\0'; 
 
       front_token();          
 
@@ -1439,7 +1474,19 @@ int after_class_scnd()
 
          case S_LZAT:               // pravidlo <Decl> -> ( <PA> ) { <MB> }
             front_token();   //ocakava bud ) v pripade prazndych argumentov, alebo type
-                     
+                    
+            funcname_len = strlen(nazov);      //Odtialto sa uchovava nazov
+            funcname = mymalloc(funcname_len*sizeof(char) + 2);
+            if(funcname == NULL)
+            {
+               error = INTERNAL_ERR;
+               return error;
+            }
+            strcpy(funcname,nazov);
+            funcname[strlen(nazov)+1] = '\0'; 
+
+            symbol = Htab_search(ptrclass->ptr, funcname);
+
             if(token2.stav == S_PZAT)   //prazdny pocet argumentov
             {
                //pravidlo: <PA> -> epsilon
@@ -1450,6 +1497,7 @@ int after_class_scnd()
                front_token();     
 
                local_table = loc_table_init();  //inicializcia tabulky pre lokalne premenne vo funkcii
+               sym_function_add_locals(symbol, local_table);
 
                error = main_body_scnd();
 
@@ -1495,6 +1543,7 @@ int after_class_scnd()
                front_token();  
 
                local_table = loc_table_init();  //inicializcia tabulky pre lokalne premenne vo funkcii
+               sym_function_add_locals(symbol, local_table);   //spojenie tabulky s funckiou ktorej patri
 
                error = main_body_scnd();
 
@@ -1634,73 +1683,182 @@ int main_body_scnd()   //pravidlo <MB> -> <SL> <MB>
    }
    else if(token2.stav == S_ID)
    {
-
-
-      /********************************  //bude sa overovat podla toho ci je plne kvalifikovane meno alebo to je lokalna premenna
-      if(strchr(token2.data, '.'))
+      if(strchr(token2.data, '.'))  //identifikator je zlozeny
       {
-         char *str = token2.data;
-         char *str2 = token2.data;
-         str = return_class();
-         str2 = return_id();
-         printf("%s\n", str);
-         printf("%s\n", str2);
-      }
-      ********************************/
-
-
-      int i = is_build_function_scnd();
-      front_token();
-      if(token2.stav == S_PRIR)    //priradenie do premennej
-      {  
-         front_token();
-         error = expresion_parser();
-
-         if(error != SUCCESS)
-            return error;
-
-         if(token2.stav != S_SEMICOLON)
-            return SYNTAX_ERR;
-      }
-      else if(token2.stav == S_LZAT)    //lubovalna ina funckia
-      {
-         if(i > 0)
+         int i = is_build_function_scnd();
+         if(i > 0)   //je to vstavana funkcia
          {
+            front_token();
             error = build_function_call_scnd(i);
             if(error != SUCCESS)
                return error;
-         }
-         else 
-         {
-            /***********VYRAZ**************/
-            front_token();
-            if(token2.stav != S_PZAT)
-               return SYNTAX_ERR;
-
-            front_token();
             if(token2.stav != S_SEMICOLON)
                return SYNTAX_ERR;
          }
+         else  //nie je to vstavana funkcia
+         {
+            error = return_class();
+            if(error != SUCCESS)
+               return error;
+
+            Hash_class* class_table_symbol = class_search(STable, class_part);   //hladame ci existuje dana class
+            temp_symbol = Htab_search(class_table_symbol->ptr, id_part); 
+
+            if(class_table_symbol == NULL)   
+            {
+               fprintf(stderr, "SEMANTIC_PROG_ERR. Class \"%s\" undefided.\n", class_part);  //dana classa neexsituje
+               return SEMANTIC_PROG_ERR;
+            }
+            if(temp_symbol == NULL)
+            {
+               fprintf(stderr, "SEMANTIC_PROG_ERR. \"%s\" undefined in class \"%s\".\n", id_part, class_part); //dana staticka premenna/funckia neexistuje
+               return SEMANTIC_PROG_ERR;
+            }
+            if(temp_symbol->fce == false) //to co sme nasli je premmena
+            {
+               front_token();
+               if(token2.stav != S_PRIR)
+                  return SYNTAX_ERR;
+
+               front_token();
+               error = expresion_parser();
+               if(error != SUCCESS)
+                  return error;
+
+               if(token2.stav != S_SEMICOLON)
+                  return SYNTAX_ERR;
+            }   
+            else if(temp_symbol->fce == true)   //to co sme nasli je funkcia
+            {
+               front_token();
+               if(token2.stav != S_LZAT)  /*******************************************************OVERENIE ARGUMENTOV*****************************/
+                  return SYNTAX_ERR;
+               front_token();
+               if(token2.stav != S_PZAT)
+                  return SYNTAX_ERR;
+               front_token();
+               if(token2.stav != S_SEMICOLON)
+                  return SYNTAX_ERR;
+            }                    
+         }
       }
-      else
-         return SYNTAX_ERR;
+      else  //identifikator je jednoduchy
+      {
+         nazov_len = strlen(token2.data); //vracia nazov statickeho symbolu
+         nazov = mymalloc(nazov_len*sizeof(char) + 2);
+         if(nazov == NULL) 
+         {
+            error = INTERNAL_ERR;
+            clearAll();
+            return error;
+         }
+         strcpy(nazov,token2.data);
+         nazov[strlen(token2.data)+1] = '\0';   //dostali sme nazov ID
+
+         local_symbol = loc_symbol_search(local_table, nazov); //overenie, ci uz dana lokalna premenna neexistuje ako premenna
+         temp_symbol = Htab_search(ptrclass->ptr, nazov);  //overenei ci existuje ako funkcia
+
+         if(local_symbol != NULL && temp_symbol == NULL)   //lokalny symbol sa nasiel -> je to premenna vo funkcii
+         {
+            front_token();
+            if(token2.stav != S_PRIR)
+               return SYNTAX_ERR;
+
+            front_token();
+            error = expresion_parser();
+
+            if(token2.stav != S_SEMICOLON)
+               return SYNTAX_ERR;
+         }
+         else if(temp_symbol != NULL && local_symbol == NULL)
+         {
+            if(temp_symbol->fce == true) //dany symbol sme nasli ako funkciu
+            {
+               front_token();
+               if(token2.stav != S_LZAT)        /********************************Tu sa budu overovat arguenty, typ +pocet ************************/
+                  return SYNTAX_ERR;
+               front_token();
+               if(token2.stav != S_PZAT)
+                  return SYNTAX_ERR;
+               front_token();
+               if(token2.stav != S_SEMICOLON)
+                  return SYNTAX_ERR;
+            }
+            else
+            {
+               fprintf(stderr, "SEMANTIC_PROG_ERR. When using \"%s\" you must enter fully quialified ID.\n", nazov);
+               return SEMANTIC_PROG_ERR;
+            }
+         }
+         else if(temp_symbol != NULL && temp_symbol != NULL)   //pripad ze sa zhoduju staticka a lokalna ID tak sa bude pouzivat lokalna
+         {
+            front_token();
+            if(token2.stav != S_PRIR)
+               return SYNTAX_ERR;
+
+            front_token();
+            error = expresion_parser();
+            if(error != SUCCESS)
+               return error;
+
+            if(token2.stav != S_SEMICOLON)
+               return SYNTAX_ERR;
+         }
+         else
+         {
+            fprintf(stderr, "SEMANTIC_PROG_ERR. Using \"%s\" which was not declared yet.\n", nazov);
+            return SEMANTIC_PROG_ERR;
+         }
+      }
    }
    else if(!((strcmp(token2.data, "String"))&&(strcmp(token2.data, "int"))&&(strcmp(token2.data, "double"))))  //pravidlo <SL> -> <PARS> <VD>
    {  
+      symbol_type = sym_type(token2);
+
       front_token();
       if(token2.stav != S_ID)
          return SYNTAX_ERR;
 
+      if(strchr(token2.data, '.'))  //nemoze byt plne kvalifikovane id
+         return SYNTAX_ERR;
+
+      nazov_len = strlen(token2.data); //vracia nazov statickeho symbolu
+      nazov = mymalloc(nazov_len*sizeof(char) + 2);
+      if(nazov == NULL) 
+      {
+         error = INTERNAL_ERR;
+         clearAll();
+         return error;
+      }
+      strcpy(nazov,token2.data);
+      nazov[strlen(token2.data)+1] = '\0';
+
+      local_symbol = loc_symbol_search(local_table, nazov); //overenie, ci uz dana lokalna premenna neexistuje
+      if(local_symbol != NULL)
+      {
+         fprintf(stderr, "Local variable \"%s\" alredy exists in \"%s\" funcion.\n", nazov, funcname);
+         return SEMANTIC_PROG_ERR;
+      }
+
       front_token();
       if(token2.stav == S_PRIR)
       {
-         /**********************ZAVOLAT OVERENIE VYRAZU***************************/
+         local_symbol  = loc_symbol_init(nazov, symbol_type, true, true, classname);      //mozno bude treba namiesto classname, funcname
+         loc_table_insert(local_table, local_symbol);
+
          front_token();
+         error = expresion_parser();
+         if(error != SUCCESS)
+            return error;
          if(token2.stav != S_SEMICOLON)
             return SYNTAX_ERR;
       }
       else if(token2.stav == S_SEMICOLON)
-         ;
+      {
+                                      //(Tmeno, typ symbolu, inci, decl, nazov_classu)
+         local_symbol  = loc_symbol_init(nazov, symbol_type, false, true, classname);
+         loc_table_insert(local_table, local_symbol);
+      }
       else
          return SYNTAX_ERR;
    }
@@ -1735,7 +1893,7 @@ int main_body_scnd()   //pravidlo <MB> -> <SL> <MB>
             || token2.stav == S_CIARKA || token2.stav == S_VYKR || token2.stav == S_NEROV
             || token2.stav == S_STRING || token2.stav == S_ESCAPE)
    {
-      fprintf(stderr, "Syntax error, unexpeted token \"%s\"\n.", token2.data);
+      fprintf(stderr, "Syntax error, unexpeted token \"%s\".\n", token2.data);
       return SYNTAX_ERR;
    }   
 
@@ -1830,42 +1988,143 @@ int main_body_riadiace_scnd()   //pravidlo <MB> -> <SL> <MB>
       if(token2.stav != S_P_KOSZ)
          return SYNTAX_ERR;
    }
+
+
+
+
    else if(token2.stav == S_ID)
    {
-      int i = is_build_function_scnd();
-
-      front_token();
-
-      if(token2.stav == S_PRIR)    //priradenie do premennej
-      {  
-         //provizorne
-         front_token();
-         if(token2.stav != S_SEMICOLON)
-            return SYNTAX_ERR;
-      }
-      else if(token2.stav == S_LZAT)    //lubovalna ina funckia
+      if(strchr(token2.data, '.'))  //identifikator je zlozeny
       {
-         if(i > 0)
+         int i = is_build_function_scnd();
+         if(i > 0)   //je to vstavana funkcia
          {
+            front_token();
             error = build_function_call_scnd(i);
             if(error != SUCCESS)
                return error;
-         }
-         else 
-         {
-            /***********VYRAZ**************/
-            front_token();
-            if(token2.stav != S_PZAT)
-               return SYNTAX_ERR;
-
-            front_token();
             if(token2.stav != S_SEMICOLON)
                return SYNTAX_ERR;
          }
+         else  //nie je to vstavana funkcia
+         {
+            error = return_class();
+            if(error != SUCCESS)
+               return error;
+
+            Hash_class* class_table_symbol = class_search(STable, class_part);   //hladame ci existuje dana class
+            temp_symbol = Htab_search(class_table_symbol->ptr, id_part); 
+
+            if(class_table_symbol == NULL)   
+            {
+               fprintf(stderr, "SEMANTIC_PROG_ERR. Class \"%s\" undefided.\n", class_part);  //dana classa neexsituje
+               return SEMANTIC_PROG_ERR;
+            }
+            if(temp_symbol == NULL)
+            {
+               fprintf(stderr, "SEMANTIC_PROG_ERR. \"%s\" undefined in class \"%s\".\n", id_part, class_part); //dana staticka premenna/funckia neexistuje
+               return SEMANTIC_PROG_ERR;
+            }
+            if(temp_symbol->fce == false) //to co sme nasli je premmena
+            {
+               front_token();
+               if(token2.stav != S_PRIR)
+                  return SYNTAX_ERR;
+
+               front_token();
+               error = expresion_parser();
+               if(error != SUCCESS)
+                  return error;
+               if(token2.stav != S_SEMICOLON)
+                  return SYNTAX_ERR;
+            }   
+            else if(temp_symbol->fce == true)   //to co sme nasli je funkcia
+            {
+               front_token();
+               if(token2.stav != S_LZAT)  /*******************************************************OVERENIE ARGUMENTOV*****************************/
+                  return SYNTAX_ERR;
+               front_token();
+               if(token2.stav != S_PZAT)
+                  return SYNTAX_ERR;
+               front_token();
+               if(token2.stav != S_SEMICOLON)
+                  return SYNTAX_ERR;
+            }                    
+         }
       }
-      else
-         return SYNTAX_ERR;
+      else  //identifikator je jednoduchy
+      {
+         nazov_len = strlen(token2.data); //vracia nazov statickeho symbolu
+         nazov = mymalloc(nazov_len*sizeof(char) + 2);
+         if(nazov == NULL) 
+         {
+            error = INTERNAL_ERR;
+            clearAll();
+            return error;
+         }
+         strcpy(nazov,token2.data);
+         nazov[strlen(token2.data)+1] = '\0';   //dostali sme nazov ID
+
+         local_symbol = loc_symbol_search(local_table, nazov); //overenie, ci uz dana lokalna premenna neexistuje ako premenna
+         temp_symbol = Htab_search(ptrclass->ptr, nazov);  //overenei ci existuje ako funkcia
+
+         if(local_symbol != NULL && temp_symbol == NULL)   //lokalny symbol sa nasiel -> je to premenna vo funkcii
+         {
+            front_token();
+            if(token2.stav != S_PRIR)
+               return SYNTAX_ERR;
+
+            front_token();
+            error = expresion_parser();
+
+            if(token2.stav != S_SEMICOLON)
+               return SYNTAX_ERR;
+         }
+         else if(temp_symbol != NULL && local_symbol == NULL)
+         {
+            if(temp_symbol->fce == true) //dany symbol sme nasli ako funkciu
+            {
+               front_token();
+               if(token2.stav != S_LZAT)        /********************************Tu sa budu overovat arguenty, typ +pocet ************************/
+                  return SYNTAX_ERR;
+               front_token();
+               if(token2.stav != S_PZAT)
+                  return SYNTAX_ERR;
+               front_token();
+               if(token2.stav != S_SEMICOLON)
+                  return SYNTAX_ERR;
+            }
+            else
+            {
+               fprintf(stderr, "SEMANTIC_PROG_ERR. When using \"%s\" you must enter fully quialified ID.\n", nazov);
+               return SEMANTIC_PROG_ERR;
+            }
+         }
+         else if(temp_symbol != NULL && temp_symbol != NULL)   //pripad ze sa zhoduju staticka a lokalna ID tak sa bude pouzivat lokalna
+         {
+            front_token();
+            if(token2.stav != S_PRIR)
+               return SYNTAX_ERR;
+
+            front_token();
+            error = expresion_parser();
+            if(error != SUCCESS)
+               return error;
+
+            if(token2.stav != S_SEMICOLON)
+               return SYNTAX_ERR;
+         }
+         else
+         {
+            fprintf(stderr, "SEMANTIC_PROG_ERR. Using \"%s\" which was not declared yet.\n", nazov);
+            return SEMANTIC_PROG_ERR;
+         }
+      }
    }
+
+
+
+
    else if(!((strcmp(token2.data, "String"))&&(strcmp(token2.data, "int"))&&(strcmp(token2.data, "double"))))  //pravidlo <SL> -> <PARS> <VD>
    {  
          return SYNTAX_ERR;
@@ -1901,7 +2160,7 @@ int main_body_riadiace_scnd()   //pravidlo <MB> -> <SL> <MB>
             || token2.stav == S_CIARKA || token2.stav == S_VYKR || token2.stav == S_NEROV
             || token2.stav == S_STRING || token2.stav == S_ESCAPE)
    {
-      fprintf(stderr, "Syntax error, unexpeted token \"%s\"\n.", token2.data);
+      fprintf(stderr, "Syntax error, unexpeted token \"%s\".\n", token2.data);
       return SYNTAX_ERR;
    }
 
