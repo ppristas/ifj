@@ -26,6 +26,10 @@
 //tHTable* Main_table;
 //clHTable* Class_table;
 
+/*
+void buildin_args(iSymbol *buildinsym, char *data, int typ_s) {
+	//TODO
+}*/
 
 int contain_me(iSymbol *funcsym, char *name, unsigned int typ) {
 	TList *templist = funcsym->data->args;
@@ -115,7 +119,7 @@ void local_function_add_args(locSymbol* locfuncsym, char *name, int typ_s, int c
         //adds only first arguement
         locfuncsym->data->args = linked_list_init();
         list_insert_first(locfuncsym->data->args, name, typ_s);
-        locfuncsym->data->arg_count = counter;
+        locfuncsym->data->arg_count = counter + 1;
 
         
     }
@@ -123,7 +127,7 @@ void local_function_add_args(locSymbol* locfuncsym, char *name, int typ_s, int c
 
         //lets begin
         list_insert_next(locfuncsym->data->args, name, typ_s);
-        locfuncsym->data->arg_count = counter;
+        locfuncsym->data->arg_count = counter + 1;
     }
 }
 
@@ -430,8 +434,9 @@ void list_insert_next(TList *list, char *name, int typ_s) {
 			addnode->name[strlen(name)+1] = '\0';
 			addnode->type = typ_s;
 			
-			addnode->next = list->act->next;
+			addnode->next = NULL;
 			list->act->next = addnode;
+			list->act = addnode;
 		}
 	}
 }
