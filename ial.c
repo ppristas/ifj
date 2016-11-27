@@ -26,6 +26,26 @@
 //tHTable* Main_table;
 //clHTable* Class_table;
 
+
+int contain_me(iSymbol *funcsym, char *name, unsigned int typ) {
+	TList *templist = funcsym->data->args;
+	int currlist_len = 0;
+	int it_contains = 0;
+
+	while((templist->first != NULL) && (currlist_len<=funcsym->data->arg_count)) {
+		if((templist->first->type == typ) && (strcmp(templist->first->name, name) == 0)) {
+			it_contains = 1;
+			break;
+		}
+		else
+			templist->first = templist->first->next;
+			currlist_len++;
+	}
+	if(it_contains == 1)
+		return 42;
+	else
+		return 21;
+}
 /**
  *      searches for symbol
  *
@@ -56,6 +76,9 @@ locSymbol* loc_symbol_search(locTable* ptrloctable,char *data) {
 void loc_table_insert(locTable* ptrloctable,locSymbol* new_locsymbol) {
 	if(loc_symbol_search(ptrloctable,new_locsymbol->name) != NULL) {
 		//do nothing
+		error = INTERNAL_ERR;
+		clearAll();
+		return;
 	}
 	else {
 		unsigned index = hash_function(new_locsymbol->name);
@@ -174,7 +197,7 @@ locSymbol* loc_symbol_function_init(char *data,  int stype, char *classname) {
  *
  * @return     pointer to symbol
  */
-locSymbol* loc_symbol_init(char *data, int stype, bool isinit, char *classname) {
+locSymbol* loc_symbol_init(char *data, int stype, bool isinit, bool isdecl, char *classname) {
 	locSymbol* locsym = NULL;
 	symData* ptrsymdata = NULL;
 	locsym = mymalloc(sizeof(struct Loc_item));
@@ -218,6 +241,7 @@ locSymbol* loc_symbol_init(char *data, int stype, bool isinit, char *classname) 
 	locsym->data->args = NULL;
 	locsym->data->instrPtr = NULL;
 	locsym->init = isinit;
+	locsym->decl = isdecl;
 	locsym->nextptr = NULL;
 
 	return locsym;
@@ -363,10 +387,19 @@ void list_insert_first(TList *list, char *name, int typ_s) {
 		return;
 	}
 
-	tmp->name = name;
+	int arg_len = strlen(name);
+	tmp->name = mymalloc(arg_len*sizeof(char) + 2);
+	if(tmp->name == NULL) {
+		error = INTERNAL_ERR;
+		clearAll();
+		return;
+	}
+	strcpy(tmp->name,name);
+	tmp->name[strlen(name)+1] = '\0';
+
 	tmp->type = typ_s;
+	tmp->next = list->first;
 	list->first = tmp;
-	//nastavenie aktivity
 	list->act = list->first;
 }
 
@@ -386,11 +419,19 @@ void list_insert_next(TList *list, char *name, int typ_s) {
 			return;
 		}
 		else {
-			addnode->name = name;
+			int arg_len = strlen(name);
+			addnode->name = mymalloc(arg_len*sizeof(char) +2);
+			if(addnode->name == NULL) {
+				error = INTERNAL_ERR;
+				clearAll();
+				return;
+			}
+			strcpy(addnode->name,name);
+			addnode->name[strlen(name)+1] = '\0';
 			addnode->type = typ_s;
+			
 			addnode->next = list->act->next;
 			list->act->next = addnode;
-			list->act = list->act->next;
 		}
 	}
 }
@@ -585,13 +626,14 @@ void function_add_args(iSymbol* funcsym, char *name, int typ_s,int counter) {
         //adds only first arguement
         funcsym->data->args = linked_list_init();
         list_insert_first(funcsym->data->args, name, typ_s);
-        funcsym->data->arg_count = counter;        
+        funcsym->data->arg_count = counter +1;        
     }
     else {
 
+    	//funcsym->data->args = myrealloc(funcsym->data->args,sizeof(struct _TList) + sizeof(struct _TNode) * counter);
         //lets begin
         list_insert_next(funcsym->data->args, name, typ_s);
-        funcsym->data->arg_count = counter;
+        funcsym->data->arg_count = counter +1;
     } 
 
 }
@@ -636,6 +678,9 @@ void Htab_insert(tHTable* tab, iSymbol* newsymbol)
 {
     if(Htab_search(tab,newsymbol->name) != NULL){
         //do nothing
+        error = INTERNAL_ERR;
+        clearAll();
+        return;
     }
     else {
     	unsigned index = hash_function(newsymbol->name);    
