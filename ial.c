@@ -31,13 +31,16 @@ void buildin_args(iSymbol *buildinsym, char *data, int typ_s) {
 	//TODO
 }*/
 
-int contain_me(iSymbol *funcsym, char *name, unsigned int typ) {
+int contain_me(iSymbol *funcsym, char *name) {
 	TList *templist = funcsym->data->args;
 	int currlist_len = 0;
 	int it_contains = 0;
 
+	if(templist == NULL)
+		return 21;
+
 	while((templist->first != NULL) && (currlist_len<=funcsym->data->arg_count)) {
-		if((templist->first->type == typ) && (strcmp(templist->first->name, name) == 0)) {
+		if((strcmp(templist->first->name, name) == 0)) {
 			it_contains = 1;
 			break;
 		}

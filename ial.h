@@ -107,7 +107,7 @@ typedef Hash_class clHTable[Hash_table_size];
 //extern clHTable *Class_table;
 
 //compares arguement with symbol
-int contain_me(iSymbol *funcsym, char *name, unsigned int typ);
+int contain_me(iSymbol *funcsym, char *name);
 //local table
 void local_function_add_args(locSymbol* locfuncsym, char *name, int typ_s, int counter);
 void sym_function_add_locals(iSymbol* funcsym,locTable* ptrloctable);
