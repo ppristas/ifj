@@ -53,6 +53,7 @@ typedef struct sym_Data {
 		int i;
 		double d;
 		char *str;
+		bool is_bool;
 	}ptr_union;
 } symData;
 
