@@ -482,8 +482,11 @@ symbolType sym_type(Ttoken token) {
     else if(strcmp(token.data,"true")==0 || strcmp(token.data,"false")==0) {
     	return tBool;
     }
+    else if(strcmp(token.data,"void")==0) {
+    	return tNan;
+    }
     else {
-        //fprintf(stderr, "Undefined type of token %s\n", token.data);
+        fprintf(stderr, "Undefined type of token %s\n", token.data);
         error = INTERNAL_ERR;
         return tNan;
     }
