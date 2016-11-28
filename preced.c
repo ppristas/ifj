@@ -9,7 +9,7 @@
    *                    Peter Pristas   (xprist05@stud.fit.vutbr.cz)            *
    *                    Daniel Florek   (xflore02@stud.fit.vutbr.cz)            *
    *                    Martin Grnac    (xgrnac00@stud.fit.vutbr.cz)            *
-   *                                                                            *               
+   *                                                                            *
    ********************************************************************************/
 
    #include <ctype.h>
@@ -17,28 +17,28 @@
    #include "error.h"
    #include "preced.h"
    #include "cleaner.h"
-   #include "stack.h" 
+   #include "stack.h"
 
    #define TAB_SIZE (16)
 
-   static const char precedense_table[TAB_SIZE][TAB_SIZE] = 
+   static const char precedense_table[TAB_SIZE][TAB_SIZE] =
    {/*     +    -    *    /    (    )   id   idf   <    >   <=   >=   ==   !=    ,    $  */
-/* +  */ {'>', '>', '<', '<', '<', '>', '<', '<', '>', '>', '>', '>', '>', '>', '>', '>'},   
-/* -  */ {'>', '>', '<', '<', '<', '>', '<', '<', '>', '>', '>', '>', '>', '>', '>', '>'},   
-/* *  */ {'>', '>', '>', '>', '<', '>', '<', '<', '>', '>', '>', '>', '>', '>', '>', '>'},  
-/* /  */ {'>', '>', '>', '>', '<', '>', '<', '<', '>', '>', '>', '>', '>', '>', '>', '>'},  
-/* (  */ {'<', '<', '<', '<', '<', '=', '<', '<', '<', '<', '<', '<', '<', '<', '>', 'E'},   
-/* )  */ {'>', '>', '>', '>', 'E', '>', 'E', 'E', '>', '>', '>', '>', '>', '>', '=', '>'}, 
-/*id  */ {'>', '>', '>', '>', 'E', '>', 'E', 'E', '>', '>', '>', '>', '>', '>', '>', '>'}, 
-/*idf */ {'E', 'E', 'E', 'E', '=', 'E', 'E', 'E', 'E', 'E', 'E', 'E', 'E', 'E', 'E', 'E'}, 
-/* <  */ {'<', '<', '<', '<', '<', '>', '<', '<', 'E', 'E', 'E', 'E', 'E', 'E', '>', '>'}, 
-/* >  */ {'<', '<', '<', '<', '<', '>', '<', '<', 'E', 'E', 'E', 'E', 'E', 'E', '>', '>'}, 
-/* <= */ {'<', '<', '<', '<', '<', '>', '<', '<', 'E', 'E', 'E', 'E', 'E', 'E', '>', '>'}, 
-/* >= */ {'<', '<', '<', '<', '<', '>', '<', '<', 'E', 'E', 'E', 'E', 'E', 'E', '>', '>'}, 
-/* == */ {'<', '<', '<', '<', '<', '>', '<', '<', 'E', 'E', 'E', 'E', 'E', 'E', '>', '>'}, 
-/* != */ {'<', '<', '<', '<', '<', '>', '<', '<', 'E', 'E', 'E', 'E', 'E', 'E', '>', '>'}, 
-/* ,  */ {'<', '<', '<', '<', '<', '=', '<', '<', '<', '<', '<', '<', '<', '<', '=', 'E'}, 
-/* $  */ {'<', '<', '<', '<', '<', 'E', '<', '<', '<', '<', '<', '<', '<', '<', 'E', 'E'},  
+/* +  */ {'>', '>', '<', '<', '<', '>', '<', '<', '>', '>', '>', '>', '>', '>', '>', '>'},
+/* -  */ {'>', '>', '<', '<', '<', '>', '<', '<', '>', '>', '>', '>', '>', '>', '>', '>'},
+/* *  */ {'>', '>', '>', '>', '<', '>', '<', '<', '>', '>', '>', '>', '>', '>', '>', '>'},
+/* /  */ {'>', '>', '>', '>', '<', '>', '<', '<', '>', '>', '>', '>', '>', '>', '>', '>'},
+/* (  */ {'<', '<', '<', '<', '<', '=', '<', '<', '<', '<', '<', '<', '<', '<', '>', 'E'},
+/* )  */ {'>', '>', '>', '>', 'E', '>', 'E', 'E', '>', '>', '>', '>', '>', '>', '=', '>'},
+/*id  */ {'>', '>', '>', '>', 'E', '>', 'E', 'E', '>', '>', '>', '>', '>', '>', '>', '>'},
+/*idf */ {'E', 'E', 'E', 'E', '=', 'E', 'E', 'E', 'E', 'E', 'E', 'E', 'E', 'E', 'E', 'E'},
+/* <  */ {'<', '<', '<', '<', '<', '>', '<', '<', 'E', 'E', 'E', 'E', 'E', 'E', '>', '>'},
+/* >  */ {'<', '<', '<', '<', '<', '>', '<', '<', 'E', 'E', 'E', 'E', 'E', 'E', '>', '>'},
+/* <= */ {'<', '<', '<', '<', '<', '>', '<', '<', 'E', 'E', 'E', 'E', 'E', 'E', '>', '>'},
+/* >= */ {'<', '<', '<', '<', '<', '>', '<', '<', 'E', 'E', 'E', 'E', 'E', 'E', '>', '>'},
+/* == */ {'<', '<', '<', '<', '<', '>', '<', '<', 'E', 'E', 'E', 'E', 'E', 'E', '>', '>'},
+/* != */ {'<', '<', '<', '<', '<', '>', '<', '<', 'E', 'E', 'E', 'E', 'E', 'E', '>', '>'},
+/* ,  */ {'<', '<', '<', '<', '<', '=', '<', '<', '<', '<', '<', '<', '<', '<', '=', 'E'},
+/* $  */ {'<', '<', '<', '<', '<', 'E', '<', '<', '<', '<', '<', '<', '<', '<', 'E', 'E'},
 };
 
 
@@ -48,7 +48,7 @@
  * params: count -> pocet zatvoriek (na detekovanie konca volania funkcie
  */
 int catch_index(SAData *pom,int *count){
-	
+
 	switch(token2.stav){
 		case S_PLUS:
 			pom->indexibus = PLUS;
@@ -93,7 +93,7 @@ int catch_index(SAData *pom,int *count){
 			//TODO
 			//vlozit do tabulky symbolov
 			//
-	
+
 			break;
 		case S_DOUBLE:
 		case S_INT:
@@ -133,7 +133,7 @@ void show_stacks(tStack *s1,tStack *s2)
 	stackTop(s1,&pom1);
 	stackTop(s2,&pom2);
     while((!(stackEmpty(s1)) || (!(stackEmpty(s2))))){
-     		
+
 	    stackTopPop(s1,&pom1);
         stackTopPop(s2,&pom2);
 		if(!stackEmpty(s1)){
@@ -152,7 +152,7 @@ void show_stacks(tStack *s1,tStack *s2)
 			if(a == 1)
 	            printf("\t\t[ %d ]",pom2.indexibus);
 			printf("\n");
-		}   	
+		}
 	 }
 }
 
@@ -191,14 +191,14 @@ int reduction(tStack *stack1,tStack *stack2){
 		stackTop(stack1,&hhelp1);
 	}
 
-	if( hhelp1.indexibus == L_HANDLE){	
+	if( hhelp1.indexibus == L_HANDLE){
 		stackTopPop(stack2,&hhelp2);
 
 		//******* E -> id
 		//*******
 		//*******
 		if(hhelp2.indexibus == ID){
-	
+
 			stackPop(stack1);		//dam dofaka leftHandle
 
 
@@ -208,12 +208,12 @@ int reduction(tStack *stack1,tStack *stack2){
 
 
 
-			stackPush(stack1,&neterminal);			
+			stackPush(stack1,&neterminal);
 			return SUCCESS;
-			
+
 		//******
 		//****** E->E op E
-		//****** 
+		//******
 		}else if(hhelp2.indexibus == NETERM){
 			//na top stack1 je L_HANDLE!!TODO
 			if(stackEmpty(stack2)){
@@ -226,14 +226,14 @@ int reduction(tStack *stack1,tStack *stack2){
 			if( hhelp3.indexibus == PLUS    ||
 			    hhelp3.indexibus == MINUS   ||
 			    hhelp3.indexibus == KRAT    ||
-				hhelp3.indexibus == DELENE  ||
-				hhelp3.indexibus == MENSIE  ||
-				hhelp3.indexibus == VACSIE  ||
-				hhelp3.indexibus == MENROV  ||
-				hhelp3.indexibus == VACROV  ||
-				hhelp3.indexibus == EQUAL   ||
-				hhelp3.indexibus == NEQUAL   ){
-								
+				  hhelp3.indexibus == DELENE  ||
+				  hhelp3.indexibus == MENSIE  ||
+				  hhelp3.indexibus == VACSIE  ||
+				  hhelp3.indexibus == MENROV  ||
+				  hhelp3.indexibus == VACROV  ||
+				  hhelp3.indexibus == EQUAL   ||
+				  hhelp3.indexibus == NEQUAL   ){
+					;
 			}else{
 				error = SYNTAX_ERR;
 				errorFce();
@@ -242,7 +242,7 @@ int reduction(tStack *stack1,tStack *stack2){
 			}
 
 			 //generovanie instrukcie TODO cez jednoduchy switch (hhelp3.indexibus){ }
-			/*	
+			/*
 			switch(hhelp3.indexibus){
 				case PLUS:
 				case MINUS:
@@ -266,21 +266,21 @@ int reduction(tStack *stack1,tStack *stack2){
 			//mal by byt dalsi neterminal
 
 			stackTopPop(stack2,&hhelp4);
-	
-			//mozem redukovat, kedze je prazdny stack2 a bol neterminal na vrchole			
+
+			//mozem redukovat, kedze je prazdny stack2 a bol neterminal na vrchole
 			if((hhelp4.indexibus == NETERM) && (stackEmpty(stack2))){
 				//redukujem
 				//TODO vlozit do tabulky symbolov
-				// a do instrukcnej pasky	
-				//TODO zistovat ci je string a double?	
-				
+				// a do instrukcnej pasky
+				//TODO zistovat ci je string a double?
+
 				//TODO ak je jeden z NETERMINALOV string a operator je + tak dam konkatenaciu
-				
+
 				error = SUCCESS;
 				stackPop(stack1);
 				neterminal.indexibus = NETERM;
 				stackPush(stack1,&neterminal);
-				return error;	
+				return error;
 			}else{
 				error = SYNTAX_ERR;
                 errorFce();
@@ -306,7 +306,7 @@ int reduction(tStack *stack1,tStack *stack2){
                 clearAll();
                 return error;
 			}
-			
+
 			if(stackEmpty(stack2)){
                 error = SYNTAX_ERR;
                 errorFce();
@@ -318,8 +318,8 @@ int reduction(tStack *stack1,tStack *stack2){
 			if((hhelp4.indexibus == PZATV) && (stackEmpty(stack2))){
 				//zredukujem na E
 				stackPop(stack1);	//odstranim L_HANDLE
-										
-				neterminal = hhelp3;	//hodnota z neterminalu z hhelp3 
+
+				neterminal = hhelp3;	//hodnota z neterminalu z hhelp3
 				neterminal.indexibus = NETERM;
 				stackPush(stack1,&neterminal);
 				return SUCCESS;
@@ -337,7 +337,7 @@ int reduction(tStack *stack1,tStack *stack2){
 		}		//pre pravu zatvorku
 				//pre neterminal
 	}
-	
+
 	error = SYNTAX_ERR;
 	return error;
 }
@@ -347,7 +347,7 @@ int expresion_parser()
    int bracket_counter = 0;
 	//front_token();
 	/// TODO treba po nasadanie zmazat get_token - sluzi len na testovanie
-	//get_token();	
+	//get_token();
 	//oba zasobniky
 	tStack Stack1;
 	stackInit(&Stack1);  //zasobnik pre terminaly
@@ -360,7 +360,7 @@ int expresion_parser()
 	//pravy index;
 	SAData right_index, left_index;
 	SAData pom;
-	SAData pom1;	
+	SAData pom1;
 	SAData vyber;
 	SAData end;	//
 	SAData top;
@@ -369,31 +369,31 @@ int expresion_parser()
 
 	stackPush(&Stack1,&pom);
 	//pushnuty dolar na prvom zasobniku
-	
+
 	do{
 //	for(int i = 0; i<6;i++){
-	
+
 		if(readToken){	//ziskam si index do tabulky symbolov podla typu tokenu
 			catch_index(&right_index,&bracket_counter);
-			
+
 		}
 
 		stackTop(&Stack1,&left_index);		//do left_index si dam vrchol zasobniku
-		
-	
+
+
 		//neterminaly preskakujem aby som ziskal najblizsi terminal na porovnanie do prec.t
 		while(left_index.indexibus > DOLAR){
 			stackTopPop(&Stack1,&vyber);
-            stackPush(&Stack2,&vyber);		
+            stackPush(&Stack2,&vyber);
             stackTop(&Stack1,&left_index); 	//na leftIndex mam prvy terminal, ktory budem porovnavat s rightindex
 		}
-	
+
 		//vratim spat vsetko z druheho zasobniku
 		while(!stackEmpty(&Stack2)){
 			stackTopPop(&Stack2,&vyber);
             stackPush(&Stack1,&vyber);
-		}	
-		
+		}
+
 		//kontrola konca volania funkcie
 		if(bracket_counter == -1){
 			right_index.indexibus = DOLAR;
@@ -402,37 +402,37 @@ int expresion_parser()
 		switch (precedense_table[left_index.indexibus][right_index.indexibus]){	//case by takto fakci uz "len" doplnit :D
 			case '=':
 				readToken = true;
-				stackPush(&Stack1,&right_index); 
+				stackPush(&Stack1,&right_index);
 				break;
 			case '<':
 				readToken = true;
 											//zatial bez druheho stacku
 				stackTop(&Stack1,&pom1);
-				while((pom1.indexibus > DOLAR)){	
+				while((pom1.indexibus > DOLAR)){
 						stackTopPop(&Stack1,&vyber);
 						stackPush(&Stack2,&vyber);
-						stackTop(&Stack1,&pom1);						
+						stackTop(&Stack1,&pom1);
 				}
-				
+
 				//vkladany "<" na zasobnik
 				pom.indexibus = L_HANDLE;
 				//vlozim "<" do zasobniku
 				stackPush(&Stack1,&pom);
-				
+
 				//vlozim odlozene neterminaly na stack
 				while(!stackEmpty(&Stack2)){
 					stackTopPop(&Stack2,&vyber);
 					stackPush(&Stack1,&vyber);
 				}
-				
+
 				//vlozim terminal na zasobnik
 				stackPush(&Stack1,&right_index);
 
 
 				break;
-			case '>':		
+			case '>':
 				reduction(&Stack1,&Stack2);
-				//ak by bolo nieco zle tak sa sem nedostane;							
+				//ak by bolo nieco zle tak sa sem nedostane;
 				readToken = false;
 				break;
 			case 'E':
@@ -446,7 +446,7 @@ int expresion_parser()
 		 while(top.indexibus > DOLAR){
             stackTopPop(&Stack1,&vyber);
             stackPush(&Stack2,&vyber);
-            stackTop(&Stack1,&top);  
+            stackTop(&Stack1,&top);
         }
 
 		stackTop(&Stack1,&end);
@@ -455,13 +455,13 @@ int expresion_parser()
             stackPush(&Stack1,&vyber);
         }
 
-		
+
 		if(readToken){
 //			printf("token: |%s|\n",token.data);
 			front_token();
 			if(error != SUCCESS){
 				errorFce();
-				clearAll();			
+				clearAll();
 			}
 		}
 
@@ -474,5 +474,3 @@ int expresion_parser()
 
 return error;
 }
-
-
