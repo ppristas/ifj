@@ -31,6 +31,7 @@ typedef enum{
 	tInt,
 	tDouble,
 	tString,
+	tBool,
 }symbolType;
 
 typedef struct _TNode {
@@ -48,7 +49,7 @@ typedef struct sym_Data {
 	int arg_count;
 	TList *args;
 	symbolType type;
-	item* instrPtr;
+	ilist* instrPtr;
 	union {
 		int i;
 		double d;
