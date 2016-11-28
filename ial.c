@@ -479,6 +479,9 @@ symbolType sym_type(Ttoken token) {
     else if(strcmp(token.data,"double")==0) {
         return tDouble;
     }
+    else if(strcmp(token.data,"true")==0 || strcmp(token.data,"false")==0) {
+    	return tBool;
+    }
     else {
         //fprintf(stderr, "Undefined type of token %s\n", token.data);
         error = INTERNAL_ERR;
