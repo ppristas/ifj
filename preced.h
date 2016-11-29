@@ -48,7 +48,8 @@ typedef enum Cikundex {
 
 
 typedef struct{
-	iSymbol sym_data;
+	symData *sym_data;
+  char* nameID;
 	tPrec_enum indexibus;
 }SAData;
 

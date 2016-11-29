@@ -16,11 +16,16 @@
    #include <stdio.h>
    #include "error.h"
    #include "preced.h"
-   #include "cleaner.h"
+   //#include "cleaner.h"
    #include "stack.h"
    //#include "ial.h"
    #include "ilist.h"
    #include "scaner.h"
+   #include "temp_tab.h"
+
+   unsigned int name = 0;
+   TMP_HTAB* const_table;
+
    #define TAB_SIZE (16)
 
    static const char precedense_table[TAB_SIZE][TAB_SIZE] =
@@ -50,7 +55,10 @@
  * params: count -> pocet zatvoriek (na detekovanie konca volania funkcie
  */
 int catch_index(SAData *pom,int *count){
-
+  char *endptr = NULL;
+  char *str = NULL;
+  int intoTableInt;
+  double intoTableDouble;
 	switch(token2.stav){
 		case S_PLUS:
 			pom->indexibus = PLUS;
@@ -99,8 +107,25 @@ int catch_index(SAData *pom,int *count){
 			//
 
 			break;
+    case S_INT:
+      pom->indexibus = ID;
+      pom->sym_data = mymalloc(sizeof(struct sym_Data));
+      if(pom->sym_data == NULL){
+        error = INTERNAL_ERR;
+        return error;
+      }
+      pom->sym_data->init = true;
+      pom->sym_data->args = NULL;
+      pom->sym_data->type = tInt;
+      pom->sym_data->instrPtr = NULL;
+      intoTableInt = pom->sym_data->ptr_union.i = strtol(token2.data,&endptr,10);
+      str = mymalloc(sizeof(char)*25);
+      sprintf(str,"@int_pom_%u",name++);  //TODO vygenerovat premennu;
+      pom->nameID = str;
+    //printf("vygenerovane meno:%s\n",pom->nameID);
+      tmp_htab_insert(const_table, pom->sym_data->type, &intoTableInt,pom->nameID);
+      break;
 		case S_DOUBLE:
-		case S_INT:
 		case S_EXP:
       //key = vygenerovat sprintfom
       //data->arg_count = 0;
@@ -109,6 +134,22 @@ int catch_index(SAData *pom,int *count){
       //data->ptr_union.d = atoi(token2.data);
 
 			pom->indexibus = ID;
+      pom->sym_data = mymalloc(sizeof(struct sym_Data));
+      if(pom->sym_data == NULL){
+        error = INTERNAL_ERR;
+        return error;
+      }
+      pom->sym_data->init = true;
+      pom->sym_data->args = NULL;
+      pom->sym_data->type = tDouble;
+      pom->sym_data->instrPtr = NULL;
+      intoTableDouble = pom->sym_data->ptr_union.d = strtod(token2.data,&endptr);
+      str = mymalloc(sizeof(char)*25);
+      sprintf(str,"@double_pom_%u",name++);  //TODO vygenerovat premennu;
+      pom->nameID = str;
+      printf("vygenerovane meno:%s\n",pom->nameID);
+      tmp_htab_insert(const_table, pom->sym_data->type, &intoTableDouble,pom->nameID);
+
 
       //pom->sym_data->data = /priradim si vytvorenu premennu
 			//TODO
@@ -117,13 +158,24 @@ int catch_index(SAData *pom,int *count){
 			//preconvertovat cez atoi
 			break;
 		case S_STRING:
-      //name vygenerovat
-      //key = vygenerovat sprintfom
-      //data->arg_count = 0;
-      //data->args = NULL;
-      //data->symbolType = tString;
-      //data->ptr_union.str = token.data;
-
+      pom->indexibus = ID;
+      pom->sym_data = mymalloc(sizeof(struct sym_Data));
+      if(pom->sym_data == NULL){
+        error = INTERNAL_ERR;
+        return error;
+      }
+      pom->sym_data->init = true;
+      pom->sym_data->args = NULL;
+      pom->sym_data->type = tString;
+      pom->sym_data->instrPtr = NULL;
+      if(token2.data != NULL)
+        pom->sym_data->ptr_union.str= token2.data;
+      else pom->sym_data->ptr_union.str = '\0';
+      str = mymalloc(sizeof(char)*25);
+      sprintf(str,"@str_pom_%u",name++);  //TODO vygenerovat premennu;
+      pom->nameID = str;
+      //printf("vygenerovane meno:%s\n",pom->nameID);
+      tmp_htab_insert(const_table, pom->sym_data->type,pom->sym_data->ptr_union.str ,pom->nameID);
 			pom->indexibus = ID;
       //pom->sym_data->data = /priradim si vytvorenu premennu
 			//TODO
@@ -204,8 +256,12 @@ int reduction(tStack *stack1,tStack *stack2){
 	SAData hhelp3;
 	SAData hhelp4;
 	SAData neterminal;
-
-  //eInstrType instruction;
+  hhelp1.nameID = NULL;
+  hhelp2.nameID = NULL;
+  hhelp3.nameID = NULL;
+  hhelp4.nameID = NULL;
+  eInstrType instruction;
+  char *str = NULL;
 	//odkladame na druhy zasobnik;
 	stackTop(stack1,&hhelp1);
 	while((hhelp1.indexibus != L_HANDLE) && (!stackEmpty(stack1))){
@@ -265,10 +321,10 @@ int reduction(tStack *stack1,tStack *stack2){
 			}
 
 			 //generovanie instrukcie TODO cez jednoduchy switch (hhelp3.indexibus){ }
-			/*
+
 			switch(hhelp3.indexibus){
 				case PLUS:
-          instruciton = I_ADD;
+          instruction = I_ADD;
           break;
 				case MINUS:
           instruction = I_SUB;
@@ -304,13 +360,13 @@ int reduction(tStack *stack1,tStack *stack2){
           break;
 			}
 
-			*/
+
 
 			if(stackEmpty(stack2)){		//ak je prazdny nastava chyba -> nedocitali sme pravidlo
                 error = SYNTAX_ERR;
                 clearAll();
                 return error;
-            }
+      }
 			//mal by byt dalsi neterminal
 
 			stackTopPop(stack2,&hhelp4);
@@ -318,14 +374,64 @@ int reduction(tStack *stack1,tStack *stack2){
 			//mozem redukovat, kedze je prazdny stack2 a bol neterminal na vrchole
 			if((hhelp4.indexibus == NETERM) && (stackEmpty(stack2))){
 				//redukujem
-				//TODO vlozit do tabulky symbolov
+        stackPop(stack1);
+				//TODO vlozit do pomocnej tabulky symbolov
 				// a do instrukcnej pasky
 				//TODO zistovat ci je string a double?
-
-				//TODO ak je jeden z NETERMINALOV string a operator je + tak dam konkatenaciu
-
-				error = SUCCESS;
-				stackPop(stack1);
+        if ((instruction == I_SUB)   ||
+            (instruction == I_DIV)   ||
+            (instruction == I_MUL)) {
+                if((hhelp2.sym_data->type == tString) || (hhelp4.sym_data->type == tString)){
+                  clearAll();
+                  error = SEMANTIC_TYPE_ERR;
+                  return error;
+                }
+              if((hhelp2.sym_data->type == tInt) || (hhelp4.sym_data->type == tInt)){
+                neterminal.sym_data->type = tInt;
+              }else{
+                neterminal.sym_data->type = tDouble;
+              }
+              str = mymalloc(sizeof(char)*25);
+              sprintf(str,"@Gen_Target_VAR_ARIT%u",name++);
+              neterminal.nameID = str;
+              //TODO instrukcna paska
+        }
+				//TODO ak je jeden z NETERMINALOV string a operator je +
+        else if ((instruction == I_EQ)    ||
+                (instruction == I_NOTEQ)  ||
+                (instruction == I_LESS)   ||
+                (instruction == I_LESSEQ) ||
+                (instruction == I_BIGGER) ||
+                (instruction == I_BIGGEREQ)) {
+            /* code */
+            //semanticka kontrola pri porovnaniach
+                if((hhelp2.sym_data->type == tString) || (hhelp4.sym_data->type == tString)){
+                  clearAll();
+                  error = SEMANTIC_TYPE_ERR;
+                  return error;
+                }
+                str = mymalloc(sizeof(char)*25);
+                sprintf(str,"@Gen_Target_VAR_COM%u",name++);
+                neterminal.nameID = str;
+                neterminal.sym_data->type = tBool;
+                //TODO instrukcna paska
+        }else if (instruction == I_ADD){
+              //konkatenacia
+              if((hhelp2.sym_data->type == tString) || (hhelp4.sym_data->type == tString))
+                  neterminal.sym_data->type = tString;
+              else{
+                  if((hhelp2.sym_data->type == tDouble) || (hhelp4.sym_data->type == tDouble)){
+                    neterminal.sym_data->type = tDouble;
+                  }else{
+                    neterminal.sym_data->type = tInt;
+                  }
+              }
+              str = mymalloc(sizeof(char)*25);
+              sprintf(str,"@Gen_Target_VAR_ADD_%u",name++);
+              neterminal.nameID = str;
+              //TODO instrukcna paska
+        }
+				//error = SUCCESS;
 				neterminal.indexibus = NETERM;
 				stackPush(stack1,&neterminal);
 				return error;
@@ -389,6 +495,7 @@ int reduction(tStack *stack1,tStack *stack2){
 
 int expresion_parser()
 {
+
    int bracket_counter = 0;
 	//front_token();
 	/// TODO treba po nasadanie zmazat get_token - sluzi len na testovanie
@@ -409,9 +516,18 @@ int expresion_parser()
 	SAData vyber;
 	SAData end;	//
 	SAData top;
-	pom.sym_data.name = NULL;
+/*  top.nameID = NULL;
+  end.nameID = NULL;
+  vyber.nameID = NULL;
+  pom1.nameID = NULL;
+  pom.nameID = NULL;*/
+	pom.sym_data = NULL;
 	pom.indexibus = DOLAR;
 
+  if(const_table == NULL){
+    const_table = (TMP_HTAB*)mymalloc(sizeof(TMP_HTAB));
+    tmp_htab_init(const_table);
+  }
 	stackPush(&Stack1,&pom);
 	//pushnuty dolar na prvom zasobniku
 
@@ -522,6 +638,6 @@ int expresion_parser()
 //	show_stacks2(&Stack1,&Stack2);
 
 
-
+  //Print_table(const_table);
 return error;
 }
