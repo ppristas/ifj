@@ -9,9 +9,9 @@
    *                    Peter Pristas   (xprist05@stud.fit.vutbr.cz)            *
    *                    Daniel Florek   (xflore02@stud.fit.vutbr.cz)            *
    *                    Martin Grnac    (xgrnac00@stud.fit.vutbr.cz)            *
-   *                                                                            *               
+   *                                                                            *
    ********************************************************************************/
-   
+
 #include <stdio.h>
 #include <stdlib.h>
 //#include "scaner.h"
@@ -41,7 +41,7 @@ bool arguments( int argc, char *argv[]){
 	    	filename = (char *)malloc(length*sizeof(char)+2);
 	    	if( filename == NULL)
 	       	 	return false;
-	
+
 	   	 strcpy(filename,argv[1]);
 
 		return true;
@@ -50,7 +50,7 @@ bool arguments( int argc, char *argv[]){
 		printf("Implicitne zadane argumenty\n");
 		return false;
 	}
-		
+
 }
 
 
@@ -67,28 +67,34 @@ int main(int argc, char *argv[])
 		return INTERNAL_ERR;
 	}
 
-	
 	while(token.stav != S_EOF){
 		get_token();
 		printf("%s :%d:%d: vrateny token:  |%s| | stav = %d error = %d\n\n",filename,token.line,token.column,token.data,token.stav,error);
 	}
 
+/*
 //front_token();
 	while(token2.stav != S_EOF){
 	front_token();
 		printf("%s :%d:%d: vrateny token2:  |%s| | stav = %d error = %d\n\n",filename,token2.line,token2.column,token2.data,token2.stav,error);
 	//front_token();
     }
-
+*/
 
 	if(error == SUCCESS)
-		printf("-----error: E_OK\n");		
+		printf("-----error: E_OK\n");
 
 
-	//expresion_parser();
+//	expresion_parser();
 
 	clearAll();
+  free(Mem);
+  free(token.data);
+  free(filename);
+  if(fclose(file) == EOF){
+      return INTERNAL_ERR;
+  }
+  errorFce();
 	return error;
 
 }
-
