@@ -18,7 +18,9 @@
    #include "preced.h"
    #include "cleaner.h"
    #include "stack.h"
-
+   //#include "ial.h"
+   #include "ilist.h"
+   #include "scaner.h"
    #define TAB_SIZE (16)
 
    static const char precedense_table[TAB_SIZE][TAB_SIZE] =
@@ -90,25 +92,43 @@ int catch_index(SAData *pom,int *count){
 			break;
 		case S_ID:
 			pom->indexibus = ID;
-			//TODO
-			//vlozit do tabulky symbolov
+			//TODO TOKEN2.data
+			//overovat z tabulky symbolov ci sa tam nachadza
+      //ziskat z find_symbol ukazatel s token2.data
+      //
 			//
 
 			break;
 		case S_DOUBLE:
 		case S_INT:
 		case S_EXP:
+      //key = vygenerovat sprintfom
+      //data->arg_count = 0;
+      //data->args = NULL;
+      //data->symbolType = tDouble;
+      //data->ptr_union.d = atoi(token2.data);
+
 			pom->indexibus = ID;
+
+      //pom->sym_data->data = /priradim si vytvorenu premennu
 			//TODO
 			//pretypovanie na double
 			//vlozit do tabulky symbolov
 			//preconvertovat cez atoi
 			break;
 		case S_STRING:
+      //name vygenerovat
+      //key = vygenerovat sprintfom
+      //data->arg_count = 0;
+      //data->args = NULL;
+      //data->symbolType = tString;
+      //data->ptr_union.str = token.data;
+
 			pom->indexibus = ID;
+      //pom->sym_data->data = /priradim si vytvorenu premennu
 			//TODO
 			//vlozit do tabulky symbolov
-			//TOKNOW konkatenaciu zistime az v interprete?
+
 			break;
 		case S_CIARKA:
 		case S_SEMICOLON:
@@ -117,6 +137,7 @@ int catch_index(SAData *pom,int *count){
 		default:
 			error = SYNTAX_ERR;
 			clearAll();
+      return error;
 			break;
 	}
 	return pom->indexibus;
@@ -183,6 +204,8 @@ int reduction(tStack *stack1,tStack *stack2){
 	SAData hhelp3;
 	SAData hhelp4;
 	SAData neterminal;
+
+  //eInstrType instruction;
 	//odkladame na druhy zasobnik;
 	stackTop(stack1,&hhelp1);
 	while((hhelp1.indexibus != L_HANDLE) && (!stackEmpty(stack1))){
@@ -245,15 +268,40 @@ int reduction(tStack *stack1,tStack *stack2){
 			/*
 			switch(hhelp3.indexibus){
 				case PLUS:
+          instruciton = I_ADD;
+          break;
 				case MINUS:
+          instruction = I_SUB;
+          break;
 				case KRAT:
-				case DELENE:
+          instruction = I_MUL;
+          break;
+  			case DELENE:
+          instruction = I_DIV;
+          break;
 				case MENSIE:
-				case VACSIE:
+          instruction = I_LESS;
+          break;
+      	case VACSIE:
+          instruction = I_BIGGER;
+          break;
 				case MENROV:
+          instruction = I_LESSEQ;
+          break;
 				case VACROV:
+          instruction = I_BIGGEREQ;
+          break;
 				case EQUAL:
+          instruction = I_EQ;
+          break;
 				case NEQUAL:
+          instruction = I_NOTEQ;
+          break;
+        default:
+          error = SEMANTIC_ERR;
+          clearAll();
+          return error;
+          break;
 			}
 
 			*/
@@ -283,10 +331,9 @@ int reduction(tStack *stack1,tStack *stack2){
 				return error;
 			}else{
 				error = SYNTAX_ERR;
-                errorFce();
-                clearAll();
-                return error;
-            }
+        clearAll();
+        return error;
+      }
 
 		//*****
 		//***** E->(E)
@@ -294,25 +341,22 @@ int reduction(tStack *stack1,tStack *stack2){
 		}else if(hhelp2.indexibus == LZATV){
 			if(stackEmpty(stack2)){
 				error = SYNTAX_ERR;
-                errorFce();
-                clearAll();
-                return error;
+        clearAll();
+        return error;
 			}
 			stackTopPop(stack2,&hhelp3);
 			//musi byt neterminal na vrchole zasobnika
 			if(hhelp3.indexibus != NETERM){
 				error = SYNTAX_ERR;
-                errorFce();
-                clearAll();
-                return error;
+        clearAll();
+        return error;
 			}
 
 			if(stackEmpty(stack2)){
-                error = SYNTAX_ERR;
-                errorFce();
-                clearAll();
-                return error;
-            }
+        error = SYNTAX_ERR;
+        clearAll();
+        return error;
+      }
 			//na vrchole musela byt prava zatvorka a zasobnik musel skoncit prazdny
 			stackTopPop(stack2,&hhelp4);
 			if((hhelp4.indexibus == PZATV) && (stackEmpty(stack2))){
@@ -322,7 +366,8 @@ int reduction(tStack *stack1,tStack *stack2){
 				neterminal = hhelp3;	//hodnota z neterminalu z hhelp3
 				neterminal.indexibus = NETERM;
 				stackPush(stack1,&neterminal);
-				return SUCCESS;
+        error = SUCCESS;
+				return error;
 			}
 
 			//ak sa dostane sem tak je syntakticka chyba
@@ -331,9 +376,9 @@ int reduction(tStack *stack1,tStack *stack2){
 			return error;
 		}else{
 			error = SYNTAX_ERR;
-            errorFce();
-            clearAll();
-            return error;
+      errorFce();
+      clearAll();
+      return error;
 		}		//pre pravu zatvorku
 				//pre neterminal
 	}
@@ -375,7 +420,8 @@ int expresion_parser()
 
 		if(readToken){	//ziskam si index do tabulky symbolov podla typu tokenu
 			catch_index(&right_index,&bracket_counter);
-
+      if(error != SUCCESS)
+        return error;
 		}
 
 		stackTop(&Stack1,&left_index);		//do left_index si dam vrchol zasobniku
@@ -432,6 +478,9 @@ int expresion_parser()
 				break;
 			case '>':
 				reduction(&Stack1,&Stack2);
+        if(error != SUCCESS)
+            //TODO ak nahodou bude chyba tak tu nevymazavam memory
+            return error;
 				//ak by bolo nieco zle tak sa sem nedostane;
 				readToken = false;
 				break;
@@ -439,6 +488,7 @@ int expresion_parser()
 				printf("nastala chyba indexovanie do preced.table\n");
 				error = SYNTAX_ERR;
 				clearAll();
+        return error;
 				break;
 		}
 
@@ -460,8 +510,9 @@ int expresion_parser()
 //			printf("token: |%s|\n",token.data);
 			front_token();
 			if(error != SUCCESS){
-				errorFce();
+				//errorFce();
 				clearAll();
+        return error;
 			}
 		}
 

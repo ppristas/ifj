@@ -9,19 +9,20 @@
    *                    Peter Pristas   (xprist05@stud.fit.vutbr.cz)            *
    *                    Daniel Florek   (xflore02@stud.fit.vutbr.cz)            *
    *                    Martin Grnac    (xgrnac00@stud.fit.vutbr.cz)            *
-   *                                                                            *               
+   *                                                                            *
    ********************************************************************************/
 
-#include "scaner.h"
+//#include "scaner.h"
+#include "ial.h"
 
 #ifndef PRECED_H
-	
+
 #define PRECED_H
-	
-	#include "ial.h"
+
+	//#include "ial.h"
 int expresion_parser();
 
-typedef enum Cikundex { 
+typedef enum Cikundex {
    PLUS,    //0 +
    MINUS,   //1 -
    KRAT,    //2 *
@@ -37,7 +38,7 @@ typedef enum Cikundex {
    EQUAL,   //12 ==
    NEQUAL,  //13 !=
    CARKA,   //14 ,
-   DOLAR,   //15 Koniec vyrazu - $ 
+   DOLAR,   //15 Koniec vyrazu - $
 
    L_HANDLE,   //16 { zaciatok handlu
    R_HANDLE,   //17 } koniec handlu
