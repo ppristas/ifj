@@ -186,7 +186,7 @@ locSymbol* loc_symbol_function_init(char *data,  int stype, char *classname) {
 	locsym->fce = true;
 	locsym->data->args = NULL;
 	locsym->data->instrPtr = NULL;
-	locsym->init = false;
+	locsym->data->init = false;
 	locsym->decl = true;
 	locsym->nextptr = NULL;
 	return locsym;
@@ -247,7 +247,7 @@ locSymbol* loc_symbol_init(char *data, int stype, bool isinit, bool isdecl, char
 	locsym->fce = NULL;
 	locsym->data->args = NULL;
 	locsym->data->instrPtr = NULL;
-	locsym->init = isinit;
+	locsym->data->init = isinit;
 	locsym->decl = isdecl;
 	locsym->nextptr = NULL;
 
@@ -547,7 +547,7 @@ iSymbol* sym_variable_init(char *data, int stype, bool isinit, char *classname, 
     ptrsym->data->args = NULL;
     ptrsym->data->instrPtr = NULL;
     ptrsym->ptr_loctable = NULL;
-    ptrsym->init = isinit;
+    ptrsym->data->init = isinit;
     ptrsym->isstatic = isstat;
     ptrsym->nextptr = NULL;//(*tab)[index].ptr;
 
@@ -612,7 +612,7 @@ iSymbol* sym_function_init(char *data, int stype, char *classname) {
     ptrsym->data->args = NULL;
     ptrsym->data->instrPtr = NULL;
     ptrsym->isstatic = false;
-    ptrsym->init = false;
+    ptrsym->data->init = false;
     ptrsym->nextptr = NULL;
     
     return ptrsym;
