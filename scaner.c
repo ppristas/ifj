@@ -9,7 +9,7 @@
    *                    Peter Pristas   (xprist05@stud.fit.vutbr.cz)            *
    *                    Daniel Florek   (xflore02@stud.fit.vutbr.cz)            *
    *                    Martin Grnac    (xgrnac00@stud.fit.vutbr.cz)            *
-   *                                                                            *               
+   *                                                                            *
    ********************************************************************************/
 
 
@@ -40,11 +40,11 @@ char *key_words[num_key_words] = {	"boolean\0",
 									"String\0",
 									"static\0",
 									"true\0",
-									"void\0",	
+									"void\0",
 									"while\0",};
 
 /**
-  * Funkcia na overenie ci je token klucove slovo 
+  * Funkcia na overenie ci je token klucove slovo
   * navratovy typ : boolean
   **/
 static void test_key_words(char *word)
@@ -61,12 +61,12 @@ static void test_key_words(char *word)
 
 /**
   *  Vrati znak do bufferu
-  *  
+  *
   **//*
 static void return_char(int c)
 {
     // vratime znak ak je neprazdny
-    if(!isspace(c))    
+    if(!isspace(c))
 		c = ungetc(c, file);
 
 	if(isprint(c))
@@ -99,7 +99,7 @@ static void extend_token(int *i, int c)
 	token.data[(*i) +1] = '\0';
 	token.data[(*i)]=c;
 	(*i)++;
-	
+
 //	return token.data;
 }
 
@@ -142,7 +142,7 @@ static void Queue_Up()
 		Queue_tok.Back->nextptr = pom;
 		Queue_tok.Back = pom;
 	}
-	
+
 }
 
 void front_token()
@@ -154,31 +154,31 @@ void front_token()
 			token2 = pom->node;
 	//		myfree(pom->node.data);
 	//		myfree(pom);
-		
+
 	}
-	
+
 }
-				
+
 /**
   * Identifikuje jednotlive lexemy a vracia Token
   * TODO
-  * 	
+  *
   *	doplnit stavy
   *	je zlozeny identifikator rozdeleny na Class a ID?
   */
 Ttoken get_token(){
-	
+
 	error = SUCCESS;
 	int c = getc(file);;
 	TStav stav = S_START;
-	
+
 	int i = 0;
 	bool end_cycle = true;
 
 	if(token.data != NULL){
-		free(token.data);	
+		free(token.data);
 	}
-	init_token();	
+	init_token();
 
 	do{
 		switch (stav)
@@ -190,11 +190,11 @@ Ttoken get_token(){
 				if(isspace(c)){
 				    stav = S_START;
 					break;
-			    }else if( (c == '$') || (c == '_') || (isalpha(c))){	
+			    }else if( (c == '$') || (c == '_') || (isalpha(c))){
 					stav = S_ID;
 				}
-				else if( isdigit(c)){ 
-					stav = S_INT;		     
+				else if( isdigit(c)){
+					stav = S_INT;
 				}
 				else if(c == '+')		stav = S_PLUS;//extend_token(&i,c);c = ungetc(c,file);column++;break;}
 				else if(c == '-')		stav = S_MINUS;
@@ -216,10 +216,10 @@ Ttoken get_token(){
 					extend_token(&i,c);
 					fill_token(S_ERROR,LEXICAL_ERR);
 					stav = S_ERROR;
-					break;		
+					break;
 				}
 //				printf("((((%c))))\n",c);
-				extend_token(&i,c);		
+				extend_token(&i,c);
         		break;
 		    }
 		case S_ID:
@@ -227,7 +227,7 @@ Ttoken get_token(){
 				if((c == '$') || (c == '_') || (isalpha(c)) || (isdigit(c))){
 					stav = S_ID;
 					extend_token(&i,c);
-						
+
 				}//doplnit pre zlozeny identifikator s bodkou .TODO
 				else if( c == '.'){
 					fill_token(S_ID,SUCCESS);
@@ -239,7 +239,7 @@ Ttoken get_token(){
 				else{
 //					printf("koniec slova: -%c-\n",c);
 					fill_token(stav,SUCCESS);
-					test_key_words(token.data);	
+					test_key_words(token.data);
 					stav = S_END;
 					ungetc(c,file);
 					column--;
@@ -276,7 +276,7 @@ Ttoken get_token(){
 				//	Queue_Up();
 				}
 				break;
-			}	
+			}
         case S_INT:
 			{
 				if(isdigit(c)){
@@ -284,7 +284,7 @@ Ttoken get_token(){
 					stav = S_INT;
 				}else if( c == '.'){
 					extend_token(&i,c);
-					stav = S_DOUBLE_POM;				
+					stav = S_DOUBLE_POM;
 				}else if( (c == 'e') || c == 'E'){
 					extend_token(&i,c);
 					stav = S_EXP;
@@ -310,32 +310,32 @@ Ttoken get_token(){
 
 					extend_token(&i,c);
 					stav = S_DOUBLE;
-					fill_token(stav,SUCCESS);					
+					fill_token(stav,SUCCESS);
 				} //******TODO doplnit pre exponent
-				else if( (c == 'e') || (c == 'E')){
+				/*else if( (c == 'e') || (c == 'E')){
 
 					extend_token(&i,c);
 					stav = S_EXP;
-					fill_token(stav,SUCCESS);		
-				}
+					fill_token(stav,SUCCESS);
+				}*/
 				else{
 					stav = S_ERROR;
 					fill_token(S_DOUBLE,LEXICAL_ERR);
 					c = ungetc(c,file);
 					column--;
-				
+
 				}
 				break;
 			}
 		case S_DOUBLE:
 			{
-		
+
 				if(isdigit(c)){
 					extend_token(&i,c);
 					stav = S_DOUBLE;
 				}
 				else if( (c == 'e') || (c == 'E')){
-               
+
 					extend_token(&i,c);
                     stav = S_EXP;
 				//	break;
@@ -350,7 +350,7 @@ Ttoken get_token(){
                     }
                     c = ungetc(c,file);
                     column--;
-					
+
 				}else{
 					fill_token(stav,SUCCESS);
 					stav = S_END;
@@ -384,10 +384,10 @@ Ttoken get_token(){
                     c = ungetc(c,file);
                     column--;
 
-				
+
 				}
 				break;
-					
+
 			}
 		case S_EXP_SIGNED:			//exponent so znamienkami 2e+4566
 			{
@@ -412,11 +412,11 @@ Ttoken get_token(){
 					column--;
 					//c = ungetc(c,file);
 					//column--;
-				
+
 				}
 				//return_char((char)c);
 				break;
-				
+
 			}
 		case S_EX:
 			{
@@ -442,7 +442,7 @@ Ttoken get_token(){
 					stav = S_END;
 				}
 				break;
-				
+
 			}
 		case S_DIV:
 			{
@@ -480,7 +480,7 @@ Ttoken get_token(){
 				}else if(c == EOF){
 					stav = S_ERROR;
 					fill_token(stav,LEXICAL_ERR);
-					
+
 				}else{
 					stav = S_MULTI_COM;
 				}
@@ -491,7 +491,7 @@ Ttoken get_token(){
 
 
 				if(c == '='){
-					extend_token(&i,c);	
+					extend_token(&i,c);
 					stav = S_ROVNY;
 					fill_token(stav,SUCCESS);
 					//c = ungetc(c,file);
@@ -502,7 +502,7 @@ Ttoken get_token(){
 					c = ungetc(c,file);
 					column--;
 					Queue_Up();
-					return token;	
+					return token;
 				}
 				break;
 			}
@@ -547,7 +547,7 @@ Ttoken get_token(){
 					column--;
 				}
 				break;
-	
+
 			}
         case S_ERROR:
 			{
@@ -569,12 +569,15 @@ Ttoken get_token(){
 					return token;
 				}
 				else if(c == 92){
-				//	printf("kekek\n");				/* ak c je \ */
-					stav = S_ESCAPE;
+					stav = S_ESCAPE;				/* ak c je \ */
 				}else if(c == EOF){
 					stav = S_ERROR;
 				}
 				else{
+					if(c < 31){
+						stav = S_END;
+						fill_token(stav,LEXICAL_ERR);
+					}
 					extend_token(&i,c);
 					stav = S_STRING;
 				}
@@ -610,12 +613,12 @@ Ttoken get_token(){
 							c = oktal_num;
 							if(c <= 377){
 								extend_token(&i,(char)c);
-								stav = S_STRING;	
+								stav = S_STRING;
 							}else{
 								while((c = getc(file)) != '"'){
 				                    if(c == EOF)
-            				            break;               				
-								}						
+            				            break;
+								}
 								fill_token(S_ERROR,LEXICAL_ERR);
 								stav =  S_ERROR;
 							}
@@ -628,12 +631,12 @@ Ttoken get_token(){
                         if(c == EOF)
                             break;
 					}
-					stav = S_ERROR; 		
-					fill_token(S_ERROR,LEXICAL_ERR);		
+					stav = S_ERROR;
+					fill_token(S_ERROR,LEXICAL_ERR);
 				//}else{
 				//	fill_token(S_ERROR,E_L_ESCAPE);
 				//	stav = S_ERROR;
-				//}// 
+				//}//
 			}else{
 				while((c = getc(file)) != '"'){
 					if(c == EOF){
@@ -688,24 +691,24 @@ Ttoken get_token(){
 				end_cycle = false;
 				break;
 	    	}
-			
+
 		}
 		if(error != SUCCESS){
 			break;
 		}
-		
+
 		if( c == '\n'){
 			line++;
 			column = 1;
 		}else if((isprint(c)) || (isspace(c))){
-			column++;	
+			column++;
 		}
 		//printf("column:%d line:%d char:%c\n",line,column,c);
 	}while((c = getc(file)) && (end_cycle));
 
 //	Queue_Up();
 //	printf("<==============KONIEC VOLANIA FUNKCIE=============>\n");
-	return token;			
+	return token;
 }
 
 
@@ -713,9 +716,6 @@ Ttoken get_token(){
 void init_Queue(tQueue *queue)
 {
 	queue->Front = NULL;
-	queue->Back = NULL;	
+	queue->Back = NULL;
 	printf("Queueu\n");
 }
-
-
-
