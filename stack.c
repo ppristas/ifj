@@ -9,7 +9,7 @@
    *                    Peter Pristas   (xprist05@stud.fit.vutbr.cz)            *
    *                    Daniel Florek   (xflore02@stud.fit.vutbr.cz)            *
    *                    Martin Grnac    (xgrnac00@stud.fit.vutbr.cz)            *
-   *                                                                            *               
+   *                                                                            *
    ********************************************************************************/
 
 #include "stack.h"
@@ -17,7 +17,7 @@
 #include "cleaner.h"
 
 void stackInit(tStack* s){
-	
+
 	s->top = NULL;
 }
 
@@ -28,7 +28,7 @@ bool stackEmpty(tStack* s){
 
 void stackPush(tStack *s, SAData *data){
 	tStackItem *pom;
-	pom = mymalloc(sizeof(struct Sitem));	
+	pom = mymalloc(sizeof(tStackItem));	
 	if( pom == NULL){
 		error = INTERNAL_ERR;
 		return;
@@ -40,11 +40,11 @@ void stackPush(tStack *s, SAData *data){
 
 
 void stackPop(tStack *s){
-	
+
 	if(!stackEmpty(s)){
 			s->top = s->top->nextptr;
-			
-	}	
+
+	}
 }
 
 
@@ -53,7 +53,7 @@ void stackTop(tStack *s, SAData *send){
 		error = SUCCESS;
 		(*send) = s->top->item;
 	}
-	
+
 }
 
 
@@ -72,12 +72,12 @@ void stackFree(tStack *s){
 }
 
 void stackPrint(tStack* s){
-		
+
 	if( s->top == NULL){
 		printf("Je inicializovany bez polozky\n");
 	}
 	while(s->top != NULL){
-	
+
 		stackPop(s);
 	}
 }
