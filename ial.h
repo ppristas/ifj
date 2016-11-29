@@ -57,6 +57,10 @@ typedef struct sym_Data {
 		char *str;
 		bool is_bool;
 	}ptr_union;
+	union {
+		int var_count;
+		int offset;
+	}funcdata_union;
 } symData;
 
 typedef struct Loc_item {
@@ -112,7 +116,7 @@ int contain_me(iSymbol *funcsym, char *name);
 void local_function_add_args(locSymbol* locfuncsym, char *name, int typ_s, int counter);
 void sym_function_add_locals(iSymbol* funcsym,locTable* ptrloctable);
 locTable* loc_table_init();
-locSymbol* loc_symbol_init(char *data, int stype, bool isinit, bool isdecl, char *classname);
+locSymbol* loc_symbol_init(char *data, int stype, bool isinit, bool isdecl, char *classname, int offset);
 locSymbol* loc_symbol_function_init(char *data, int stype, char *classname);
 void loc_table_insert(locTable* ptrloctable,locSymbol* new_locsymbol);
 locSymbol* loc_symbol_search(locTable* ptrloctable,char *data);
