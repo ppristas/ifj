@@ -20,9 +20,9 @@ static int tmp_hash_key(char *key)
     unsigned long hash = 5381;
     int c;
 
-     while (c = *key++)
+     while((c = *key++) == true){
          hash = ((hash << 5) + hash) + c;
-
+     }
      return (hash % TMP_HTAB_SIZE);
 }
 
@@ -93,7 +93,7 @@ void tmp_htab_insert(TMP_HTAB* table,symbolType type,void* ptr,char* key)
 }
 
 
-static void Print_table_row(T_TMP_ITEM* item)
+void Print_table_row(T_TMP_ITEM* item)
 {
     T_TMP_ITEM* tmp=item;
 
@@ -117,7 +117,7 @@ static void Print_table_row(T_TMP_ITEM* item)
 }
 
 
-static void Print_table(TMP_HTAB* tabulka)
+void Print_table(TMP_HTAB* tabulka)
 {
     for (int i=0;i<TMP_HTAB_SIZE;++i)
     {
@@ -135,7 +135,7 @@ static void Print_table(TMP_HTAB* tabulka)
 //TMP_HTAB* middle_vysledky = (TMP_HTAB*)mymalloc(sizeof(TMP_HTAB));
 
 //tabulka pre konstanty
-//TMP_HTAB* const_table = (TMP_HTAB*)mymalloc(sizeof(TMP_HTAB)); 
+//TMP_HTAB* const_table = (TMP_HTAB*)mymalloc(sizeof(TMP_HTAB));
 
 TMP_HTAB* middle_vysledky;
 TMP_HTAB* const_table;
