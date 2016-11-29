@@ -131,6 +131,16 @@ static void Print_table(TMP_HTAB* tabulka)
     }
 }
 
+// tabulka pre medzi vysledky  allokovat v maine;
+//TMP_HTAB* middle_vysledky = (TMP_HTAB*)mymalloc(sizeof(TMP_HTAB));
+
+//tabulka pre konstanty
+//TMP_HTAB* const_table = (TMP_HTAB*)mymalloc(sizeof(TMP_HTAB)); 
+
+TMP_HTAB* middle_vysledky;
+TMP_HTAB* const_table;
+
+
 /*
 int main(int argc, char *argv[])
 {
