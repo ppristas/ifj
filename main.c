@@ -18,9 +18,10 @@
 #include <stdbool.h>
 #include "error.h"
 //#include "stack.h"
-#include "cleaner.h"
-
+//#include "cleaner.h"
+#include "parser.h"
 #include "preced.h"
+#include "temp_tab.h"
 
 char *filename = NULL;
 
@@ -37,13 +38,6 @@ bool arguments( int argc, char *argv[]){
 			printf("Chybny otvaraci subor\n");
 			return false;
 		}
-		int length = strlen(argv[1]);
-	    	filename = (char *)malloc(length*sizeof(char)+2);
-	    	if( filename == NULL)
-	       	 	return false;
-
-	   	 strcpy(filename,argv[1]);
-
 		return true;
 	}
 	else{
@@ -64,14 +58,20 @@ int main(int argc, char *argv[])
 	if( !(arguments(argc, argv)) )
 	{
 		fprintf(stderr,"Chyba pri spracovani argumentov\n");
+		free(Mem);
+		free(filename);
+		clearAll();
+		if(file != NULL)
+			if(fclose(file) == EOF)
+				return INTERNAL_ERR;
 		return INTERNAL_ERR;
 	}
-
+/*
 	while(token.stav != S_EOF){
 		get_token();
-		printf("%s :%d:%d: vrateny token:  |%s| | stav = %d error = %d\n\n",filename,token.line,token.column,token.data,token.stav,error);
+		printf(":%d:%d: vrateny token:  |%s| | stav = %d error = %d\n\n",token.line,token.column,token.data,token.stav,error);
 	}
-
+*/
 /*
 //front_token();
 	while(token2.stav != S_EOF){
@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
 	//front_token();
     }
 */
-
+	parser();
 	if(error == SUCCESS)
 		printf("-----error: E_OK\n");
 
@@ -88,12 +88,13 @@ int main(int argc, char *argv[])
 //	expresion_parser();
 
 	clearAll();
-  free(Mem);
   free(token.data);
   free(filename);
-  if(fclose(file) == EOF){
-      return INTERNAL_ERR;
-  }
+	free(Mem);
+	if(filename == NULL)
+  	if(fclose(file) == EOF){
+      	return INTERNAL_ERR;
+  	}
   errorFce();
 	return error;
 
