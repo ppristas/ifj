@@ -13,7 +13,7 @@ tMemoryPtr Mem;
 /*
  *function: inicializacia
  */
-void initCleaner(){				
+void initCleaner(){
 	/*Mem->Act = NULL;
 	Mem->Act->data = NULL;
 	Mem->First = NULL;
@@ -32,9 +32,9 @@ Mem->First->data = NULL;*/
  *
  */
 void *mymalloc(unsigned int size){
-	
+
 	tAdrPtr pom;
-	
+
 	if( (pom = malloc(sizeof(struct tAdr))) == NULL){
 		error = INTERNAL_ERR;
 		return NULL;
@@ -45,20 +45,20 @@ void *mymalloc(unsigned int size){
 		pom->size = size;
 		pom->rPtr = NULL;
 		pom->lPtr = NULL;
-		if( Mem->First == NULL){	
+		if( Mem->First == NULL){
 			Mem->First = pom;
 			Mem->Last = pom;
 		}else{
 			pom->lPtr = Mem->Last;
 			Mem->Last->rPtr = pom;
-			Mem->Last = pom;			
+			Mem->Last = pom;
 		}
 	}else{
 		error = INTERNAL_ERR;
 		return NULL;
-	}	
+	}
 	return tmp;
-			
+
 }
 
 /*
@@ -68,12 +68,12 @@ void *mymalloc(unsigned int size){
 void *myrealloc(void *adress,unsigned int size){
 
 	void *pom;
-	if(adress == NULL){		//pridam 
+	if(adress == NULL){		//pridam
 		pom = mymalloc(size);
 		if(pom == NULL){
 			return NULL;
 		}
-		return pom;								
+		return pom;
 	}
 	tAdrPtr tmpPtr = Mem->First;
 	while(tmpPtr != NULL){
@@ -85,7 +85,7 @@ void *myrealloc(void *adress,unsigned int size){
 		tmpPtr = tmpPtr->rPtr;
 	}
 	return NULL;
-	
+
 }
 
 /*
@@ -97,12 +97,12 @@ void myfree(void *uk){
 		tAdrPtr pom = Mem->First;
 		while(pom != NULL){
 			if(pom->data == uk){
-				break;	
+				break;
 			}
-			pom = pom->rPtr;	
+			pom = pom->rPtr;
 		}
 		if(pom != NULL){
-			if(Mem->First 
+			if(Mem->First
 		}
 	}
 }*/
@@ -115,7 +115,7 @@ void myfree(void *uk){
 void clearAll(){
 	tAdrPtr tmpPtr;
 
-	printf("tmp cleaned\n");
+	//printf("tmp cleaned\n");
 	tmpPtr = Mem->First;
 	while(tmpPtr != NULL){
 		Mem->First = Mem->First->rPtr;
@@ -124,17 +124,5 @@ void clearAll(){
 		free(tmpPtr);
 		tmpPtr = Mem->First;
 	}
-	free(Mem);
-	
-	if((fclose(file)) == EOF)
-		error = INTERNAL_ERR;
-	free(filename);
-	free(token.data);	
-	errorFce();
-	exit(error);
+	//exit(error);
 }
-
-
-
-
-
