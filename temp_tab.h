@@ -23,5 +23,7 @@ T_TMP_ITEM* tmp_htab_search(TMP_HTAB* table,char* key);
 symData* tmp_get_data(TMP_HTAB* table,char* key);
 void tmp_htab_init(TMP_HTAB* table);
 
+extern TMP_HTAB* middle_vysledky;
+extern TMP_HTAB* const_table;
 
 #endif
