@@ -46,6 +46,7 @@ typedef struct _TList {
 } TList;
 
 typedef struct sym_Data {
+	bool init;
 	int arg_count;
 	TList *args;
 	symbolType type;
@@ -62,7 +63,6 @@ typedef struct Loc_item {
 	symData *data;
 	char *name;
 	bool fce;
-	bool init;
 	bool decl;
 	char *class_name;
 	struct Loc_item *nextptr;
@@ -78,7 +78,6 @@ typedef struct Sym_item{
 	symData *data;
 	char *name;
 	bool fce;
-	bool init;
 	bool decl;
 	locTable *ptr_loctable;
 	char *class_name;
