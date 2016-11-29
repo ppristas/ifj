@@ -717,5 +717,4 @@ void init_Queue(tQueue *queue)
 {
 	queue->Front = NULL;
 	queue->Back = NULL;
-	printf("Queueu\n");
 }
