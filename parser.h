@@ -15,6 +15,12 @@
    #ifndef PAR_H
    #define PAR_H
 
+   extern clHTable* STable;         // Ukazatel na celu tabulku symbolov.
+   extern locTable* local_table;    // Ukazatel na lokalnu tabulku
+   extern char* class_part;         // Po zavolani return_class() bude obsahovat cast ID, ktora bola tvorena classom
+   extern char* id_part;            // Rovnako po zavolani return_class() ale bude obsahovat cast tvorenu ID
+   extern symbolType assSymbol;     // Typ symbola, do ktoreho sa bude priradovat
+
    int is_build_function();
    int parser();
    int prog();
@@ -38,6 +44,8 @@
    int build_print_scnd();
    int print_params_scnd();
    int build_function_call_scnd(int decider);
+   int user_function_call();
+   int is_function_call_or_ass();
 
    /*------------Ostatne-------------------*/
    int return_class();
