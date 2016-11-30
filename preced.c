@@ -22,11 +22,12 @@
    #include "ilist.h"
    #include "scaner.h"
    #include "temp_tab.h"
-
+   #include "parser.h"
    unsigned int name = 0;
    TMP_HTAB* const_table;
-
+   symData *destExpr;
    #define TAB_SIZE (16)
+
 
    static const char precedense_table[TAB_SIZE][TAB_SIZE] =
    {/*     +    -    *    /    (    )   id   idf   <    >   <=   >=   ==   !=    ,    $  */
@@ -59,6 +60,9 @@ int catch_index(SAData *pom,int *count){
   char *str = NULL;
   int intoTableInt;
   double intoTableDouble;
+  iSymbol *symbol_pom = NULL;
+  locSymbol *locsymbol_pom = NULL;
+  Hash_class *class_table_pom = NULL;
 	switch(token2.stav){
 		case S_PLUS:
 			pom->indexibus = PLUS;
@@ -100,13 +104,59 @@ int catch_index(SAData *pom,int *count){
 			break;
 		case S_ID:
 			pom->indexibus = ID;
+
 			//TODO TOKEN2.data
 			//overovat z tabulky symbolov ci sa tam nachadza
       //ziskat z find_symbol ukazatel s token2.data
       //
 			//
+      //extern clHTable* STable;         // Ukazatel na celu tabulku symbolov.
+  /*    extern locTable* local_table;    // Ukazatel na lokalnu tabulku
+      extern char* class_part;         // Po zavolani return_class() bude obsahovat cast ID, ktora bola tvorena classom
+      extern char* id_part;            // Rovnako po zavolani return_class() ale bude obsahovat cast tvorenu ID
+      extern symbolType assSymbol;     // Typ symbola, do ktoreho sa bude priradovat
+*/    //locSymbol* loc_symbol_search(locTable* ptrloctable,char *data); //ukazatel na lokalny symbol
+      if(strchr(token2.data, '.')){
+        return_class();
+        class_table_pom = class_search(STable,class_part);
+        if(class_table_pom == NULL){
+          error = SEMANTIC_PROG_ERR;
+          return error;
+        }
+        symbol_pom = Htab_search(class_table_pom->ptr, id_part);
+        if(symbol_pom == NULL){
+          error = SEMANTIC_PROG_ERR;
+          return error;
+        }
+        if(!(symbol_pom->data->init)){
+          error = SEMANTIC_PROG_ERR;
+          return error;
+        }
 
-			break;
+      /*  if((locsymbol_pom = loc_symbol_search(local_table, token2.data)) == NULL){
+          error = SEMANTIC_PROG_ERR;
+          return error;
+        }*/
+        pom->sym_data = symbol_pom->data;
+        pom->nameID = symbol_pom->name;
+      }else{
+          //lokalna tabulka
+          if((locsymbol_pom = loc_symbol_search(local_table, token2.data)) == NULL){
+            error = SEMANTIC_PROG_ERR;
+            return error;
+          }
+          pom->sym_data = locsymbol_pom->data;
+          pom->nameID = locsymbol_pom->name;
+      }
+//ak tam bude bodka
+//Hash_class* class_search(clHTable *clptr,char *classname);
+
+    iSymbol* Htab_search(tHTable *ST, char *id);
+
+      pom->indexibus = ID;
+      //pom->nameID =
+      //pom->sym_data =
+      break;
     case S_INT:
       pom->indexibus = ID;
       pom->sym_data = mymalloc(sizeof(struct sym_Data));
@@ -147,7 +197,7 @@ int catch_index(SAData *pom,int *count){
       str = mymalloc(sizeof(char)*25);
       sprintf(str,"@double_pom_%u",name++);  //TODO vygenerovat premennu;
       pom->nameID = str;
-      printf("vygenerovane meno:%s\n",pom->nameID);
+    //  printf("vygenerovane meno:%s\n",pom->nameID);
       tmp_htab_insert(const_table, pom->sym_data->type, &intoTableDouble,pom->nameID);
 
 
@@ -260,6 +310,19 @@ int reduction(tStack *stack1,tStack *stack2){
   hhelp2.nameID = NULL;
   hhelp3.nameID = NULL;
   hhelp4.nameID = NULL;
+  neterminal.nameID = NULL;
+  hhelp1.sym_data = NULL;
+  hhelp2.sym_data = NULL;
+  hhelp3.sym_data = NULL;
+  hhelp4.sym_data = NULL;
+  neterminal.sym_data = NULL;
+
+  neterminal.sym_data = mymalloc(sizeof(struct sym_Data));
+  if(neterminal.sym_data == NULL){
+    error= INTERNAL_ERR;
+    clearAll();
+    return error;
+  }
   eInstrType instruction;
   char *str = NULL;
 	//odkladame na druhy zasobnik;
@@ -387,13 +450,14 @@ int reduction(tStack *stack1,tStack *stack2){
                   return error;
                 }
               if((hhelp2.sym_data->type == tInt) || (hhelp4.sym_data->type == tInt)){
-                neterminal.sym_data->type = tInt;
+                neterminal.sym_data->type = tInt;   //vysledny by mal byt int
               }else{
-                neterminal.sym_data->type = tDouble;
+                neterminal.sym_data->type = tDouble;  //vysledny by mat byt double
               }
-              str = mymalloc(sizeof(char)*25);
+              str = mymalloc(sizeof(char)*30);
               sprintf(str,"@Gen_Target_VAR_ARIT%u",name++);
               neterminal.nameID = str;
+              //tmp_htab_insert(const_table, neterminal.sym_data->type,NULL ,neterminal.nameID);
               //TODO instrukcna paska
         }
 				//TODO ak je jeden z NETERMINALOV string a operator je +
@@ -410,10 +474,11 @@ int reduction(tStack *stack1,tStack *stack2){
                   error = SEMANTIC_TYPE_ERR;
                   return error;
                 }
-                str = mymalloc(sizeof(char)*25);
+                str = mymalloc(sizeof(char)*30);
                 sprintf(str,"@Gen_Target_VAR_COM%u",name++);
                 neterminal.nameID = str;
                 neterminal.sym_data->type = tBool;
+                //tmp_htab_insert(const_table, neterminal.sym_data->type,NULL ,neterminal.nameID);
                 //TODO instrukcna paska
         }else if (instruction == I_ADD){
               //konkatenacia
@@ -423,12 +488,16 @@ int reduction(tStack *stack1,tStack *stack2){
                   if((hhelp2.sym_data->type == tDouble) || (hhelp4.sym_data->type == tDouble)){
                     neterminal.sym_data->type = tDouble;
                   }else{
+
                     neterminal.sym_data->type = tInt;
+
                   }
               }
-              str = mymalloc(sizeof(char)*25);
+              str = mymalloc(sizeof(char)*30);
               sprintf(str,"@Gen_Target_VAR_ADD_%u",name++);
               neterminal.nameID = str;
+              //tmp_htab_insert(const_table, neterminal.sym_data->type,NULL ,neterminal.nameID);
+
               //TODO instrukcna paska
         }
 				//error = SUCCESS;
@@ -516,11 +585,18 @@ int expresion_parser()
 	SAData vyber;
 	SAData end;	//
 	SAData top;
-/*  top.nameID = NULL;
+  SAData send;
+  top.nameID = NULL;
   end.nameID = NULL;
   vyber.nameID = NULL;
   pom1.nameID = NULL;
-  pom.nameID = NULL;*/
+  pom.nameID = NULL;
+
+  top.sym_data = NULL;
+  end.sym_data = NULL;
+  vyber.sym_data = NULL;
+  pom1.sym_data = NULL;
+
 	pom.sym_data = NULL;
 	pom.indexibus = DOLAR;
 
@@ -615,7 +691,7 @@ int expresion_parser()
             stackTop(&Stack1,&top);
         }
 
-		stackTop(&Stack1,&end);
+		    stackTop(&Stack1,&end);
         while(!stackEmpty(&Stack2)){
             stackTopPop(&Stack2,&vyber);
             stackPush(&Stack1,&vyber);
@@ -635,9 +711,36 @@ int expresion_parser()
 
 //	}
 	}while(!((right_index.indexibus == DOLAR) && (end.indexibus == DOLAR)));
-//	show_stacks2(&Stack1,&Stack2);
-
-
+	//show_stacks2(&Stack1,&Stack2);
+  stackTopPop(&Stack1, &send);
+  if(priradenie){
+    if(send.sym_data->type == assSymbol){
+      destExpr = send.sym_data;
+      error = SUCCESS;
+    }else{
+      if(send.sym_data->type == tString){
+          //clearAll();
+          error = SEMANTIC_TYPE_ERR;
+      }
+      if(assSymbol == tString){
+        if(send.sym_data->type == tInt){
+          //clearAll();
+          error = SEMANTIC_TYPE_ERR;
+        }
+        if(send.sym_data->type == tDouble){
+          //clearAll();
+          error = SEMANTIC_TYPE_ERR;
+        }
+        if(send.sym_data->type == tDouble){
+          //clearAll();
+          error = SEMANTIC_TYPE_ERR;
+        }
+      }
+    /* code */
+    }
+  }
+  destExpr = send.sym_data;
+  ///printf("---%s----%d--\n\n",send.nameID,send.sym_data->type);
   //Print_table(const_table);
 return error;
 }

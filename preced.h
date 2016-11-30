@@ -53,4 +53,5 @@ typedef struct{
 	tPrec_enum indexibus;
 }SAData;
 
+extern symData *destExpr;
 #endif //PRECED_H
