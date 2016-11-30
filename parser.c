@@ -22,10 +22,6 @@
 #include "preced.h"
 #include "ial.h"
 
-int user_function_call();
-int is_function_call_or_ass();
-
-
 void print_elements_of_list(iSymbol *funcsym) {
     TList *templist = funcsym->data->args;
     int currlist_len = 0;
@@ -142,7 +138,6 @@ int parser()
       fprintf(stderr, "SEMANTIC_PROG_ERR. Class Main must be defined exactly once. No more, no less.\n");
       return SEMANTIC_PROG_ERR;
    }
-
    if(Htab_search(class_table_symbol->ptr, "run") == NULL)
    {
       fprintf(stderr, "SEMANTIC_PROG_ERR. Class Main must contain one function called \"run\".\n");
@@ -1494,6 +1489,7 @@ int class_scnd()
    strcpy(classname,token2.data);
    classname[strlen(token2.data)+1] = '\0';
 
+
    ptrclass = class_search(STable, classname);  //ptrclass->classname obsahuje nazov classu
                                                 //ptrclass->ptr obsahuje ukazatel na tabulku danej classy
    if(ptrclass == NULL)
@@ -2293,13 +2289,14 @@ int main_body_riadiace_scnd()   //pravidlo <MB> -> <SL> <MB>
 
          if(local_symbol != NULL && temp_symbol == NULL)   //lokalny symbol sa nasiel -> je to premenna vo funkcii
          {
+
             front_token();
             if(token2.stav != S_PRIR)
                return SYNTAX_ERR;
 
             priradenie = true;
             local_symbol->data->init = true;
-            assSymbol = temp_symbol->data->type;
+            assSymbol = local_symbol->data->type;
             error = is_function_call_or_ass();
             if(error != SUCCESS)
                return error;
@@ -2318,7 +2315,6 @@ int main_body_riadiace_scnd()   //pravidlo <MB> -> <SL> <MB>
          }
       }
    }
-
    else if(!((strcmp(token2.data, "String"))&&(strcmp(token2.data, "int"))&&(strcmp(token2.data, "double"))))  //pravidlo <SL> -> <PARS> <VD>
    {
          return SYNTAX_ERR;
@@ -3225,11 +3221,9 @@ if(token2.stav != S_ID)
    error = expresion_parser();
    if(error != SUCCESS)
       return error;
-
 }
 else
 {
-
    if(strchr(token2.data, '.'))  //zlozeny ID
    {
       int i = is_build_function_scnd();
@@ -3338,7 +3332,7 @@ else
       }
       else
       {
-         fprintf(stderr, "SEMANTIC_PROG_ERR. \"%s\" undefined in class \"%s\".\n", nazov, class_part); //dana staticka premenna/funckia neexistuje
+         fprintf(stderr, "SEMANTIC_PROG_ERR. \"%s\" undefined in function \"%s\".\n", nazov, funcname); //dana staticka premenna/funckia neexistuje
             return SEMANTIC_PROG_ERR;
       }
    }
