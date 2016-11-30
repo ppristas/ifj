@@ -18,15 +18,12 @@ typedef struct tmp_item
 
 typedef T_TMP_ITEM* TMP_HTAB[TMP_HTAB_SIZE];
 
-void tmp_htab_insert(TMP_HTAB* table,symbolType type,void* ptr,char* key);
+void tmp_htab_insert(TMP_HTAB* table,symbolType type,void* ptr,char* key,int offset);
 T_TMP_ITEM* tmp_htab_search(TMP_HTAB* table,char* key);
 symData* tmp_get_data(TMP_HTAB* table,char* key);
 void tmp_htab_init(TMP_HTAB* table);
 
-void Print_table(TMP_HTAB* tabulka);
-void Print_table_row(T_TMP_ITEM* item);
 
-extern TMP_HTAB* middle_vysledky;
-extern TMP_HTAB* const_table;
+extern TMP_HTAB* tabulka;
 
 #endif
