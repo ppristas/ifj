@@ -366,7 +366,7 @@ int after_class()
          if((strcmp(token.data, "String"))&&(strcmp(token.data, "int"))&&(strcmp(token.data, "double")))
             return SYNTAX_ERR;
 
-         params_counter = 0;
+         params_counter = -1;
          error = params_after(); //riadenie predane params_after
 
          if(error != SUCCESS)
@@ -1384,11 +1384,6 @@ int print_params()
    get_token();
    if(error != SUCCESS)
       return error;
-   if(token.stav == S_ID)
-      error = SUCCESS;
-   else if(token.stav == S_STRING)
-      error = SUCCESS;
-   else return error;
 
    get_token();
    if(error != SUCCESS)
@@ -1739,7 +1734,6 @@ int after_class_scnd()
                if((strcmp(token2.data, "String"))&&(strcmp(token2.data, "int"))&&(strcmp(token2.data, "double")))
                   return SYNTAX_ERR;
 
-               params_counter = 0;
                error = params_after_scnd(); //riadenie predane params_after
                if(error != SUCCESS)
                   return error;
@@ -2090,7 +2084,9 @@ int main_body_scnd()   //pravidlo <MB> -> <SL> <MB>
    else if(!(strcmp(token2.data, "return")))
    {
          front_token();
-         error = expresion_parser();
+         if(token2.stav != S_SEMICOLON)
+            error = expresion_parser();
+
          if(error != SUCCESS)
             return error;
          if(token2.stav != S_SEMICOLON)
@@ -2322,7 +2318,9 @@ int main_body_riadiace_scnd()   //pravidlo <MB> -> <SL> <MB>
    else if(!(strcmp(token2.data, "return")))
    {
          front_token();
-         error = expresion_parser();
+         if(token2.stav != S_SEMICOLON)
+            error = expresion_parser();
+         
          if(error != SUCCESS)
             return error;
          if(token2.stav != S_SEMICOLON)
@@ -2380,6 +2378,8 @@ int build_function_call_scnd(int decider)
       if(token2.stav != S_LZAT)
          return SYNTAX_ERR;
       front_token();   //musi byt )
+      if(token2.stav == S_ID || token2.stav == S_INT || token2.stav == S_STRING || token2.stav == S_DOUBLE)
+         return SEMANTIC_TYPE_ERR;
       if(token2.stav != S_PZAT)
          return SYNTAX_ERR;
       front_token();   //musi byt ;
@@ -2399,96 +2399,17 @@ int build_function_call_scnd(int decider)
             break;
 
          case S_ID:        //pripad sort(s);
-            if(strchr(token2.data, '.'))
-            {
-               error = return_class();
-               if(error != SUCCESS)
-                  return error;
-               Hash_class* class_table_symbol = class_search(STable, class_part);   //hladame ci existuje dana class
-
-               if(class_table_symbol == NULL)
-               {
-                  fprintf(stderr, "SEMANTIC_PROG_ERR. Class \"%s\" undefined.\n", class_part);  //dana classa neexsituje
-                  return SEMANTIC_PROG_ERR;
-               }
-               temp_symbol = Htab_search(class_table_symbol->ptr, id_part);
-               if(temp_symbol == NULL)
-               {
-                  fprintf(stderr, "SEMANTIC_PROG_ERR. \"%s\" undefined in class \"%s\".\n", id_part, class_part); //dana staticka premenna/funckia neexistuje
-                  return SEMANTIC_PROG_ERR;
-               }
-               if(temp_symbol->fce == true)
-               {
-                  fprintf(stderr, "SEMANTIC_TYPE_ERR. \"%s\" defined as function, not variable in \"%s\".\n", id_part, class_part); //je to funckia, nie premenna
-                  return SEMANTIC_TYPE_ERR;
-               }
-               if(temp_symbol->data->type != tString)
-               {
-                  fprintf(stderr, "SEMANTIC_TYPE_ERR. Expected type \"String\" in \"%s\".\n", id_part);
-                  return SEMANTIC_TYPE_ERR;
-               }
-               if(temp_symbol->data->init == false)
-               {
-                  fprintf(stderr, "RUNTIME_INIT_ERR. Using uninitialized \"%s\" in \"%s\".\n", id_part, funcname);
-                  return RUNTIME_INIT_ERR;
-               }
-
-            }
-            else
-            {
-               nazov_len = strlen(token2.data); //vracia nazov statickeho symbolu
-               nazov = mymalloc(nazov_len*sizeof(char) + 2);
-               if(nazov == NULL)
-               {
-                  error = INTERNAL_ERR;
-
-                  return error;
-               }
-               strcpy(nazov,token2.data);
-               nazov[strlen(token2.data)+1] = '\0';   //dostali sme nazov ID
-
-
-               /*Hash_class* class_table_symbol = class_search(STable, classname);
-               if(class_table_symbol != NULL)
-               {
-                  temp_symbol = Htab_search(class_table_symbol->ptr, nazov);
-                  if(temp_symbol == NULL)
-                  {
-                     fprintf(stderr, "SEMANTIC_PROG_ERR. Using \"%s\" which is not declared in funcion \"%s\".\n", nazov, funcname);
-                     return SEMANTIC_PROG_ERR;
-                  }
-                  if(temp_symbol->fce == true && temp_symbol->isstatic == true)
-                  {
-                     fprintf(stderr, "SEMANTIC_TYPE_ERR. Using \"%s\" which is funcion in \"%s\".\n", nazov, funcname);
-                     return SEMANTIC_TYPE_ERR;
-                  }
-               }
-               else
-                  return SEMANTIC_PROG_ERR; */
-
-               local_symbol = loc_symbol_search(local_table, nazov); //overenie, ci uz dana lokalna premenna neexistuje ako premenna
-               if(local_symbol == NULL)
-               {
-                  fprintf(stderr, "SEMANTIC_PROG_ERR. Using \"%s\" undeclared in \"%s\".\n", nazov, funcname);
-                  return SEMANTIC_PROG_ERR;
-               }
-               if(local_symbol->data->type != tString)
-               {
-                  fprintf(stderr, "SEMANTIC_TYPE_ERR. Expected type \"String\" in \"%s\".\n", nazov);
-                  return SEMANTIC_TYPE_ERR;
-               }
-               if(local_symbol->data->init == false)
-               {
-                  fprintf(stderr, "RUNTIME_INIT_ERR. Using uninitialized \"%s\" in \"%s\".\n", nazov, funcname);
-                  return RUNTIME_INIT_ERR;
-               }
-            }
+            error = build_in_ID();
+            if(error != SUCCESS)
+               return error;
             break;
 
-         default: return SEMANTIC_PROG_ERR;
+         default: return SEMANTIC_TYPE_ERR;
       }
 
       front_token();   //musi byt )
+      if(token2.stav == S_ID || token2.stav == S_INT || token2.stav == S_STRING || token2.stav == S_DOUBLE)
+         return SEMANTIC_TYPE_ERR;
       if(token2.stav != S_PZAT)
          return SYNTAX_ERR;
       front_token();   //musi byt ;
@@ -2505,93 +2426,13 @@ int build_function_call_scnd(int decider)
       switch(token2.stav)
       {
          case S_STRING:    //pripad find("awadawdawdaw", .....);
-             break;
-         case S_ID:        //pripad compare(s, .....);
-            if(strchr(token2.data, '.'))
-            {
-               error = return_class();
-               if(error != SUCCESS)
-                  return error;
-               Hash_class* class_table_symbol = class_search(STable, class_part);   //hladame ci existuje dana class
-
-               if(class_table_symbol == NULL)
-               {
-                  fprintf(stderr, "SEMANTIC_PROG_ERR. Class \"%s\" undefined.\n", class_part);  //dana classa neexsituje
-                  return SEMANTIC_PROG_ERR;
-               }
-               temp_symbol = Htab_search(class_table_symbol->ptr, id_part);
-               if(temp_symbol == NULL)
-               {
-                  fprintf(stderr, "SEMANTIC_PROG_ERR. \"%s\" undefined in class \"%s\".\n", id_part, class_part); //dana staticka premenna/funckia neexistuje
-                  return SEMANTIC_PROG_ERR;
-               }
-               if(temp_symbol->fce == true)
-               {
-                  fprintf(stderr, "SEMANTIC_TYPE_ERR. \"%s\" defined as function, not variable in \"%s\".\n", id_part, class_part); //je to funckia, nie premenna
-                  return SEMANTIC_TYPE_ERR;
-               }
-               if(temp_symbol->data->type != tString)
-               {
-                  fprintf(stderr, "SEMANTIC_TYPE_ERR. Expected type \"String\" in \"%s\".\n", id_part);
-                  return SEMANTIC_TYPE_ERR;
-               }
-               if(temp_symbol->data->init == false)
-               {
-                  fprintf(stderr, "RUNTIME_INIT_ERR. Using uninitialized \"%s\" in \"%s\".\n", id_part, funcname);
-                  return RUNTIME_INIT_ERR;
-               }
-
-            }
-            else
-            {
-               nazov_len = strlen(token2.data); //vracia nazov statickeho symbolu
-               nazov = mymalloc(nazov_len*sizeof(char) + 2);
-               if(nazov == NULL)
-               {
-                  error = INTERNAL_ERR;
-
-                  return error;
-               }
-               strcpy(nazov,token2.data);
-               nazov[strlen(token2.data)+1] = '\0';   //dostali sme nazov ID
-
-               /*Hash_class* class_table_symbol = class_search(STable, classname);
-               if(class_table_symbol != NULL)
-               {
-                  temp_symbol = Htab_search(class_table_symbol->ptr, nazov);
-                  if(temp_symbol == NULL)
-                  {
-                     fprintf(stderr, "SEMANTIC_PROG_ERR. Using \"%s\" which is not declared in funcion \"%s\".\n", nazov, funcname);
-                     return SEMANTIC_PROG_ERR;
-                  }
-                  if(temp_symbol->fce == true && temp_symbol->isstatic == true)
-                  {
-                     fprintf(stderr, "SEMANTIC_TYPE_ERR. Using \"%s\" which is funcion in \"%s\".\n", nazov, funcname);
-                     return SEMANTIC_TYPE_ERR;
-                  }
-               }
-               else
-                  return SEMANTIC_PROG_ERR;  */
-
-               local_symbol = loc_symbol_search(local_table, nazov); //overenie, ci uz dana lokalna premenna neexistuje ako premenna
-               if(local_symbol == NULL)
-               {
-                  fprintf(stderr, "SEMANTIC_PROG_ERR. Using \"%s\" undeclared in \"%s\".\n", nazov, funcname);
-                  return SEMANTIC_PROG_ERR;
-               }
-               if(local_symbol->data->type != tString)
-               {
-                  fprintf(stderr, "SEMANTIC_TYPE_ERR. Expected type \"String\" in \"%s\".\n", nazov);
-                  return SEMANTIC_TYPE_ERR;
-               }
-               if(local_symbol->data->init == false)
-               {
-                  fprintf(stderr, "RUNTIME_INIT_ERR. Using uninitialized \"%s\" in \"%s\".\n", nazov, funcname);
-                  return RUNTIME_INIT_ERR;
-               }
-            }
             break;
-         default: return SEMANTIC_PROG_ERR;
+         case S_ID:        //pripad compare(s, .....);
+            error = build_in_ID();
+            if(error != SUCCESS)
+               return error;
+            break;
+         default: return SEMANTIC_TYPE_ERR;
       }
 
       front_token();
@@ -2604,94 +2445,15 @@ int build_function_call_scnd(int decider)
          case S_STRING:    //pripad find("awadawdawdaw", "awda");
              break;
          case S_ID:        //pripad compare(s, p);
-            if(strchr(token2.data, '.'))
-            {
-               error = return_class();
-               if(error != SUCCESS)
-                  return error;
-               Hash_class* class_table_symbol = class_search(STable, class_part);   //hladame ci existuje dana class
-
-               if(class_table_symbol == NULL)
-               {
-                  fprintf(stderr, "SEMANTIC_PROG_ERR. Class \"%s\" undefined.\n", class_part);  //dana classa neexsituje
-                  return SEMANTIC_PROG_ERR;
-               }
-               temp_symbol = Htab_search(class_table_symbol->ptr, id_part);
-               if(temp_symbol == NULL)
-               {
-                  fprintf(stderr, "SEMANTIC_PROG_ERR. \"%s\" undefined in class \"%s\".\n", id_part, class_part); //dana staticka premenna/funckia neexistuje
-                  return SEMANTIC_PROG_ERR;
-               }
-               if(temp_symbol->fce == true)
-               {
-                  fprintf(stderr, "SEMANTIC_TYPE_ERR. \"%s\" defined as function, not variable in \"%s\".\n", id_part, class_part); //je to funckia, nie premenna
-                  return SEMANTIC_TYPE_ERR;
-               }
-               if(temp_symbol->data->type != tString)
-               {
-                  fprintf(stderr, "SEMANTIC_TYPE_ERR. Expected type \"String\" in \"%s\".\n", id_part);
-                  return SEMANTIC_TYPE_ERR;
-               }
-               if(temp_symbol->data->init == false)
-               {
-                  fprintf(stderr, "RUNTIME_INIT_ERR. Using uninitialized \"%s\" in \"%s\".\n", id_part, funcname);
-                  return RUNTIME_INIT_ERR;
-               }
-
-            }
-            else
-            {
-               nazov_len = strlen(token2.data); //vracia nazov statickeho symbolu
-               nazov = mymalloc(nazov_len*sizeof(char) + 2);
-               if(nazov == NULL)
-               {
-                  error = INTERNAL_ERR;
-
-                  return error;
-               }
-               strcpy(nazov,token2.data);
-               nazov[strlen(token2.data)+1] = '\0';   //dostali sme nazov ID
-
-               /*Hash_class* class_table_symbol = class_search(STable, classname);
-               if(class_table_symbol != NULL)
-               {
-                  temp_symbol = Htab_search(class_table_symbol->ptr, nazov);
-                  if(temp_symbol == NULL)
-                  {
-                     fprintf(stderr, "SEMANTIC_PROG_ERR. Using \"%s\" which is not declared in funcion \"%s\".\n", nazov, funcname);
-                     return SEMANTIC_PROG_ERR;
-                  }
-                  if(temp_symbol->fce == true && temp_symbol->isstatic == true)
-                  {
-                     fprintf(stderr, "SEMANTIC_TYPE_ERR. Using \"%s\" which is funcion in \"%s\".\n", nazov, funcname);
-                     return SEMANTIC_TYPE_ERR;
-                  }
-               }
-               else
-                  return SEMANTIC_PROG_ERR; */
-
-               local_symbol = loc_symbol_search(local_table, nazov); //overenie, ci uz dana lokalna premenna neexistuje ako premenna
-               if(local_symbol == NULL)
-               {
-                  fprintf(stderr, "SEMANTIC_PROG_ERR. Using \"%s\" undeclared in \"%s\".\n", nazov, funcname);
-                  return SEMANTIC_PROG_ERR;
-               }
-               if(local_symbol->data->type != tString)
-               {
-                  fprintf(stderr, "SEMANTIC_TYPE_ERR. Expected type \"String\" in \"%s\".\n", nazov);
-                  return SEMANTIC_TYPE_ERR;
-               }
-               if(local_symbol->data->init == false)
-               {
-                  fprintf(stderr, "RUNTIME_INIT_ERR. Using uninitialized \"%s\" in \"%s\".\n", nazov, funcname);
-                  return RUNTIME_INIT_ERR;
-               }
-            }
+            error = build_in_ID();
+            if(error != SUCCESS)
+               return error;
             break;
-         default: return SEMANTIC_PROG_ERR;
+         default: return SEMANTIC_TYPE_ERR;
       }
-
       front_token();   //musi byt )
+      if(token2.stav == S_ID || token2.stav == S_INT || token2.stav == S_STRING || token2.stav == S_DOUBLE)
+         return SEMANTIC_TYPE_ERR;
       if(token2.stav != S_PZAT)
          return SYNTAX_ERR;
       front_token();   //musi byt ;
@@ -2710,91 +2472,11 @@ int build_function_call_scnd(int decider)
          case S_STRING:    //pripad substr("awadawdawdaw", ...., .....);
              break;
          case S_ID:        //pripad substr(s, ...., .....);
-            if(strchr(token2.data, '.'))
-            {
-               error = return_class();
-               if(error != SUCCESS)
-                  return error;
-               Hash_class* class_table_symbol = class_search(STable, class_part);   //hladame ci existuje dana class
-
-               if(class_table_symbol == NULL)
-               {
-                  fprintf(stderr, "SEMANTIC_PROG_ERR. Class \"%s\" undefined.\n", class_part);  //dana classa neexsituje
-                  return SEMANTIC_PROG_ERR;
-               }
-               temp_symbol = Htab_search(class_table_symbol->ptr, id_part);
-               if(temp_symbol == NULL)
-               {
-                  fprintf(stderr, "SEMANTIC_PROG_ERR. \"%s\" undefined in class \"%s\".\n", id_part, class_part); //dana staticka premenna/funckia neexistuje
-                  return SEMANTIC_PROG_ERR;
-               }
-               if(temp_symbol->fce == true)
-               {
-                  fprintf(stderr, "SEMANTIC_TYPE_ERR. \"%s\" defined as function, not variable in \"%s\".\n", id_part, class_part); //je to funckia, nie premenna
-                  return SEMANTIC_TYPE_ERR;
-               }
-               if(temp_symbol->data->type != tString)
-               {
-                  fprintf(stderr, "SEMANTIC_TYPE_ERR. Expected type \"String\" in \"%s\".\n", id_part);
-                  return SEMANTIC_TYPE_ERR;
-               }
-               if(temp_symbol->data->init != false)
-               {
-                  fprintf(stderr, "RUNTIME_INIT_ERR. Using uninitialized \"%s\" in \"%s\".\n", id_part, funcname);
-                  return RUNTIME_INIT_ERR;
-               }
-
-            }
-            else
-            {
-               nazov_len = strlen(token2.data); //vracia nazov statickeho symbolu
-               nazov = mymalloc(nazov_len*sizeof(char) + 2);
-               if(nazov == NULL)
-               {
-                  error = INTERNAL_ERR;
-
-                  return error;
-               }
-               strcpy(nazov,token2.data);
-               nazov[strlen(token2.data)+1] = '\0';   //dostali sme nazov ID
-
-               /*Hash_class* class_table_symbol = class_search(STable, classname);
-               if(class_table_symbol != NULL)
-               {
-                  temp_symbol = Htab_search(class_table_symbol->ptr, nazov);
-                  if(temp_symbol == NULL)
-                  {
-                     fprintf(stderr, "SEMANTIC_PROG_ERR. Using \"%s\" which is not declared in funcion \"%s\".\n", nazov, funcname);
-                     return SEMANTIC_PROG_ERR;
-                  }
-                  if(temp_symbol->fce == true && temp_symbol->isstatic == true)
-                  {
-                     fprintf(stderr, "SEMANTIC_TYPE_ERR. Using \"%s\" which is funcion in \"%s\".\n", nazov, funcname);
-                     return SEMANTIC_TYPE_ERR;
-                  }
-               }
-               else
-                  return SEMANTIC_PROG_ERR; */
-
-               local_symbol = loc_symbol_search(local_table, nazov); //overenie, ci uz dana lokalna premenna neexistuje ako premenna
-               if(local_symbol == NULL)
-               {
-                  fprintf(stderr, "SEMANTIC_PROG_ERR. Using \"%s\" undeclared in \"%s\".\n", nazov, funcname);
-                  return SEMANTIC_PROG_ERR;
-               }
-               if(local_symbol->data->type != tString)
-               {
-                  fprintf(stderr, "SEMANTIC_TYPE_ERR. Expected type \"String\" in \"%s\".\n", nazov);
-                  return SEMANTIC_TYPE_ERR;
-               }
-               if(local_symbol->data->init == false)
-               {
-                  fprintf(stderr, "RUNTIME_INIT_ERR. Using uninitialized \"%s\" in \"%s\".\n", nazov, funcname);
-                  return RUNTIME_INIT_ERR;
-               }
-            }
+            error = build_in_ID();
+            if(error != SUCCESS)
+               return error;
             break;
-         default: return SEMANTIC_PROG_ERR;
+         default: return SEMANTIC_TYPE_ERR;
       }
 
       front_token();
@@ -2855,24 +2537,6 @@ int build_function_call_scnd(int decider)
                strcpy(nazov,token2.data);
                nazov[strlen(token2.data)+1] = '\0';   //dostali sme nazov ID
 
-               /*Hash_class* class_table_symbol = class_search(STable, classname);
-               if(class_table_symbol != NULL)
-               {
-                  temp_symbol = Htab_search(class_table_symbol->ptr, nazov);
-                  if(temp_symbol == NULL)
-                  {
-                     fprintf(stderr, "SEMANTIC_PROG_ERR. Using \"%s\" which is not declared in funcion \"%s\".\n", nazov, funcname);
-                     return SEMANTIC_PROG_ERR;
-                  }
-                  if(temp_symbol->fce == true && temp_symbol->isstatic == true)
-                  {
-                     fprintf(stderr, "SEMANTIC_TYPE_ERR. Using \"%s\" which is funcion in \"%s\".\n", nazov, funcname);
-                     return SEMANTIC_TYPE_ERR;
-                  }
-               }
-               else
-                  return SEMANTIC_PROG_ERR;  */
-
                local_symbol = loc_symbol_search(local_table, nazov); //overenie, ci uz dana lokalna premenna neexistuje ako premenna
                if(local_symbol == NULL)
                {
@@ -2892,7 +2556,7 @@ int build_function_call_scnd(int decider)
             }
             break;
             //overenie v TS ci je dany ID string
-         default: return SEMANTIC_PROG_ERR;
+         default: return SEMANTIC_TYPE_ERR;
       }
 
       front_token();
@@ -2953,24 +2617,6 @@ int build_function_call_scnd(int decider)
                strcpy(nazov,token2.data);
                nazov[strlen(token2.data)+1] = '\0';   //dostali sme nazov ID
 
-               /*Hash_class* class_table_symbol = class_search(STable, classname);
-               if(class_table_symbol != NULL)
-               {
-                  temp_symbol = Htab_search(class_table_symbol->ptr, nazov);
-                  if(temp_symbol == NULL)
-                  {
-                     fprintf(stderr, "SEMANTIC_PROG_ERR. Using \"%s\" which is not declared in funcion \"%s\".\n", nazov, funcname);
-                     return SEMANTIC_PROG_ERR;
-                  }
-                  if(temp_symbol->fce == true && temp_symbol->isstatic == true)
-                  {
-                     fprintf(stderr, "SEMANTIC_TYPE_ERR. Using \"%s\" which is funcion in \"%s\".\n", nazov, funcname);
-                     return SEMANTIC_TYPE_ERR;
-                  }
-               }
-               else
-                  return SEMANTIC_PROG_ERR; */
-
                local_symbol = loc_symbol_search(local_table, nazov); //overenie, ci uz dana lokalna premenna neexistuje ako premenna
                if(local_symbol == NULL)
                {
@@ -2990,10 +2636,12 @@ int build_function_call_scnd(int decider)
             }
             break;
             //overenie v TS ci je dany ID string
-         default: return SEMANTIC_PROG_ERR;
+         default: return SEMANTIC_TYPE_ERR;
       }
 
       front_token();   //musi byt )
+      if(token2.stav == S_ID || token2.stav == S_INT || token2.stav == S_STRING || token2.stav == S_DOUBLE)
+         return SEMANTIC_TYPE_ERR;
       if(token2.stav != S_PZAT)
          return SYNTAX_ERR;
       front_token();   //musi byt ;
@@ -3003,11 +2651,15 @@ int build_function_call_scnd(int decider)
    }
    else if(decider == F_print)
    {
+      if(priradenie == true)
+      {
+         fprintf(stderr, "RUNTIME_INIT_ERR. \"ifj16.print\" has return type of void.\n"); //dana staticka premenna/funckia neexistuje
+         return RUNTIME_INIT_ERR;
+      }
       error = build_print_scnd();
       if(error != SUCCESS)
          return error;
    }
-
    else
       return SYNTAX_ERR;
    return error;
@@ -3100,9 +2752,13 @@ int user_function_call()
          {
             continue;
          }
-         else if(token2.stav == S_PZAT)
+         else if(token2.stav == S_PZAT && i > 1)
          {
             return SEMANTIC_TYPE_ERR;
+         }
+         else if(token2.stav == S_PZAT && i == 1)
+         {
+            break;
          }
          else if(strchr(token2.data, '.'))  //zlozeny id
          {
@@ -3141,10 +2797,11 @@ int user_function_call()
                   fprintf(stderr, "SEMANTIC_TYPE_ERR. Wrong argument type of \"%s\" in function \"%s\".\n", id_part, class_part);
                   return SEMANTIC_TYPE_ERR;
                }
-               if(i - 1 > 0)
+               if(i > 0)
                {
                   Node = Node->next;
-                  argument_type = Node->type;
+                  if(Node != NULL)
+                     argument_type = Node->type;
                }
             }
          }
@@ -3163,19 +2820,6 @@ int user_function_call()
 
             local_symbol = loc_symbol_search(local_table, nazov); //overenie, ci uz dana lokalna premenna existuje ako premenna
             if(local_symbol == NULL)
-
-            /*temp_symbol = Htab_search(ptrclass->ptr, nazov);  //overenei ci existuje ako funkcia
-            if(temp_symbol == NULL)
-            {
-               fprintf(stderr, "SEMANTIC_PROG_ERR. Using \"%s\" which is not declared in funcion \"%s\".\n", nazov, funcname);
-               return SEMANTIC_TYPE_ERR;
-            }
-            if(temp_symbol->fce == true && temp_symbol->isstatic == true)
-            {
-               fprintf(stderr, "SEMANTIC_TYPE_ERR. Using \"%s\" which is funcion in \"%s\".\n", nazov, funcname);
-               return SEMANTIC_PROG_ERR;
-            }*/
-            if(local_symbol == NULL)
             {
                fprintf(stderr, "SEMANTIC_PROG_ERR. Using \"%s\" undeclared in \"%s\".\n", nazov, funcname);
                return SEMANTIC_PROG_ERR;
@@ -3192,10 +2836,11 @@ int user_function_call()
                   fprintf(stderr, "SEMANTIC_TYPE_ERR. Wrong argument type of \"%s\" in function \"%s\".\n", nazov, funcname);
                   return SEMANTIC_TYPE_ERR;
                }
-               if(i - 1 > 0)
+               if(i > 0)
                {
                   Node = Node->next;
-                  argument_type = Node->type;
+                  if(Node != NULL)
+                     argument_type = Node->type;
                }
             }
          }
@@ -3203,6 +2848,7 @@ int user_function_call()
          i--;
       }
    }
+
    front_token();
    if(token2.stav != S_PZAT)
       return SYNTAX_ERR;
@@ -3339,5 +2985,95 @@ else
    priradenie = false;
    return error;
    }
+priradenie = false;
 return error;
+}
+
+int build_in_ID()
+{
+    if(strchr(token2.data, '.'))
+            {
+               error = return_class();
+               if(error != SUCCESS)
+                  return error;
+               Hash_class* class_table_symbol = class_search(STable, class_part);   //hladame ci existuje dana class
+
+               if(class_table_symbol == NULL)
+               {
+                  fprintf(stderr, "SEMANTIC_PROG_ERR. Class \"%s\" undefined.\n", class_part);  //dana classa neexsituje
+                  return SEMANTIC_PROG_ERR;
+               }
+               temp_symbol = Htab_search(class_table_symbol->ptr, id_part);
+               if(temp_symbol == NULL)
+               {
+                  fprintf(stderr, "SEMANTIC_PROG_ERR. \"%s\" undefined in class \"%s\".\n", id_part, class_part); //dana staticka premenna/funckia neexistuje
+                  return SEMANTIC_PROG_ERR;
+               }
+               if(temp_symbol->fce == true)
+               {
+                  fprintf(stderr, "SEMANTIC_TYPE_ERR. \"%s\" defined as function, not variable in \"%s\".\n", id_part, class_part); //je to funckia, nie premenna
+                  return SEMANTIC_TYPE_ERR;
+               }
+               if(temp_symbol->data->type != tString)
+               {
+                  fprintf(stderr, "SEMANTIC_TYPE_ERR. Expected type \"String\" in \"%s\".\n", id_part);
+                  return SEMANTIC_TYPE_ERR;
+               }
+               if(temp_symbol->data->init == false)
+               {
+                  fprintf(stderr, "RUNTIME_INIT_ERR. Using uninitialized \"%s\" in \"%s\".\n", id_part, funcname);
+                  return RUNTIME_INIT_ERR;
+               }
+
+            }
+            else
+            {
+               nazov_len = strlen(token2.data); //vracia nazov statickeho symbolu
+               nazov = mymalloc(nazov_len*sizeof(char) + 2);
+               if(nazov == NULL)
+               {
+                  error = INTERNAL_ERR;
+
+                  return error;
+               }
+               strcpy(nazov,token2.data);
+               nazov[strlen(token2.data)+1] = '\0';   //dostali sme nazov ID
+
+
+               /*Hash_class* class_table_symbol = class_search(STable, classname);
+               if(class_table_symbol != NULL)
+               {
+                  temp_symbol = Htab_search(class_table_symbol->ptr, nazov);
+                  if(temp_symbol == NULL)
+                  {
+                     fprintf(stderr, "SEMANTIC_PROG_ERR. Using \"%s\" which is not declared in funcion \"%s\".\n", nazov, funcname);
+                     return SEMANTIC_PROG_ERR;
+                  }
+                  if(temp_symbol->fce == true && temp_symbol->isstatic == true)
+                  {
+                     fprintf(stderr, "SEMANTIC_TYPE_ERR. Using \"%s\" which is funcion in \"%s\".\n", nazov, funcname);
+                     return SEMANTIC_TYPE_ERR;
+                  }
+               }
+               else
+                  return SEMANTIC_PROG_ERR; */
+
+               local_symbol = loc_symbol_search(local_table, nazov); //overenie, ci uz dana lokalna premenna neexistuje ako premenna
+               if(local_symbol == NULL)
+               {
+                  fprintf(stderr, "SEMANTIC_PROG_ERR. Using \"%s\" undeclared in \"%s\".\n", nazov, funcname);
+                  return SEMANTIC_PROG_ERR;
+               }
+               if(local_symbol->data->type != tString)
+               {
+                  fprintf(stderr, "SEMANTIC_TYPE_ERR. Expected type \"String\" in \"%s\".\n", nazov);
+                  return SEMANTIC_TYPE_ERR;
+               }
+               if(local_symbol->data->init == false)
+               {
+                  fprintf(stderr, "RUNTIME_INIT_ERR. Using uninitialized \"%s\" in \"%s\".\n", nazov, funcname);
+                  return RUNTIME_INIT_ERR;
+               }
+            }
+            return error;
 }

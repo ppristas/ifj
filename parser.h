@@ -46,6 +46,7 @@
    int build_function_call_scnd(int decider);
    int user_function_call();
    int is_function_call_or_ass();
+   int build_in_ID();
 
    /*------------Ostatne-------------------*/
    int return_class();
