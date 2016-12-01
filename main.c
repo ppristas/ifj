@@ -59,7 +59,6 @@ int main(int argc, char *argv[])
 	{
 		fprintf(stderr,"Chyba pri spracovani argumentov\n");
 		free(Mem);
-		free(filename);
 		clearAll();
 		if(file != NULL)
 			if(fclose(file) == EOF)
@@ -89,7 +88,7 @@ int main(int argc, char *argv[])
 
 	clearAll();
   free(token.data);
-  free(filename);
+  //free(filename);
 	free(Mem);
 	if(filename == NULL)
   	if(fclose(file) == EOF){
