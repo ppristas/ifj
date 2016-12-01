@@ -21,7 +21,7 @@ static int tmp_hash_key(char *key)
     unsigned long hash = 5381;
     int c;
 
-     while (c = *key++)
+     while ((c = *key++) == true)
          hash = ((hash << 5) + hash) + c;
 
      return (hash % TMP_HTAB_SIZE);
@@ -116,7 +116,7 @@ void tmp_htab_insert(TMP_HTAB* table,symbolType type,void* ptr,char* key,int off
 
 
 
-static void Print_table_row(T_TMP_ITEM* item)
+void Print_table_row(T_TMP_ITEM* item)
 {
     T_TMP_ITEM* tmp=item;
 
@@ -140,7 +140,7 @@ static void Print_table_row(T_TMP_ITEM* item)
 }
 
 
-static void Print_table(TMP_HTAB* tabulka)
+void Print_table(TMP_HTAB* tabulka)
 {
     for (int i=0;i<TMP_HTAB_SIZE;++i)
     {
@@ -153,7 +153,7 @@ static void Print_table(TMP_HTAB* tabulka)
 
     }
 }
-
+/*
 static symData* fill_data(T_TMP_ITEM* data,char* key,int count)
 {
     data->key=(char*)mymalloc(sizeof(char)* ((int)strlen(key) +1));
@@ -274,7 +274,6 @@ int main(int argc, char *argv[])
 
 
 
-/*
    Print_addres(addres);
 
    strcpy(addres->ptr_union.str,"kokoto");
@@ -287,12 +286,12 @@ int main(int argc, char *argv[])
 
    Print_addres(addres);
 
-*/
+
 
     Print_stack(Stack);
 
 
-/*
+
     dbl=300.45;
     tmp_htab_insert(tabulka,tDouble,&dbl,"T6",0);
     dbl=0.45;
@@ -315,7 +314,7 @@ int main(int argc, char *argv[])
     tmp_htab_insert(tabulka,tString,"LDS_THC","T65",3);
 
     Print_table(tabulka);
-*/
+
     stack_frame_pop(Stack);
     stack_frame_pop(Stack);
     stack_frame_pop(Stack);
@@ -324,4 +323,4 @@ int main(int argc, char *argv[])
 
 
     return 0;
-}
+}*/

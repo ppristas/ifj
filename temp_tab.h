@@ -22,7 +22,8 @@ void tmp_htab_insert(TMP_HTAB* table,symbolType type,void* ptr,char* key,int off
 T_TMP_ITEM* tmp_htab_search(TMP_HTAB* table,char* key);
 symData* tmp_get_data(TMP_HTAB* table,char* key);
 void tmp_htab_init(TMP_HTAB* table);
-
+void Print_table(TMP_HTAB* tabulka);
+void Print_table_row(T_TMP_ITEM* item);
 
 extern TMP_HTAB* tabulka;
 
