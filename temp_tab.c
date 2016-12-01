@@ -53,6 +53,7 @@ symData* tmp_get_data(TMP_HTAB *table, char *key)
     return NULL;
 }
 
+
 void tmp_htab_insert(TMP_HTAB* table,symbolType type,void* ptr,char* key,int offset)
 {
     if (key != NULL)
@@ -73,18 +74,37 @@ void tmp_htab_insert(TMP_HTAB* table,symbolType type,void* ptr,char* key,int off
 
             tmp->data->funcdata_union.offset=offset;
 
-            if (type == tInt)
+
+            if (ptr == NULL)
             {
-                tmp->data->ptr_union.i=(*(int*)ptr);
+                if (type == tInt)
+                {
+                    tmp->data->ptr_union.i=0;
+                }
+                else if (type == tDouble )
+                {
+                    tmp->data->ptr_union.d=0.0;
+                }
+                else if (type == tString )
+                {
+                    tmp->data->ptr_union.str=NULL;
+                }
             }
-            else if (type == tDouble )
+            else
             {
-                tmp->data->ptr_union.d=(*(double*)ptr);
-            }
-            else if (type == tString )
-            {
-                tmp->data->ptr_union.str=(char*)mymalloc(sizeof(char)*(int)(strlen((char*)ptr)+1));
-                strcpy(tmp->data->ptr_union.str,((char*)ptr));
+                if (type == tInt)
+                {
+                    tmp->data->ptr_union.i=(*(int*)ptr);
+                }
+                else if (type == tDouble )
+                {
+                    tmp->data->ptr_union.d=(*(double*)ptr);
+                }
+                else if (type == tString )
+                {
+                    tmp->data->ptr_union.str=(char*)mymalloc(sizeof(char)*(int)(strlen((char*)ptr)+1));
+                    strcpy(tmp->data->ptr_union.str,((char*)ptr));
+                }
             }
 
             tmp->next=(*table)[index];
@@ -93,6 +113,7 @@ void tmp_htab_insert(TMP_HTAB* table,symbolType type,void* ptr,char* key,int off
         }
     }
 }
+
 
 
 static void Print_table_row(T_TMP_ITEM* item)
