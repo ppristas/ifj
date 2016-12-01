@@ -455,7 +455,7 @@ int after_class()
 
          case S_PRIR:               // pravidlo <Decl> ->
 
-            symbol = sym_variable_init(nazov, symbol_type, true, classname, true, true);
+            symbol = sym_variable_init(nazov, symbol_type, false, classname, true, true);
             symbol->data->funcdata_union.offset = -1;
             Htab_insert(ukazatel_na_triedu, symbol);
 
