@@ -129,7 +129,7 @@ int catch_index(SAData *pom,int *count){
           return error;
         }
         if(!(symbol_pom->data->init)){
-          error = SEMANTIC_PROG_ERR;
+          error = RUNTIME_INIT_ERR;
           return error;
         }
 
@@ -143,6 +143,10 @@ int catch_index(SAData *pom,int *count){
           //lokalna tabulka
           if((locsymbol_pom = loc_symbol_search(local_table, token2.data)) == NULL){
             error = SEMANTIC_PROG_ERR;
+            return error;
+          }
+          if(!(locsymbol_pom->data->init)){
+            error = RUNTIME_INIT_ERR;
             return error;
           }
           pom->sym_data = locsymbol_pom->data;
@@ -173,7 +177,7 @@ int catch_index(SAData *pom,int *count){
       sprintf(str,"@int_pom_%u",name++);  //TODO vygenerovat premennu;
       pom->nameID = str;
     //printf("vygenerovane meno:%s\n",pom->nameID);
-      tmp_htab_insert(const_table, pom->sym_data->type, &intoTableInt,pom->nameID);
+      tmp_htab_insert(const_table, pom->sym_data->type, &intoTableInt,pom->nameID,-1);
       break;
 		case S_DOUBLE:
 		case S_EXP:
@@ -198,7 +202,7 @@ int catch_index(SAData *pom,int *count){
       sprintf(str,"@double_pom_%u",name++);  //TODO vygenerovat premennu;
       pom->nameID = str;
     //  printf("vygenerovane meno:%s\n",pom->nameID);
-      tmp_htab_insert(const_table, pom->sym_data->type, &intoTableDouble,pom->nameID);
+      tmp_htab_insert(const_table, pom->sym_data->type, &intoTableDouble,pom->nameID,-1);
 
 
       //pom->sym_data->data = /priradim si vytvorenu premennu
@@ -225,7 +229,7 @@ int catch_index(SAData *pom,int *count){
       sprintf(str,"@str_pom_%u",name++);  //TODO vygenerovat premennu;
       pom->nameID = str;
       //printf("vygenerovane meno:%s\n",pom->nameID);
-      tmp_htab_insert(const_table, pom->sym_data->type,pom->sym_data->ptr_union.str ,pom->nameID);
+      tmp_htab_insert(const_table, pom->sym_data->type,pom->sym_data->ptr_union.str ,pom->nameID,-1);
 			pom->indexibus = ID;
       //pom->sym_data->data = /priradim si vytvorenu premennu
 			//TODO
@@ -457,7 +461,7 @@ int reduction(tStack *stack1,tStack *stack2){
               str = mymalloc(sizeof(char)*30);
               sprintf(str,"@Gen_Target_VAR_ARIT%u",name++);
               neterminal.nameID = str;
-              //tmp_htab_insert(const_table, neterminal.sym_data->type,NULL ,neterminal.nameID);
+              tmp_htab_insert(const_table, neterminal.sym_data->type,NULL ,neterminal.nameID,-1);
               //TODO instrukcna paska
         }
 				//TODO ak je jeden z NETERMINALOV string a operator je +
@@ -478,7 +482,7 @@ int reduction(tStack *stack1,tStack *stack2){
                 sprintf(str,"@Gen_Target_VAR_COM%u",name++);
                 neterminal.nameID = str;
                 neterminal.sym_data->type = tBool;
-                //tmp_htab_insert(const_table, neterminal.sym_data->type,NULL ,neterminal.nameID);
+                tmp_htab_insert(const_table, neterminal.sym_data->type,NULL ,neterminal.nameID,-1);
                 //TODO instrukcna paska
         }else if (instruction == I_ADD){
               //konkatenacia
@@ -496,7 +500,7 @@ int reduction(tStack *stack1,tStack *stack2){
               str = mymalloc(sizeof(char)*30);
               sprintf(str,"@Gen_Target_VAR_ADD_%u",name++);
               neterminal.nameID = str;
-              //tmp_htab_insert(const_table, neterminal.sym_data->type,NULL ,neterminal.nameID);
+              tmp_htab_insert(const_table, neterminal.sym_data->type,NULL ,neterminal.nameID,-1);
 
               //TODO instrukcna paska
         }
