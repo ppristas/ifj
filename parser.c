@@ -22,19 +22,6 @@
 #include "preced.h"
 #include "ial.h"
 
-void print_elements_of_list(iSymbol *funcsym) {
-    TList *templist = funcsym->data->args;
-    int currlist_len = 0;
-
-    //printf("%s\n", templist->first->name);
-    while((templist->first != NULL) && (currlist_len<=funcsym->data->arg_count)) {
-        printf("%d %s\n", templist->first->type,templist->first->name);
-        templist->first = templist->first->next;
-        currlist_len++;
-    }
-
-}
-
 int bracket_counter = 0;
 int params_counter = 0;
 
@@ -451,6 +438,7 @@ int after_class()
          case S_SEMICOLON:          //pravidlo <Decl> -> ;
                                     //(Tmeno, typ symbolu, inici, nazov cls, static, deklarovana)
             symbol = sym_variable_init(nazov, symbol_type, false, classname, true, true);
+            symbol->data->funcdata_union.offset = -1;
             Htab_insert(ukazatel_na_triedu, symbol);
 
             get_token();
@@ -468,6 +456,7 @@ int after_class()
          case S_PRIR:               // pravidlo <Decl> ->
 
             symbol = sym_variable_init(nazov, symbol_type, true, classname, true, true);
+            symbol->data->funcdata_union.offset = -1;
             Htab_insert(ukazatel_na_triedu, symbol);
 
             while(token.stav != S_SEMICOLON)
@@ -639,9 +628,6 @@ int params_after()
    }
    strcpy(nazov,token.data);
    nazov[strlen(token.data)+1] = '\0';
-
-   local_symbol  = loc_symbol_init(nazov, symbol_type, true, true, funcname, 0);      //mozno bude treba namiesto classname, funcname
-   loc_table_insert(local_table, local_symbol);
 
    function_add_args(symbol, nazov, symbol_type, params_counter);
 
@@ -1584,6 +1570,7 @@ int after_class_scnd()
          if((strcmp(token2.data, "String"))&&(strcmp(token2.data, "int"))&&(strcmp(token2.data, "double")))
             return SYNTAX_ERR;
 
+         offset_counter = 0;
          error = params_after_scnd(); //riadenie predane params_after
 
          if(error != SUCCESS)
@@ -1599,6 +1586,7 @@ int after_class_scnd()
          front_token();
 
          error = main_body_scnd();
+         symbol->data->funcdata_union.var_count = offset_counter;
 
          if(error != SUCCESS)
             return error;
@@ -1662,9 +1650,13 @@ int after_class_scnd()
          case S_PRIR:               // pravidlo <Decl> ->
 
             front_token();
+            priradenie = true;
             error = expresion_parser();
             if(error != SUCCESS)
                return error;
+
+            temp_symbol->data->init = true;
+            priradenie = false;
 
             if(token2.stav != S_SEMICOLON)
                return SYNTAX_ERR;
@@ -1704,6 +1696,7 @@ int after_class_scnd()
 
                front_token();
 
+               offset_counter = 0;
                error = main_body_scnd();
 
                if(error != SUCCESS)
@@ -1734,6 +1727,7 @@ int after_class_scnd()
                if((strcmp(token2.data, "String"))&&(strcmp(token2.data, "int"))&&(strcmp(token2.data, "double")))
                   return SYNTAX_ERR;
 
+               offset_counter = 0;
                error = params_after_scnd(); //riadenie predane params_after
                if(error != SUCCESS)
                   return error;
@@ -1748,6 +1742,7 @@ int after_class_scnd()
                front_token();
 
                error = main_body_scnd();
+               symbol->data->funcdata_union.var_count = offset_counter;
 
                if(error != SUCCESS)
                   return error;
@@ -1781,16 +1776,31 @@ int after_class_scnd()
 
 int params_after_scnd()
 {
-   /*params_counter++;
-   symbol_type = sym_type(token2);*/
+   symbol_type = sym_type(token2);
 
    if(error != SUCCESS)
       return error;
-   front_token();   //cakam id
+   front_token();
+
    if(token2.stav != S_ID)
       return SYNTAX_ERR;
 
+   nazov_len = strlen(token2.data); //vracia nazov  symbolu
+   nazov = mymalloc(nazov_len*sizeof(char) + 2);
+   if(nazov == NULL) 
+   {
+      error = INTERNAL_ERR; 
+      return error;
+   }
+   strcpy(nazov,token2.data);
+   nazov[strlen(token2.data)+1] = '\0';
+
+   local_symbol  = loc_symbol_init(nazov, symbol_type, true, true, funcname, offset_counter++);      //mozno bude treba namiesto classname, funcname
+   loc_table_insert(local_table, local_symbol);
+
    front_token();   //ak ) koncime a predavame riadenie, ak , pokracujeme
+   if(error != SUCCESS)
+      return error;
    if(token2.stav == S_PZAT)
    {
       // pravidlo <NP> -> epsilon;
@@ -1929,10 +1939,12 @@ int main_body_scnd()   //pravidlo <MB> -> <SL> <MB>
                assSymbol = temp_symbol->data->type;
 
                priradenie = true;
-               temp_symbol->data->init = true;
                error = is_function_call_or_ass();
                if(error != SUCCESS)
                   return error;
+
+               temp_symbol->data->init = true;
+               priradenie = false;
 
                if(token2.stav != S_SEMICOLON)
                   return SYNTAX_ERR;
@@ -1972,12 +1984,14 @@ int main_body_scnd()   //pravidlo <MB> -> <SL> <MB>
             if(token2.stav != S_PRIR)
                return SYNTAX_ERR;
 
-            local_symbol->data->init = true;
             priradenie = true;
             assSymbol = local_symbol->data->type;
             error = is_function_call_or_ass();
             if(error != SUCCESS)
                return error;
+
+            local_symbol->data->init = true;
+            priradenie = false;
 
             if(token2.stav != S_SEMICOLON)
                return SYNTAX_ERR;
@@ -2003,12 +2017,14 @@ int main_body_scnd()   //pravidlo <MB> -> <SL> <MB>
             if(token2.stav != S_PRIR)
                return SYNTAX_ERR;
 
-            local_symbol->data->init = true;
             priradenie = true;
             assSymbol = local_symbol->data->type;
             error = is_function_call_or_ass();
             if(error != SUCCESS)
                return error;
+
+            local_symbol->data->init = true;
+            priradenie = false;
 
             if(token2.stav != S_SEMICOLON)
                return SYNTAX_ERR;
@@ -2060,12 +2076,15 @@ int main_body_scnd()   //pravidlo <MB> -> <SL> <MB>
       front_token();
       if(token2.stav == S_PRIR)
       {
-         local_symbol  = loc_symbol_init(nazov, symbol_type, true, true, classname, offset_counter++);      //mozno bude treba namiesto classname, funcname
+         local_symbol  = loc_symbol_init(nazov, symbol_type, true, true, funcname, offset_counter++);      //mozno bude treba namiesto classname, funcname
          loc_table_insert(local_table, local_symbol);
 
          priradenie = true;
          assSymbol = local_symbol->data->type;
          error = is_function_call_or_ass();
+
+         local_symbol->data->init = true;
+         priradenie = false;
          if(error != SUCCESS)
             return error;
 
@@ -2075,7 +2094,7 @@ int main_body_scnd()   //pravidlo <MB> -> <SL> <MB>
       else if(token2.stav == S_SEMICOLON)
       {
                                       //(Tmeno, typ symbolu, inci, decl, nazov_classu)
-         local_symbol  = loc_symbol_init(nazov, symbol_type, false, true, classname, offset_counter++);
+         local_symbol  = loc_symbol_init(nazov, symbol_type, false, true, funcname, offset_counter++);
          loc_table_insert(local_table, local_symbol);
       }
       else
@@ -2250,11 +2269,13 @@ int main_body_riadiace_scnd()   //pravidlo <MB> -> <SL> <MB>
                   return SYNTAX_ERR;
 
                priradenie = true;
-               temp_symbol->data->init = true;
                assSymbol = temp_symbol->data->type;
                error = is_function_call_or_ass();
                if(error != SUCCESS)
                   return error;
+
+               temp_symbol->data->init = true;
+               priradenie = false;
 
                if(token2.stav != S_SEMICOLON)
                   return SYNTAX_ERR;
@@ -2291,11 +2312,13 @@ int main_body_riadiace_scnd()   //pravidlo <MB> -> <SL> <MB>
                return SYNTAX_ERR;
 
             priradenie = true;
-            local_symbol->data->init = true;
             assSymbol = local_symbol->data->type;
             error = is_function_call_or_ass();
             if(error != SUCCESS)
                return error;
+
+            local_symbol->data->init = true;
+            priradenie = false;
 
             if(token2.stav != S_SEMICOLON)
                return SYNTAX_ERR;
@@ -2373,6 +2396,16 @@ int build_function_call_scnd(int decider)
 {
    if(error != SUCCESS)
       return error;
+   if(priradenie == true)
+   {
+      if((decider == F_string && assSymbol != tString)||(decider == F_double && assSymbol != tDouble)||(decider == F_int && assSymbol != tInt) ||
+         (decider == F_length && assSymbol != tInt) || (decider == F_sort && assSymbol != tString) || (decider == F_find && assSymbol != tInt) ||
+         (decider == F_substr && assSymbol != tString) || (decider == F_compare && assSymbol != tInt))
+      {
+         fprintf(stderr, "RUNTIME_INIT_ERR. Colliding return type of function \"%s\"\n", id_part); //dana staticka premenna/funckia neexistuje
+         return SEMANTIC_TYPE_ERR;
+      }
+   }
    if(decider == F_string || decider == F_double || decider == F_int)   //pravidlo <SL> -> <FC> -> read...();
    {
       if(token2.stav != S_LZAT)
@@ -2389,6 +2422,7 @@ int build_function_call_scnd(int decider)
    }
    else if(decider == F_length || decider == F_sort)
    {
+
       if(token2.stav != S_LZAT)
          return SYNTAX_ERR;
 
@@ -2656,9 +2690,11 @@ int build_function_call_scnd(int decider)
          fprintf(stderr, "RUNTIME_INIT_ERR. \"ifj16.print\" has return type of void.\n"); //dana staticka premenna/funckia neexistuje
          return RUNTIME_INIT_ERR;
       }
+      printf("%s\n", token2.data);
       error = build_print_scnd();
       if(error != SUCCESS)
          return error;
+
    }
    else
       return SYNTAX_ERR;

@@ -20,6 +20,7 @@
    extern char* class_part;         // Po zavolani return_class() bude obsahovat cast ID, ktora bola tvorena classom
    extern char* id_part;            // Rovnako po zavolani return_class() ale bude obsahovat cast tvorenu ID
    extern symbolType assSymbol;     // Typ symbola, do ktoreho sa bude priradovat
+   extern bool priradenie;          // Sme v priradeni alebo nie 
 
    int is_build_function();
    int parser();
