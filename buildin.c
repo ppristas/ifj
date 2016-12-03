@@ -5,11 +5,12 @@
 #include "buildin.h"
 
 // v interprete uvolnovat vystup str_ret
+//pridany mymalloc
 char* sort(const char *str)
 {
     unsigned int n = strlen(str);
     char *str_tmp=NULL;
-    if ((str_tmp=malloc(sizeof(char)*(n+2))) == NULL )
+    if ((str_tmp=(char*)mymalloc(sizeof(char)*(n+2))) == NULL )
         return NULL;
 
     strncpy(&str_tmp[1],str,n);
@@ -89,5 +90,45 @@ int compare(const char *s1, const char *s2){
     }
 
     return 0;
+}
+
+int find(char* s,char* search)
+{
+    int s_len=strlen(s);
+    int search_len=strlen(search);
+    int found;
+
+    int match_jump[search_len];
+    int char_jump[MAXCHAR];
+
+    if (s_len < search_len)
+        return -1;
+
+    if (s_len == search_len)
+    {
+        if(strcmp(s,search)==0)
+            return 0;
+        else
+            return -1;
+    }
+
+    if (search_len == 1)
+    {
+        for(int i=0;i<s_len;i++)
+            if (search[0] == s[i])
+                return i;
+
+        return -1;
+    }
+
+    if (search_len == 0)
+        return 0;
+
+    found=(boyer_moore(search,s,match_jump,char_jump)-1);
+
+    if (found == s_len)
+        return -1;
+    else
+        return found;
 }
 
