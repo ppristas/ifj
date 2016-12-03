@@ -21,6 +21,15 @@
 #include "buildin.h"
 #include "cleaner.h"
 #include "error.h"
+
+#define MAXCHAR 128
+
+#define max(x,y) ((x) > (y) ? (x) : (y))
+
+#define min(x,y) ((x) < (y) ? (x) : (y))
+
+
+
 //#include "ilist.h"
 
 //tHTable* Main_table;
@@ -30,6 +39,7 @@
 void buildin_args(iSymbol *buildinsym, char *data, int typ_s) {
 	//TODO
 }*/
+
 
 int contain_me(iSymbol *funcsym, char *name) {
 	TList *templist = funcsym->data->args;
@@ -798,73 +808,93 @@ char* heapsort(char *ptr,unsigned int n)
 }
 
 
-//Hladanie najpravejsieho nematchnuteho prvku
-static int find_jump(const char *pattern, const char c, int index){
-    while(index >= 0){
-        if (pattern[index] == c){
-            return index;
-        }
-        index--;
-    }
-    return index;
+static void compute_char_jumps(int* char_jump,char* pattern,int pattern_len)
+{
 
+    memset(char_jump,0,MAXCHAR);
+
+    for(int i=0;i<MAXCHAR; ++i)
+        char_jump[i]=pattern_len;
+
+    for(int i=0;i<pattern_len;++i)
+        char_jump[pattern[i]]=pattern_len-i-1;
 }
 
+static void compute_match_jumps(int* match_jump,char* pattern,int pattern_len)
+{
+    int k,q,qq;
+    int backup[pattern_len+1];
 
+    //inicializacia backup a match_jump
+    memset(backup,0,pattern_len+1);
+    memset(match_jump,0,pattern_len);
 
-//Hladanie podretazca boyer_moore algoritmom prvou heuristikou, funguje potrebujem vsak este odtestovat extremnejsie vstupy
-int boyer_moore(const char *str, const char *pattern){
-    int str_len=length(str);
-    int pat_len=length(pattern);
+    for(k=0;k<=pattern_len;++k)
+        match_jump[k]=2*pattern_len-k;
 
-    if(pat_len == 0){
-        return 0;
-    }
+    k=pattern_len;
+    q=pattern_len+1;
 
-    if(pat_len > str_len){
-        return -2;
-    }
-
-    int sIndex = pat_len-1;
-    int pIndex = pat_len-1;
-
-    while (sIndex < str_len){
-
-        if(str[sIndex] != pattern[pIndex]){
-            //osetrenie pripadu, ze nie je zhoda
-
-            if(pIndex == pat_len-1){
-                int j = find_jump(pattern, str[sIndex], pIndex-1);
-                if (j == -1){
-                    sIndex += pat_len;
-                }
-                else if (pat_len - 1 == 0){
-                    sIndex += 1;
-                }
-                else{
-                sIndex += pIndex - j ;
-                }
-            }
-
-            //je zhoda, posun na zhodu
-            else{
-                sIndex += pat_len - (pat_len - pIndex);
-            }
-            pIndex = pat_len - 1;
+    while (k>0)
+    {
+        backup[k]=q;
+        while (q<=pattern_len  &&  pattern[k-1]!=pattern[q-1])
+        {
+            match_jump[q]=min(match_jump[q],(pattern_len-k));
+            q=backup[q];
         }
-
-        else{
-            if(pIndex == 0){
-                return sIndex;
-            }
-            sIndex--;
-            pIndex--;
-        }
-
-
+        k--;
+        q--;
     }
 
-    return -1;
+    for(k=0;k<=q;k++)
+        match_jump[k]=min(match_jump[k],(pattern_len+q-k));
 
+    qq=backup[q];
+    while (q<=pattern_len)
+    {
+        while (q<=qq)
+        {
+            match_jump[q]=min(match_jump[q],(qq-q+pattern_len));
+            q++;
+        }
+        qq=backup[qq];
+    }
 }
 
+int boyer_moore(char* pattern,char* text,int* match_jump,int* char_jump)
+{
+    int k,j,text_len,pattern_len;
+    // j je index do textu a k je index do pattern
+    pattern_len=strlen(pattern);
+    text_len=strlen(text);
+
+    compute_char_jumps(char_jump,pattern,pattern_len);
+    compute_match_jumps(match_jump,pattern,pattern_len);
+
+    j=k=pattern_len;
+
+    while (j<=text_len && k>0)
+    {
+        if (text[j-1] == pattern[k-1])
+        {
+            j--;
+            k--;
+        }
+        else
+        {
+            j=j+max(char_jump[text[j]],match_jump[k]);
+            k=pattern_len;
+        }
+    }
+
+    if (k==0)
+    {
+        return j+1;
+    }
+    else
+    {
+        return text_len+1;
+    }
+
+}
