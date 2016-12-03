@@ -144,6 +144,8 @@ iSymbol* Htab_search(tHTable *ST, char *id);
 /**********************************************************/
 
 char* heapsort(char *ptr,unsigned int n);
-int boyer_moore(const char *str, const char *pattern);
+int boyer_moore(char* pattern,char* text,int* match_jump,int* char_jump);
+
+
 
 #endif
