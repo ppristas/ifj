@@ -167,7 +167,7 @@ int catch_index(SAData *pom,int *count){
       if(pom->sym_data == NULL){
         error = INTERNAL_ERR;
         return error;
-      } 
+      }
       pom->sym_data->init = true;
       pom->sym_data->args = NULL;
       pom->sym_data->type = tInt;
@@ -724,6 +724,17 @@ int expresion_parser()
       destExpr = send.sym_data;
       error = SUCCESS;
     }else{
+      if (assSymbol == tDouble) {
+        if(send.sym_data->type == tString){
+          error = SEMANTIC_TYPE_ERR;
+        }
+      }
+      if(assSymbol == tInt){
+        if(send.sym_data->type == tString)
+          error = SEMANTIC_TYPE_ERR;
+        if(send.sym_data->type == tDouble)
+          error = SEMANTIC_TYPE_ERR;
+      }
       if(send.sym_data->type == tString){
           //clearAll();
           error = SEMANTIC_TYPE_ERR;
