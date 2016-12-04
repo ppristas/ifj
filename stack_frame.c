@@ -104,6 +104,8 @@ symData* decode_addres(stackFrame_t* stack_frame, int offset)
     {
         return &(stack_frame->frame[stack_frame->top]->var_array[offset]);
     }
+    // v pripade zaporneho offsetu crash vracia NULL
+    return NULL;
 }
 
 symData* pre_decode_addres(stackFrame_t *stack_frame, int offset)
@@ -112,6 +114,9 @@ symData* pre_decode_addres(stackFrame_t *stack_frame, int offset)
     {
         return &(stack_frame->frame[stack_frame->top-1]->var_array[offset]);
     }
+
+    // v pripade zaporneho offsetu crash vracia NULL
+    return NULL;
 }
 
 void Print_addres(symData* addres)
