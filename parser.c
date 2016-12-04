@@ -2189,96 +2189,14 @@ int main_body_scnd()   //pravidlo <MB> -> <SL> <MB>
             }
             if(token2.stav != S_SEMICOLON)
                return SYNTAX_ERR;
-            generateLastInstruction(I_RET, NULL, NULL, NULL, currentList);
          }
-         else if(token2.stav == S_INT && symbol->data->type != tInt)
+         else
          {
-            fprintf(stderr, "SEMANTIC_TYPE_ERR. Invalid return type of function \"%s\".\n", symbol->name); //dana staticka premenna/funckia neexistuje
-            return SEMANTIC_TYPE_ERR;
-         }
-         else if(token2.stav == S_STRING && symbol->data->type != tString)
-         {
-            fprintf(stderr, "SEMANTIC_TYPE_ERR. Invalid return type of function \"%s\".\n", symbol->name); //dana staticka premenna/funckia neexistuje
-            return SEMANTIC_TYPE_ERR;
-         }
-         else if(token2.stav == S_DOUBLE && symbol->data->type != tDouble)
-         {
-            fprintf(stderr, "SEMANTIC_TYPE_ERR. Invalid return type of function \"%s\".\n", symbol->name); //dana staticka premenna/funckia neexistuje
-            return SEMANTIC_TYPE_ERR;
-         }
-         else if(token2.stav == S_ID)
-         {
-            if(strchr(token2.data, '.'))  //zlozeny ID
-            {
-               error = return_class();
-               if(error != SUCCESS)
-                  return error;
-
-               Hash_class* class_table_symbol = class_search(STable, class_part);   //hladame ci existuje dana class
-
-               if(class_table_symbol == NULL)
-               {
-                  fprintf(stderr, "SEMANTIC_PROG_ERR. Class \"%s\" undefined.\n", class_part);  //dana classa neexsituje
-                  return SEMANTIC_PROG_ERR;
-               }
-               temp_symbol = Htab_search(class_table_symbol->ptr, id_part);
-               if(temp_symbol == NULL)
-               {
-                  fprintf(stderr, "SEMANTIC_PROG_ERR. \"%s\" undefined in class \"%s\".\n", id_part, class_part); //dana staticka premenna/funckia neexistuje
-                  return SEMANTIC_PROG_ERR;
-               }
-               if(temp_symbol->fce == true) //to co sme nasli je premmena
-               {
-                  fprintf(stderr, "SEMANTIC_TYPE_ERR. \"%s\" is function, not variable in class \"%s\".\n", id_part, class_part); //dana staticka premenna/funckia neexistuje
-                  return SEMANTIC_TYPE_ERR;
-               }
-               if(temp_symbol->data->type != symbol->data->type)
-               {
-                  fprintf(stderr, "SEMANTIC_TYPE_ERR. Invalid return type of function \"%s\".\n", symbol->name); //dana staticka premenna/funckia neexistuje
-                  return SEMANTIC_TYPE_ERR;
-               }
-               if(temp_symbol->data->init == false)
-               {
-                  fprintf(stderr, "RUNTIME_INIT_ERR. Return uninitialized variable \"%s\".\n", id_part); //dana staticka premenna/funckia neexistuje
-                  return RUNTIME_INIT_ERR;
-               }
-               generateLastInstruction(I_RET,temp_symbol->data, NULL, NULL, currentList);
-            }
-            else  //jednoduchy ID
-            {
-               nazov_len = strlen(token2.data);  //vracia nazov lokalneho symbolu
-               nazov = mymalloc(nazov_len*sizeof(char) + 2);
-               if(nazov == NULL)
-               {
-                  error = INTERNAL_ERR;
-                  return error;
-               }
-               strcpy(nazov,token2.data);
-               nazov[strlen(token2.data)+1] = '\0';
-
-               local_symbol = loc_symbol_search(local_table, nazov);
-               if(local_symbol == NULL)
-               {
-                  fprintf(stderr, "SEMANTIC_PROG_ERR. \"%s\" undefined in function \"%s\".\n", nazov, symbol->name); //dana staticka premenna/funckia neexistuje
-                  return SEMANTIC_PROG_ERR;
-               }
-               if(local_symbol->data->type != symbol->data->type)
-               {
-                  fprintf(stderr, "SEMANTIC_TYPE_ERR. Invalid return type of function \"%s\".\n", symbol->name); //dana staticka premenna/funckia neexistuje
-                  return SEMANTIC_TYPE_ERR;
-               }
-               if(local_symbol->data->init == false)
-               {
-                  fprintf(stderr, "RUNTIME_INIT_ERR. Returning uninitialized variable in \"%s\".\n", symbol->name); //dana staticka premenna/funckia neexistuje
-                  return RUNTIME_INIT_ERR;
-               }
-               generateLastInstruction(I_RET,local_symbol->data, NULL, NULL, currentList);
-            }
-         }
-
-         if(symbol->data->type != tNan)
-         {
-            front_token();
+            assSymbol = symbol->data->type;
+            priradenie = true;
+            error = expresion_parser();
+            if(error != SUCCESS)
+               return error;
             if(token2.stav != S_SEMICOLON)
                return SYNTAX_ERR;
          }        
@@ -2560,99 +2478,17 @@ int main_body_riadiace_scnd()   //pravidlo <MB> -> <SL> <MB>
             }
             if(token2.stav != S_SEMICOLON)
                return SYNTAX_ERR;
-            generateLastInstruction(I_RET, NULL, NULL, NULL, currentList);
          }
-         else if(token2.stav == S_INT && symbol->data->type != tInt)
+         else
          {
-            fprintf(stderr, "SEMANTIC_TYPE_ERR. Invalid return type of function \"%s\".\n", symbol->name); //dana staticka premenna/funckia neexistuje
-            return SEMANTIC_TYPE_ERR;
-         }
-         else if(token2.stav == S_STRING && symbol->data->type != tString)
-         {
-            fprintf(stderr, "SEMANTIC_TYPE_ERR. Invalid return type of function \"%s\".\n", symbol->name); //dana staticka premenna/funckia neexistuje
-            return SEMANTIC_TYPE_ERR;
-         }
-         else if(token2.stav == S_DOUBLE && symbol->data->type != tDouble)
-         {
-            fprintf(stderr, "SEMANTIC_TYPE_ERR. Invalid return type of function \"%s\".\n", symbol->name); //dana staticka premenna/funckia neexistuje
-            return SEMANTIC_TYPE_ERR;
-         }
-         else if(token2.stav == S_ID)
-         {
-            if(strchr(token2.data, '.'))  //zlozeny ID
-            {
-               error = return_class();
-               if(error != SUCCESS)
-                  return error;
-
-               Hash_class* class_table_symbol = class_search(STable, class_part);   //hladame ci existuje dana class
-
-               if(class_table_symbol == NULL)
-               {
-                  fprintf(stderr, "SEMANTIC_PROG_ERR. Class \"%s\" undefined.\n", class_part);  //dana classa neexsituje
-                  return SEMANTIC_PROG_ERR;
-               }
-               temp_symbol = Htab_search(class_table_symbol->ptr, id_part);
-               if(temp_symbol == NULL)
-               {
-                  fprintf(stderr, "SEMANTIC_PROG_ERR. \"%s\" undefined in class \"%s\".\n", id_part, class_part); //dana staticka premenna/funckia neexistuje
-                  return SEMANTIC_PROG_ERR;
-               }
-               if(temp_symbol->fce == true) //to co sme nasli je premmena
-               {
-                  fprintf(stderr, "SEMANTIC_TYPE_ERR. \"%s\" is function, not variable in class \"%s\".\n", id_part, class_part); //dana staticka premenna/funckia neexistuje
-                  return SEMANTIC_TYPE_ERR;
-               }
-               if(temp_symbol->data->type != symbol->data->type)
-               {
-                  fprintf(stderr, "SEMANTIC_TYPE_ERR. Invalid return type of function \"%s\".\n", symbol->name); //dana staticka premenna/funckia neexistuje
-                  return SEMANTIC_TYPE_ERR;
-               }
-               if(temp_symbol->data->init == false)
-               {
-                  fprintf(stderr, "RUNTIME_INIT_ERR. Return uninitialized variable \"%s\".\n", id_part); //dana staticka premenna/funckia neexistuje
-                  return RUNTIME_INIT_ERR;
-               }
-               generateLastInstruction(I_RET,temp_symbol->data, NULL, NULL, currentList);
-            }
-            else  //jednoduchy ID
-            {
-               nazov_len = strlen(token2.data);  //vracia nazov lokalneho symbolu
-               nazov = mymalloc(nazov_len*sizeof(char) + 2);
-               if(nazov == NULL)
-               {
-                  error = INTERNAL_ERR;
-                  return error;
-               }
-               strcpy(nazov,token2.data);
-               nazov[strlen(token2.data)+1] = '\0';
-
-               local_symbol = loc_symbol_search(local_table, nazov);
-               if(local_symbol == NULL)
-               {
-                  fprintf(stderr, "SEMANTIC_PROG_ERR. \"%s\" undefined in function \"%s\".\n", nazov, symbol->name); //dana staticka premenna/funckia neexistuje
-                  return SEMANTIC_PROG_ERR;
-               }
-               if(local_symbol->data->type != symbol->data->type)
-               {
-                  fprintf(stderr, "SEMANTIC_TYPE_ERR. Invalid return type of function \"%s\".\n", symbol->name); //dana staticka premenna/funckia neexistuje
-                  return SEMANTIC_TYPE_ERR;
-               }
-               if(local_symbol->data->init == false)
-               {
-                  fprintf(stderr, "RUNTIME_INIT_ERR. Returning uninitialized variable in \"%s\".\n", symbol->name); //dana staticka premenna/funckia neexistuje
-                  return RUNTIME_INIT_ERR;
-               }
-               generateLastInstruction(I_RET,local_symbol->data, NULL, NULL, currentList);
-            }
-         }
-
-         if(symbol->data->type != tNan)
-         {
-            front_token();
+            assSymbol = symbol->data->type;
+            priradenie = true;
+            error = expresion_parser();
+            if(error != SUCCESS)
+               return error;
             if(token2.stav != S_SEMICOLON)
                return SYNTAX_ERR;
-         }    
+         }  
    }
 
 
