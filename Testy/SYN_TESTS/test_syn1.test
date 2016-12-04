@@ -1,0 +1,19 @@
+class Main 
+{
+	static int x;
+	static String str2;
+	static void run()
+	{
+		String str1 = "Ahoj";
+		Frame.play(str1);
+	}
+}
+
+class Frame
+{
+	static void play(String str)
+	{
+		Main.str2 = str
+		return;
+	}
+}
