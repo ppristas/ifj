@@ -14,8 +14,10 @@
 #ifndef IAL_H
 #define IAL_H
 
+#define MAXCHAR 128
 
 #define Hash_table_size 256
+#include "cleaner.h"
 #include "scaner.h"
 #include "ilist.h"
 #include <stdbool.h>
