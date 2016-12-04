@@ -167,7 +167,7 @@ int catch_index(SAData *pom,int *count){
       if(pom->sym_data == NULL){
         error = INTERNAL_ERR;
         return error;
-      }
+      } 
       pom->sym_data->init = true;
       pom->sym_data->args = NULL;
       pom->sym_data->type = tInt;
