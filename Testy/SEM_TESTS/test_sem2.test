@@ -1,0 +1,14 @@
+class Main 
+{
+	static void run() {
+	Game.play();
+	}
+}
+
+class Game
+{
+	static void pray()
+	{
+		return;
+	}
+}
