@@ -3,6 +3,7 @@
 #include <string.h>
 #include "ial.h"
 #include "buildin.h"
+#include "cleaner.h"
 
 // v interprete uvolnovat vystup str_ret
 //pridany mymalloc
