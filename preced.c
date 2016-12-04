@@ -463,6 +463,7 @@ int reduction(tStack *stack1,tStack *stack2){
               neterminal.nameID = str;
               tmp_htab_insert(const_table, neterminal.sym_data->type,NULL ,neterminal.nameID,-1);
               //TODO instrukcna paska
+              generateLastInstruction(instruction, hhelp2.sym_data, hhelp4.sym_data, neterminal.sym_data, currentList);
         }
 				//TODO ak je jeden z NETERMINALOV string a operator je +
         else if ((instruction == I_EQ)    ||
@@ -483,6 +484,7 @@ int reduction(tStack *stack1,tStack *stack2){
                 neterminal.nameID = str;
                 neterminal.sym_data->type = tBool;
                 tmp_htab_insert(const_table, neterminal.sym_data->type,NULL ,neterminal.nameID,-1);
+                generateLastInstruction(instruction, hhelp2.sym_data, hhelp4.sym_data, neterminal.sym_data, currentList);
                 //TODO instrukcna paska
         }else if (instruction == I_ADD){
               //konkatenacia
@@ -501,8 +503,8 @@ int reduction(tStack *stack1,tStack *stack2){
               sprintf(str,"@Gen_Target_VAR_ADD_%u",name++);
               neterminal.nameID = str;
               tmp_htab_insert(const_table, neterminal.sym_data->type,NULL ,neterminal.nameID,-1);
-
               //TODO instrukcna paska
+              generateLastInstruction(instruction, hhelp2.sym_data, hhelp4.sym_data, neterminal.sym_data, currentList);
         }
 				//error = SUCCESS;
 				neterminal.indexibus = NETERM;
