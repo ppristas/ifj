@@ -1,6 +1,5 @@
-
-
-
+#ifndef CLEANER_H
+#define CLEANER_H
 
 
 typedef struct tAdr{
@@ -23,3 +22,5 @@ void *myrealloc( void *adress, unsigned int size);
 void clearAll();
 void initCleaner();
 void myfree(void *uk);
+
+#endif
