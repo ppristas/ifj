@@ -1,0 +1,7 @@
+class Main
+{
+    static void run()
+    {
+         int ahoj = 7.5.4;
+    }
+}

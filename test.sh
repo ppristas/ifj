@@ -1,5 +1,13 @@
 #!/bin/bash
 
+	if [[ $# -eq 0 ]]; then
+		echo "--------------------------------------"
+		echo "SPUSTENIE: ./test dir				"
+		echo "dir -> directory to tests		    "
+		echo "example -> ./test ./Testy/LEX_TESTS "
+		echo "--------------------------------------"
+		exit 0; 
+	fi
 
   testing_files=$(ls -l $1| grep "\.test" | awk '{print $9}'| sed 's|*.\.||' | awk -F '\.' '{print $1}');
   testing_file_count=$(ls -l $1| grep "\.test" | awk '{print $9}'| sed 's|*.\.||' | wc -l );
