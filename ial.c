@@ -816,7 +816,7 @@ static void compute_char_jumps(int* char_jump,char* pattern,int pattern_len)
         char_jump[i]=pattern_len;
 
     for(int i=0;i<pattern_len;++i)
-        char_jump[pattern[i]]=pattern_len-i-1;
+        char_jump[(int)pattern[i]]=pattern_len-i-1;
 }
 
 static void compute_match_jumps(int* match_jump,char* pattern,int pattern_len)
@@ -882,7 +882,7 @@ int boyer_moore(char* pattern,char* text,int* match_jump,int* char_jump)
         }
         else
         {
-            j=j+max(char_jump[text[j]],match_jump[k]);
+            j=j+max(char_jump[(int)text[j]],match_jump[k]);
             k=pattern_len;
         }
     }
