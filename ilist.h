@@ -5,23 +5,34 @@
 //kod instrukcie
 typedef enum
 {
-    I_ASSIGN,
-    I_ADD,
-    I_SUB,
-    I_DIV,
-    I_MUL,
-    I_CALL,
-    I_RET,
-    I_NOT,
-    I_NOTEQ,
-    I_LESS,
-    I_LESSEQ,
-    I_BIGGER,
-    I_BIGGEREQ,
-    I_EQ,
-    I_LABEL,
-    I_JMP,
-    I_IFJMP,
+    I_ASSIGN, //(OP,DEST, -)
+    I_ADD, //(OP1,OP2, dest)
+    I_SUB, //(OP1,OP2, dest)
+    I_DIV, //(OP1, OP2, dest)
+    I_MUL, //(OP1, OP2, dest)
+    I_NOTEQ, //(OP1,OP2,dest)
+    I_LESS, //(OP1,OP2,dest)
+    I_LESSEQ, //(OP1,OP2,dest)
+    I_BIGGER, //(OP1,OP2,dest)
+    I_BIGGEREQ, //(OP1,OP2,dest)
+    I_EQ, //(OP1,OP2,dest)
+    I_LABEL, //(-,-,-)
+    I_JMP, //(OP1, -, -) v tomto prípade je OP1 adresa inštrukcie na ktoru sa bude skakat
+    I_IFJMP, //(OP1, OP2, -) OP1 adresa, OP2 boolean vysledok logickej operácie
+    I_PRINT, //(OP1, -, -) OP1 je adresa prvku ktory sa bude tlacit
+    I_READI, //(-, -, dest) nacita INT zo vstupu
+    I_READD, //(-, -, dest) Nacita Double zo vstupu
+    I_READS, //(-, -, dest) Nacita String zo vstupu
+    I_STRLEN,   // (op1, -, dest) Dlzka retazca (vystup int)
+    I_STRCMP, // (op1, op2, dest) Porovnanie retazcov (vystup int)
+    I_STRSORT, // (op1, -, dest) Sort stringu, vystup v Dest
+    I_STRSUB,
+    I_STRFIND,
+    I_FRAME, // (op1, -, -) OP1 je adresa funkcie vola sa prve pred I_PUSHPARAM
+    I_CALL, // (op1, -, dest) OP1 je adresa funkcie vola sa posledne po I_PUSHPARAM, dest je miesto priradenia navratovej hodnoty (ak nie je tak NULL)
+    I_PUSHPARAM, //(op1, -, -) OP1 je argument, ktory sa pushuje
+    I_RET, // (op1, -, -) hodnota vysledku returnu, priradi sa do adresy, ktora bola urcena pri CALLE funkcie
+
 
 
 
@@ -51,31 +62,56 @@ typedef struct {
 }   ilist;
 
 
+typedef struct stackItem{
+    item* instrPtr;
+    ilist* list;
+    struct stackItem* nextItem;
+}stackItem;
+
+typedef struct instrStack{
+    stackItem* top;
+    int pocet;
+}instrStack;
+
+typedef struct labelItem{
+    item* label;
+    struct labelItem* nextItem;
+}labelItem;
+
+typedef struct labelStack{
+    labelItem * top;
+}labelStack;
+
 //Globálna páska na inštrukcie súvisiace s globálnymi premennými
 extern ilist globalList;
 //Globálna páska na inštrukcie v rámci Mainu, aby bola prístupnejšia nie len z TS
-extern ilist mainList;
+extern ilist * currentList;
+extern labelStack lStack;
 
 //Inicializácia globálnej pásky
 void listInit(ilist *L);
+
+item* generateItem (eInstrType type, void *op1, void *op2, void *dest);
+void insertItem(item * I, ilist *L);
+
 //Nagenerovanie a vloženie Inštrukcie do inštrukčnej pásky
 void generateLastInstruction(eInstrType type, void *op1, void *op2, void *dest, ilist *L);
 //Nagenerovanie a vloženie prvku za aktívny prvok, toto sa bude využívať pri podmienkach
-void generatePostInstruction(eInstrType type, void *op1, void *op2, void *dest, ilist *L);
+//void generatePostInstruction(eInstrType type, void *op1, void *op2, void *dest, ilist *L);
 
 //Nastavenie aktívneho prvku na prvý prvok
 void actFirst(ilist *L);
 //Nastavenie aktívneho prvku na posledný prvok, spolu s prevInstuction sa bude musieť použiť na podmienky
 void actLast(ilist *L);
 //Komentár o jedno vyššie
-void prevInstruction(ilist *L);
+//void prevInstruction(ilist *L);
 //Iterácia aktívneho prvku o jedno
 void succ(ilist *L);
 //Získa sa pointer na posledný prvok
 item* getLast(ilist *L);
 
-//Na tieto 2 inštrukcie jebte
-void insertPostIntruction(ilist *L, instr *I);
+
+//void insertPostIntruction(ilist *L, instr *I);
 void insertLastInstruction(ilist *L, instr *I);
 //Zničí sa list
 void destroyList(ilist *L);
@@ -83,4 +119,19 @@ void destroyList(ilist *L);
 instr *getInstruction(ilist *L);
 //Inštrukcia na skoky
 void setInstruction(ilist *L, item* instruction);
+
+
+void stackInitList(instrStack *stack);
+void stackPushList(instrStack *stack, item* instrPtr, ilist *L);
+void stackPopList(instrStack *stack);
+ilist * stackTopList(instrStack *stack);
+item * stackTopInstruction(instrStack *stack);
+void stackDestroyList(instrStack * stack);
+
+void labelStackInit(labelStack * stack);
+void labelStackPush(labelStack * stack, item * label1);
+item * labelStackTop(labelStack * stack);
+item * labelStackPrevTop(labelStack * stack);
+void labelStackPop(labelStack * stack);
+
 #endif // ILIST_H_INCLUDED
