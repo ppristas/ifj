@@ -22,7 +22,6 @@
 #include "cleaner.h"
 #include "error.h"
 
-#define MAXCHAR 128
 
 #define max(x,y) ((x) > (y) ? (x) : (y))
 
