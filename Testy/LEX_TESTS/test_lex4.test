@@ -1,0 +1,12 @@
+class Main
+{
+    static void run()
+    {
+         int ahoj;
+         if(0){
+            ahoj = 5 ? 5;
+         }else{
+
+         }
+    }
+}

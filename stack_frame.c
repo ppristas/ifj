@@ -2,7 +2,9 @@
 #include  <stdbool.h>
 #include <stdlib.h>
 #include "stack_frame.h"
-#include "temp_tab.h"
+#include <string.h>
+
+stackFrame_t* global_stack_frame;
 
 void stack_frame_create(stackFrame_t ** stack_frame)
 {
@@ -61,6 +63,11 @@ void stack_frame_push(stackFrame_t* stack_frame,symData* function) //create fram
         stack_frame->frame[stack_frame->top]->var_array=(symData*)malloc(sizeof(symData)* function->funcdata_union.var_count);
         stack_frame->frame[stack_frame->top]->max=function->funcdata_union.var_count;
         stack_frame->frame[stack_frame->top]->args_counter=0;
+        stack_frame->frame[stack_frame->top]->return_type=function->type;
+    }
+    else{
+        printf("STACK FULL");
+        exit(1);
     }
 }
 
@@ -76,7 +83,9 @@ symData* set_return_value(stackFrame_t *stack_frame, symData* data)
     }
     else
     {
-        return pre_decode_addres(stack_frame,data->funcdata_union.offset);
+        symData* tmp = pre_decode_addres(stack_frame,data->funcdata_union.offset);
+        tmp->type=data->type;
+        return tmp;
     }
 }
 
@@ -100,11 +109,12 @@ void frame_push_variable(stackFrame_t* stack_frame,symData* variable)
 
 symData* decode_addres(stackFrame_t* stack_frame, int offset)
 {
+
     if (stack_frame->frame[stack_frame->top]->max > offset)
     {
         return &(stack_frame->frame[stack_frame->top]->var_array[offset]);
     }
-    // v pripade zaporneho offsetu crash vracia NULL
+    // NULL must be
     return NULL;
 }
 
@@ -114,8 +124,7 @@ symData* pre_decode_addres(stackFrame_t *stack_frame, int offset)
     {
         return &(stack_frame->frame[stack_frame->top-1]->var_array[offset]);
     }
-
-    // v pripade zaporneho offsetu crash vracia NULL
+    // NULL must be
     return NULL;
 }
 
@@ -157,9 +166,18 @@ void frame_fill_variable(stackFrame_t* stack_frame,symData* variable)
 
 void arg_push(stackFrame_t *stack_frame,symData *data)
 {
-    symData* parameter=pre_decode_addres(stack_frame,data->funcdata_union.offset);
+    symData *parameter;
 
-    Print_addres(parameter);
+    if(data->funcdata_union.offset < 0){
+        parameter=data;
+    }
+    else{
+        parameter=pre_decode_addres(stack_frame,data->funcdata_union.offset);
+
+    }
+
+
+    //Print_addres(parameter);
 
     if (data->type == tString)
     {
@@ -177,6 +195,7 @@ void arg_push(stackFrame_t *stack_frame,symData *data)
         stack_frame->frame[stack_frame->top]->var_array[stack_frame->frame[stack_frame->top]->args_counter].ptr_union.d=parameter->ptr_union.d;
         printf("Ulozim na %d\n",stack_frame->frame[stack_frame->top]->args_counter);
     }
+    stack_frame->frame[stack_frame->top]->var_array[stack_frame->frame[stack_frame->top]->args_counter].init=true;
     stack_frame->frame[stack_frame->top]->var_array[stack_frame->frame[stack_frame->top]->args_counter].type=parameter->type;
     stack_frame->frame[stack_frame->top]->args_counter++;
 }
@@ -226,6 +245,6 @@ void Print_stack(stackFrame_t* stack_frame)
 
         printf("\n");
     }
+    printf("STACK EMPTY\n");
 }
-
 

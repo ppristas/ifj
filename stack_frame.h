@@ -10,6 +10,7 @@ typedef struct
 
     int max;
     int args_counter;
+    symbolType return_type;
     symData* return_addres;
     symData* var_array;
 }frame_data_t;
@@ -21,7 +22,7 @@ typedef struct _stack_frame
 }stackFrame_t;
 
 
-stackFrame_t* global_stack_frame;
+extern stackFrame_t* global_stack_frame;
 
 void stack_frame_create(stackFrame_t ** stack_frame);
 void stack_frame_init(stackFrame_t *stack_frame);
@@ -41,4 +42,5 @@ void Print_stack(stackFrame_t* stack_frame);
 void Print_addres(symData* addres);
 
 
-#endif
+
+#endif // STACK_FRAME_H
