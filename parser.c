@@ -21,6 +21,8 @@
 #include "error.h"
 #include "preced.h"
 #include "ial.h"
+#include "ilist.h"
+#include "interpret.h"
 
 int bracket_counter = 0;
 int params_counter = 0;
@@ -38,9 +40,12 @@ iSymbol* symbol = NULL;       //lubovolny symbol ............... funcsym = symbo
 iSymbol* temp_symbol = NULL;  //docasny symbol
 Hash_class* ptrclass = NULL;  //drzi ukazatel tHtable* ukazatel na triedu + meno triedy
 iSymbol* isTemp_symbol = NULL;
+symData *destination = NULL;  //dest pri priradeni
+symData *temporary = NULL;
+symData *temporary2 = NULL;
+symData *temporary3 = NULL;
 char* classname;              //nazov classu
 char* funcname;               //nazov aktualnej funckie
-
 char* class_part = NULL;   //pri zlozenom ID tato cast obsahuje class
 char* id_part = NULL;      //pri zlozenom ID tato cast obsahuje ID
 
@@ -103,6 +108,10 @@ int parser()
    if(STable == NULL)
       return INTERNAL_ERR;
 
+   labelStackInit(&lStack);   //inicializovanie pasky
+   listInit(&globalList);     
+
+
    /************************************************************/
    /************************PRVY PRIECHOD***********************/
    /************************************************************/
@@ -146,6 +155,15 @@ int parser()
    error = prog_scnd();
    if(error != SUCCESS)
       return error;
+
+   class_table_symbol = class_search(STable, "Main");
+   symbol = Htab_search(class_table_symbol->ptr, "run");
+
+   currentList = &globalList;
+   generateLastInstruction(I_FRAME, symbol->data, NULL, NULL, &globalList);
+   generateLastInstruction(I_CALL, symbol->data, NULL, NULL, &globalList);
+   interpret(&globalList);
+
 
    return error;
 }
@@ -262,6 +280,7 @@ int after_class()
    if(!(strcmp(token.data, "void")))
    {
       symbol_type = sym_type(token);  //vrati typ statickeho symbolu
+      
 
       get_token();
       if(error != SUCCESS)
@@ -1522,6 +1541,14 @@ int after_class_scnd()
       funcname[strlen(token2.data)+1] = '\0';
 
       symbol = Htab_search(ptrclass->ptr, funcname);  //symbol by mal teraz obsahovat nazov funkcie
+      ilist* L = mymalloc(sizeof(ilist));
+      if(L == NULL)
+      {
+         return INTERNAL_ERR;
+      }
+      listInit(L);   
+      symbol->data->instrPtr = L;
+      currentList = L;
 
       local_table = symbol->ptr_loctable;
 
@@ -1650,14 +1677,19 @@ int after_class_scnd()
 
          case S_PRIR:               // pravidlo <Decl> ->
 
+            currentList = &globalList;
+
             front_token();
             priradenie = true;
+            destination = temp_symbol->data;
             error = expresion_parser();
             if(error != SUCCESS)
                return error;
 
             temp_symbol->data->init = true;
             priradenie = false;
+
+            generateLastInstruction(I_ASSIGN, destExpr, NULL, destination, currentList);
 
             if(token2.stav != S_SEMICOLON)
                return SYNTAX_ERR;
@@ -1687,6 +1719,14 @@ int after_class_scnd()
 
             symbol = Htab_search(ptrclass->ptr, funcname);
             local_table = symbol->ptr_loctable;
+            ilist* L = mymalloc(sizeof(ilist));
+            if(L == NULL)
+            {
+               return INTERNAL_ERR;
+            }
+            listInit(L); 
+            symbol->data->instrPtr = L;
+            currentList = L;
 
             if(token2.stav == S_PZAT)   //prazdny pocet argumentov
             {
@@ -1827,14 +1867,25 @@ int main_body_scnd()   //pravidlo <MB> -> <SL> <MB>
       return error;
    if(!(strcmp(token2.data, "while")))  //pravidlo <SL> -> while ( <E> ) { main body }
    {
+      item* LABEL1 = generateItem(I_LABEL, NULL, NULL, NULL);
+      item* LABEL2 = generateItem(I_LABEL, NULL, NULL, NULL);
+      labelStackPush(&lStack, LABEL1);
+      labelStackPush(&lStack, LABEL2);
+
+
       front_token();   //cakam (
       if(token2.stav != S_LZAT)
          return SYNTAX_ERR;
 
       front_token();
+
+      insertItem(labelStackPrevTop(&lStack), currentList);
+
       error = expresion_parser();
       if(error != SUCCESS)
          return error;
+
+      generateLastInstruction(I_IFJMP, labelStackTop(&lStack), destExpr, NULL, currentList);
 
       if(token2.stav != S_PZAT)
          return SYNTAX_ERR;
@@ -1845,6 +1896,10 @@ int main_body_scnd()   //pravidlo <MB> -> <SL> <MB>
       front_token();
       error = main_body_riadiace_scnd();    // v tele whilu moze byt hocico, preto volame main_body
 
+      generateLastInstruction(I_JMP, labelStackPrevTop(&lStack), NULL, NULL, currentList);
+      insertItem(labelStackTop(&lStack), currentList);
+      labelStackPop(&lStack);
+
       if(error != SUCCESS)
             return error;
 
@@ -1853,6 +1908,13 @@ int main_body_scnd()   //pravidlo <MB> -> <SL> <MB>
    }
    else if(!(strcmp(token2.data, "if")))  //pravidlo <SL> -> if ( <E> ) { <MB> } else { <MB> }
    {
+
+      item* LABEL1 = generateItem(I_LABEL, NULL, NULL, NULL);
+      item* LABEL2 = generateItem(I_LABEL, NULL, NULL, NULL);
+      labelStackPush(&lStack, LABEL1);
+      labelStackPush(&lStack, LABEL2);
+
+
       front_token();
       if(token2.stav != S_LZAT)
          return SYNTAX_ERR;
@@ -1861,6 +1923,8 @@ int main_body_scnd()   //pravidlo <MB> -> <SL> <MB>
       error = expresion_parser();
       if(error != SUCCESS)
          return error;
+
+      generateLastInstruction(I_IFJMP, labelStackTop(&lStack), destExpr, NULL, currentList);
 
       if(token2.stav != S_PZAT)
          return SYNTAX_ERR;
@@ -1873,6 +1937,9 @@ int main_body_scnd()   //pravidlo <MB> -> <SL> <MB>
       error = main_body_riadiace_scnd();
       if(error != SUCCESS)
          return error;
+
+      generateLastInstruction(I_JMP, labelStackTop(&lStack), NULL, NULL, currentList);
+      insertItem(labelStackPrevTop(&lStack), currentList);
 
       if(error != SUCCESS)
          return error;
@@ -1891,9 +1958,12 @@ int main_body_scnd()   //pravidlo <MB> -> <SL> <MB>
       front_token();
       if(token2.stav != S_P_KOSZ)
          error = main_body_riadiace_scnd();
-
       if(error != SUCCESS)
          return error;
+
+      insertItem(labelStackTop(&lStack), currentList);
+      labelStackPop(&lStack);
+
       if(token2.stav != S_P_KOSZ)
          return SYNTAX_ERR;
    }
@@ -1939,6 +2009,7 @@ int main_body_scnd()   //pravidlo <MB> -> <SL> <MB>
                assSymbol = temp_symbol->data->type;
                isTemp_symbol = temp_symbol;
                priradenie = true;
+               destination = temp_symbol->data;
                error = is_function_call_or_ass();
                if(error != SUCCESS)
                   return error;
@@ -1988,6 +2059,7 @@ int main_body_scnd()   //pravidlo <MB> -> <SL> <MB>
 
             priradenie = true;
             assSymbol = local_symbol->data->type;
+            destination = local_symbol->data;
             error = is_function_call_or_ass();
             if(error != SUCCESS)
                return error;
@@ -2022,6 +2094,7 @@ int main_body_scnd()   //pravidlo <MB> -> <SL> <MB>
 
             priradenie = true;
             assSymbol = local_symbol->data->type;
+            destination = local_symbol->data;
             error = is_function_call_or_ass();
             if(error != SUCCESS)
                return error;
@@ -2084,6 +2157,7 @@ int main_body_scnd()   //pravidlo <MB> -> <SL> <MB>
 
          priradenie = true;
          assSymbol = local_symbol->data->type;
+         destination = local_symbol->data;
          error = is_function_call_or_ass();
 
          local_symbol->data->init = true;
@@ -2115,6 +2189,7 @@ int main_body_scnd()   //pravidlo <MB> -> <SL> <MB>
             }
             if(token2.stav != S_SEMICOLON)
                return SYNTAX_ERR;
+            generateLastInstruction(I_RET, NULL, NULL, NULL, currentList);
          }
          else if(token2.stav == S_INT && symbol->data->type != tInt)
          {
@@ -2167,6 +2242,7 @@ int main_body_scnd()   //pravidlo <MB> -> <SL> <MB>
                   fprintf(stderr, "RUNTIME_INIT_ERR. Return uninitialized variable \"%s\".\n", id_part); //dana staticka premenna/funckia neexistuje
                   return RUNTIME_INIT_ERR;
                }
+               generateLastInstruction(I_RET,temp_symbol->data, NULL, NULL, currentList);
             }
             else  //jednoduchy ID
             {
@@ -2196,6 +2272,7 @@ int main_body_scnd()   //pravidlo <MB> -> <SL> <MB>
                   fprintf(stderr, "RUNTIME_INIT_ERR. Returning uninitialized variable in \"%s\".\n", symbol->name); //dana staticka premenna/funckia neexistuje
                   return RUNTIME_INIT_ERR;
                }
+               generateLastInstruction(I_RET,local_symbol->data, NULL, NULL, currentList);
             }
          }
 
@@ -2257,14 +2334,25 @@ int main_body_riadiace_scnd()   //pravidlo <MB> -> <SL> <MB>
 
    if(!(strcmp(token2.data, "while")))  //pravidlo <MBr> -> while ( <E> ) { main body }
    {
+      item* LABEL1 = generateItem(I_LABEL, NULL, NULL, NULL);
+      item* LABEL2 = generateItem(I_LABEL, NULL, NULL, NULL);
+      labelStackPush(&lStack, LABEL1);
+      labelStackPush(&lStack, LABEL2);
+
+
       front_token();   //cakam (
       if(token2.stav != S_LZAT)
          return SYNTAX_ERR;
 
       front_token();
+
+      insertItem(labelStackPrevTop(&lStack), currentList);
+
       error = expresion_parser();
       if(error != SUCCESS)
          return error;
+
+      generateLastInstruction(I_IFJMP, labelStackTop(&lStack), destExpr, NULL, currentList);
 
       if(token2.stav != S_PZAT)
          return SYNTAX_ERR;
@@ -2275,6 +2363,10 @@ int main_body_riadiace_scnd()   //pravidlo <MB> -> <SL> <MB>
       front_token();
       error = main_body_riadiace_scnd();    // v tele whilu moze byt hocico az na lokalnu deklaraciu, preto volame main_body
 
+      generateLastInstruction(I_JMP, labelStackPrevTop(&lStack), NULL, NULL, currentList);
+      insertItem(labelStackTop(&lStack), currentList);
+      labelStackPop(&lStack);
+
       if(error != SUCCESS)
             return error;
 
@@ -2283,23 +2375,37 @@ int main_body_riadiace_scnd()   //pravidlo <MB> -> <SL> <MB>
    }
    else if(!(strcmp(token2.data, "if")))  //pravidlo <MBr> -> if ( <E> ) { <MB> } else { <MB> }
    {
+      item* LABEL1 = generateItem(I_LABEL, NULL, NULL, NULL);
+      item* LABEL2 = generateItem(I_LABEL, NULL, NULL, NULL);
+      labelStackPush(&lStack, LABEL1);
+      labelStackPush(&lStack, LABEL2);
+
+
       front_token();
       if(token2.stav != S_LZAT)
          return SYNTAX_ERR;
 
-      front_token();
+      front_token(); //vyhdnotenie vyrazu
       error = expresion_parser();
       if(error != SUCCESS)
          return error;
 
+      generateLastInstruction(I_IFJMP, labelStackTop(&lStack), destExpr, NULL, currentList);
+
       if(token2.stav != S_PZAT)
          return SYNTAX_ERR;
+
       front_token();
       if(token2.stav != S_L_KOSZ)
          return SYNTAX_ERR;
 
       front_token();
       error = main_body_riadiace_scnd();
+      if(error != SUCCESS)
+         return error;
+
+      generateLastInstruction(I_JMP, labelStackTop(&lStack), NULL, NULL, currentList);
+      insertItem(labelStackPrevTop(&lStack), currentList);
 
       if(error != SUCCESS)
          return error;
@@ -2318,9 +2424,12 @@ int main_body_riadiace_scnd()   //pravidlo <MB> -> <SL> <MB>
       front_token();
       if(token2.stav != S_P_KOSZ)
          error = main_body_riadiace_scnd();
-
       if(error != SUCCESS)
          return error;
+
+      insertItem(labelStackTop(&lStack), currentList);
+      labelStackPop(&lStack);
+
       if(token2.stav != S_P_KOSZ)
          return SYNTAX_ERR;
    }
@@ -2367,6 +2476,7 @@ int main_body_riadiace_scnd()   //pravidlo <MB> -> <SL> <MB>
                priradenie = true;
                assSymbol = temp_symbol->data->type;
                isTemp_symbol = temp_symbol;
+               destination = temp_symbol->data;
                error = is_function_call_or_ass();
                if(error != SUCCESS)
                   return error;
@@ -2411,6 +2521,7 @@ int main_body_riadiace_scnd()   //pravidlo <MB> -> <SL> <MB>
 
             priradenie = true;
             assSymbol = local_symbol->data->type;
+            destination = local_symbol->data;
             error = is_function_call_or_ass();
             if(error != SUCCESS)
                return error;
@@ -2449,6 +2560,7 @@ int main_body_riadiace_scnd()   //pravidlo <MB> -> <SL> <MB>
             }
             if(token2.stav != S_SEMICOLON)
                return SYNTAX_ERR;
+            generateLastInstruction(I_RET, NULL, NULL, NULL, currentList);
          }
          else if(token2.stav == S_INT && symbol->data->type != tInt)
          {
@@ -2501,6 +2613,7 @@ int main_body_riadiace_scnd()   //pravidlo <MB> -> <SL> <MB>
                   fprintf(stderr, "RUNTIME_INIT_ERR. Return uninitialized variable \"%s\".\n", id_part); //dana staticka premenna/funckia neexistuje
                   return RUNTIME_INIT_ERR;
                }
+               generateLastInstruction(I_RET,temp_symbol->data, NULL, NULL, currentList);
             }
             else  //jednoduchy ID
             {
@@ -2530,6 +2643,7 @@ int main_body_riadiace_scnd()   //pravidlo <MB> -> <SL> <MB>
                   fprintf(stderr, "RUNTIME_INIT_ERR. Returning uninitialized variable in \"%s\".\n", symbol->name); //dana staticka premenna/funckia neexistuje
                   return RUNTIME_INIT_ERR;
                }
+               generateLastInstruction(I_RET,local_symbol->data, NULL, NULL, currentList);
             }
          }
 
@@ -2540,6 +2654,9 @@ int main_body_riadiace_scnd()   //pravidlo <MB> -> <SL> <MB>
                return SYNTAX_ERR;
          }    
    }
+
+
+
    else if(token2.stav == S_L_KOSZ)
    {
       front_token();
@@ -2586,6 +2703,12 @@ int main_body_riadiace_scnd()   //pravidlo <MB> -> <SL> <MB>
 int build_function_call_scnd(int decider)
 {
    locSymbol* isLoc_symbol = NULL;
+   symData *temporary = mymalloc(sizeof(symData));
+   symData *temporary2 = mymalloc(sizeof(symData));
+   if(temporary == NULL || temporary2 == NULL)
+   {
+      return INTERNAL_ERR;
+   }
 
    if(error != SUCCESS)
       return error;
@@ -2611,6 +2734,18 @@ int build_function_call_scnd(int decider)
       front_token();   //musi byt ;
       if(token2.stav != S_SEMICOLON)
          return SYNTAX_ERR;
+      if(decider == F_int)
+      {
+         generateLastInstruction(I_READI, NULL, NULL, destination, currentList);
+      }
+      else if(decider == F_string)
+      {
+         generateLastInstruction(I_READS, NULL, NULL, destination, currentList);
+      }
+      else if(decider == F_double)
+      {
+         generateLastInstruction(I_READD, NULL, NULL, destination, currentList);
+      }
       return error;
    }
    else if(decider == F_length || decider == F_sort)
@@ -2623,15 +2758,33 @@ int build_function_call_scnd(int decider)
       switch(token2.stav)
       {
          case S_STRING:    //pripad sort("awadawdawdaw");
+            nazov_len = strlen(token2.data);
+            temporary->ptr_union.str = mymalloc(nazov_len*sizeof(char) + 2);
+            if(temporary->ptr_union.str == NULL)
+            {
+               return INTERNAL_ERR;
+            }
+            strcpy(temporary->ptr_union.str,token2.data);
+            temporary->ptr_union.str[strlen(token2.data)+1] = '\0';
+            temporary->funcdata_union.offset = -1;
             break;
 
          case S_ID:        //pripad sort(s);
-            error = build_in_ID();
+            error = build_in_ID(1);
             if(error != SUCCESS)
                return error;
             break;
 
          default: return SEMANTIC_TYPE_ERR;
+
+         if(decider == F_length)
+         {
+            generateLastInstruction(I_STRLEN, temporary, NULL, destination, currentList);
+         }
+         else if(decider == F_sort)
+         {
+            generateLastInstruction(I_STRSORT, temporary, NULL, destination, currentList);
+         }
       }
 
       front_token();   //musi byt )
@@ -2653,13 +2806,26 @@ int build_function_call_scnd(int decider)
       switch(token2.stav)
       {
          case S_STRING:    //pripad find("awadawdawdaw", .....);
+            nazov_len = strlen(token2.data);
+            temporary->ptr_union.str = mymalloc(nazov_len*sizeof(char) + 2);
+            if(temporary->ptr_union.str == NULL)
+            {
+               return INTERNAL_ERR;
+            }
+            strcpy(temporary->ptr_union.str,token2.data);
+            temporary->ptr_union.str[strlen(token2.data)+1] = '\0';
+            temporary->funcdata_union.offset = -1;
+
             break;
          case S_ID:        //pripad compare(s, .....);
-            error = build_in_ID();
+            error = build_in_ID(1);
             if(error != SUCCESS)
                return error;
+
             break;
          default: return SEMANTIC_TYPE_ERR;
+
+
       }
 
       front_token();
@@ -2670,13 +2836,33 @@ int build_function_call_scnd(int decider)
       switch(token2.stav)
       {
          case S_STRING:    //pripad find("awadawdawdaw", "awda");
-             break;
+            nazov_len = strlen(token2.data);
+            temporary2->ptr_union.str = mymalloc(nazov_len*sizeof(char) + 2);
+            if(temporary2->ptr_union.str == NULL)
+            {
+               return INTERNAL_ERR;
+            }
+            strcpy(temporary2->ptr_union.str,token2.data);
+            temporary2->ptr_union.str[strlen(token2.data)+1] = '\0';
+            temporary2->funcdata_union.offset = -1;
+
+            break;
          case S_ID:        //pripad compare(s, p);
-            error = build_in_ID();
+            error = build_in_ID(2);
             if(error != SUCCESS)
                return error;
             break;
          default: return SEMANTIC_TYPE_ERR;
+
+         if(decider == F_find)
+         {
+            generateLastInstruction(I_STRFIND, temporary, temporary2, destination, currentList);
+         }
+         else if(decider == F_compare)
+         {
+            generateLastInstruction(I_STRCMP, temporary, temporary2, destination, currentList);
+         }
+
       }
       front_token();   //musi byt )
       if(token2.stav == S_ID || token2.stav == S_INT || token2.stav == S_STRING || token2.stav == S_DOUBLE)
@@ -2892,6 +3078,9 @@ int build_function_call_scnd(int decider)
       error = expresion_parser();
       if(error != SUCCESS)
          return error;
+
+      generateLastInstruction(I_PRINT, destExpr, NULL, NULL, currentList);
+
       if(token2.stav != S_PZAT)
          return SYNTAX_ERR;
       front_token();
@@ -2903,58 +3092,10 @@ int build_function_call_scnd(int decider)
    return error;
 }
 
-/*int build_print_scnd()
-{
-   if(error != SUCCESS)
-      return error;
-
-   if(token2.stav != S_LZAT)
-      return SYNTAX_ERR;
-
-   error = print_params_scnd();
-
-   if(error != SUCCESS)
-      return error;
-
-   front_token();
-   if(token2.stav != S_SEMICOLON)
-      return SYNTAX_ERR;
-
-   return error;
-}
-
-int print_params_scnd()
-{
-   if(error != SUCCESS)
-      return error;
-
-   front_token();
-   if(token2.stav == S_ID)
-      error = SUCCESS;
-   else if(token2.stav == S_STRING)
-      error = SUCCESS;
-   else return error;
-
-   front_token();
-   if(token2.stav == S_PZAT)
-   {
-      return error;
-   }
-   else if(token2.stav == S_PLUS)
-   {
-      error = print_params_scnd();
-      if(error != SUCCESS)
-         return error;
-   }
-   else
-      return SYNTAX_ERR;
-   return error;
-}*/
-
 int user_function_call()
 {
    locSymbol* isLoc_symbol = NULL;
-   iSymbol* UFCTemp_symbol = isTemp_symbol;
+   iSymbol* UFCTemp_symbol = isTemp_symbol;     //UFCTemp_symbol = ukazatel na volanu funkciu
    front_token();
    if(token2.stav != S_LZAT)
    {
@@ -2962,6 +3103,7 @@ int user_function_call()
       return SYNTAX_ERR;
    }
 
+   generateLastInstruction(I_FRAME, UFCTemp_symbol->data, NULL, NULL, currentList);
 
    if(UFCTemp_symbol->data->arg_count == 0) //UFCTemp_symbol = ukazatel na funkciu, ktorej ideme overit parametre
    {
@@ -3039,6 +3181,7 @@ int user_function_call()
                }
                if(i > 0)
                {
+                  generateLastInstruction(I_PUSHPARAM,isLoc_symbol->data, NULL, NULL, currentList);
                   Node = Node->next;
                   if(Node != NULL)
                      argument_type = Node->type;
@@ -3078,6 +3221,7 @@ int user_function_call()
                }
                if(i > 0)
                {
+                  generateLastInstruction(I_PUSHPARAM,isLoc_symbol->data, NULL, NULL, currentList);
                   Node = Node->next;
                   if(Node != NULL)
                      argument_type = Node->type;
@@ -3087,9 +3231,22 @@ int user_function_call()
 
          i--;
       }
+       if(i > 0)
+         return SEMANTIC_TYPE_ERR;
+   }
+
+   if(priradenie == false)
+   {
+      generateLastInstruction(I_CALL, UFCTemp_symbol->data, NULL, NULL, currentList);
+   }
+   else if(priradenie == true)
+   {
+      generateLastInstruction(I_CALL, UFCTemp_symbol->data, destination, NULL, currentList);
    }
 
    front_token();
+   if(token2.stav == S_ID || token2.stav == S_INT || token2.stav == S_DOUBLE || token2.stav == S_STRING || token2.stav == S_CIARKA)
+      return SEMANTIC_TYPE_ERR;
    if(token2.stav != S_PZAT)
       return SYNTAX_ERR;
    front_token();
@@ -3108,6 +3265,7 @@ if(token2.stav != S_ID)
    error = expresion_parser();
    if(error != SUCCESS)
       return error;
+   generateLastInstruction(I_ASSIGN, destExpr, NULL, destination, currentList);
 }
 else
 {
@@ -3154,6 +3312,7 @@ else
                   error = expresion_parser();
                   if(error != SUCCESS)
                      return error;
+                  generateLastInstruction(I_ASSIGN, destExpr, NULL, destination, currentList);
                }
                else  //je to funkcia
                {
@@ -3197,6 +3356,7 @@ else
          error = expresion_parser();
          if(error != SUCCESS)
             return error;
+         generateLastInstruction(I_ASSIGN, destExpr, NULL, destination, currentList);
       }
       else if(isLoc_symbol == NULL && isTemp_symbol != NULL)
       {
@@ -3230,7 +3390,7 @@ priradenie = false;
 return error;
 }
 
-int build_in_ID()
+int build_in_ID(int witch)
 {
    locSymbol* isLoc_symbol = NULL;
     if(strchr(token2.data, '.'))
@@ -3266,7 +3426,12 @@ int build_in_ID()
                   fprintf(stderr, "RUNTIME_INIT_ERR. Using uninitialized \"%s\" in \"%s\".\n", id_part, funcname);
                   return RUNTIME_INIT_ERR;
                }
-
+               if(witch == 1)
+                  temporary = isTemp_symbol->data;
+               else if(witch == 2)
+                  temporary2 = isTemp_symbol->data;
+               else if(witch == 3)
+                  temporary3 = isTemp_symbol->data;
             }
             else
             {
@@ -3316,6 +3481,12 @@ int build_in_ID()
                   fprintf(stderr, "RUNTIME_INIT_ERR. Using uninitialized \"%s\" in \"%s\".\n", nazov, funcname);
                   return RUNTIME_INIT_ERR;
                }
+               if(witch == 1)
+                  temporary = isLoc_symbol->data;
+               else if(witch == 2)
+                  temporary2 = isLoc_symbol->data;
+               else if(witch == 3)
+                  temporary3 = isLoc_symbol->data;
             }
             return error;
 }
