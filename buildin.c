@@ -92,6 +92,130 @@ int compare(const char *s1, const char *s2){
     return 0;
 }
 
+void readString(symData * dest)
+{
+    int chunk=10;
+    int c;
+
+    char *save1=malloc(sizeof(char)*chunk);
+    int counter=0;
+    int reallocs=1;
+
+    while ((c=getchar()) != '\n')
+    {
+        if (counter == (reallocs*chunk)-1)
+        {
+            reallocs++;
+            save1=realloc(save1,reallocs*chunk);
+        }
+        *(save1+(counter))=c;
+        counter++;
+    }
+    *(save1+counter)='\0';
+
+    if(dest != NULL){
+        dest->ptr_union.str=malloc(sizeof(char) * strlen(save1));
+        if(dest->ptr_union.str == NULL){
+            exit(99);
+        }
+        dest->init=true;
+        strcpy(dest->ptr_union.str, save1);
+    }
+    free(save1);
+}
+
+void readInt(symData * dest)
+{
+    int i=0;
+    int chunk=10;
+    int c;
+    char * error;
+
+    char *save1=malloc(sizeof(char)*chunk);
+    int counter=0;
+    int reallocs=1;
+
+    while ((c=getchar()) != '\n')
+    {
+        if (counter == (reallocs*chunk)-1)
+        {
+            reallocs++;
+            save1=realloc(save1,reallocs*chunk);
+        }
+        *(save1+(counter))=c;
+        counter++;
+    }
+    *(save1+counter)='\0';
+
+    i = strtol(save1, &error, 10);
+    if(*error == 0 || *error== 32 || *error == 10){
+        if(dest != NULL){
+            if(dest->type==tInt){
+                dest->init= true;
+                dest->ptr_union.i = i;
+            }
+            else if(dest->type==tDouble){
+                dest->init= true;
+                dest->ptr_union.d = i;
+            }
+            else{
+                exit(4);
+            }
+        }
+    }
+    else{
+        exit(7);
+    }
+
+    free(save1);
+}
+
+void readDouble(symData * dest)
+{
+    double d=0.0;
+    int chunk=10;
+    int c;
+    char * error;
+
+    char *save1=malloc(sizeof(char)*chunk);
+    int counter=0;
+    int reallocs=1;
+
+    while ((c=getchar()) != '\n')
+    {
+        if (counter == (reallocs*chunk)-1)
+        {
+            reallocs++;
+            save1=realloc(save1,reallocs*chunk);
+        }
+        *(save1+(counter))=c;
+        counter++;
+    }
+    *(save1+counter)='\0';
+
+    d = strtod(save1, &error);
+    if(*error == 0 || *error== 32 || *error == 10){
+        if(dest != NULL){
+            if(dest->type==tInt){
+                dest->init= true;
+                dest->ptr_union.i = d;
+            }
+            else if(dest->type==tDouble){
+                dest->init= true;
+                dest->ptr_union.d = d;
+            }
+            else{
+                exit(4);
+            }
+        }
+    }
+    else{
+        exit(7);
+    }
+
+    free(save1);
+}
+
 int find(char* s,char* search)
 {
     int s_len=strlen(s);
