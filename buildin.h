@@ -1,6 +1,8 @@
 #ifndef BUILDIN_H
 #define BUILDIN_H
 
+#include "ial.h"
+
 //TEST SMART-GIT 
 
 char* sort(const char *str);
