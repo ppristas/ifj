@@ -172,6 +172,7 @@ int catch_index(SAData *pom,int *count){
       pom->sym_data->args = NULL;
       pom->sym_data->type = tInt;
       pom->sym_data->instrPtr = NULL;
+      pom->sym_data->funcdata_union.offset=-1;
       intoTableInt = pom->sym_data->ptr_union.i = strtol(token2.data,&endptr,10);
       str = mymalloc(sizeof(char)*25);
       sprintf(str,"@int_pom_%u",name++);  //TODO vygenerovat premennu;
@@ -197,6 +198,7 @@ int catch_index(SAData *pom,int *count){
       pom->sym_data->args = NULL;
       pom->sym_data->type = tDouble;
       pom->sym_data->instrPtr = NULL;
+      pom->sym_data->funcdata_union.offset = -1;
       intoTableDouble = pom->sym_data->ptr_union.d = strtod(token2.data,&endptr);
       str = mymalloc(sizeof(char)*25);
       sprintf(str,"@double_pom_%u",name++);  //TODO vygenerovat premennu;
@@ -222,6 +224,7 @@ int catch_index(SAData *pom,int *count){
       pom->sym_data->args = NULL;
       pom->sym_data->type = tString;
       pom->sym_data->instrPtr = NULL;
+      pom->sym_data->funcdata_union.offset=-1;
       if(token2.data != NULL)
         pom->sym_data->ptr_union.str= token2.data;
       else pom->sym_data->ptr_union.str = '\0';
