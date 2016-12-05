@@ -60,8 +60,8 @@ void stack_frame_push(stackFrame_t* stack_frame,symData* function) //create fram
     {
         stack_frame->top++;
         stack_frame->frame[stack_frame->top]=(frame_data_t*)malloc(sizeof(frame_data_t));
-        stack_frame->frame[stack_frame->top]->var_array=(symData*)malloc(sizeof(symData)* function->funcdata_union.var_count);
-        stack_frame->frame[stack_frame->top]->max=function->funcdata_union.var_count;
+        stack_frame->frame[stack_frame->top]->var_array=(symData*)malloc(sizeof(symData)* 20);
+        stack_frame->frame[stack_frame->top]->max=20;
         stack_frame->frame[stack_frame->top]->args_counter=0;
         stack_frame->frame[stack_frame->top]->return_type=function->type;
     }
