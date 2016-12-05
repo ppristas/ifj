@@ -1,19 +1,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "ilist.h"
+#include "cleaner.h"
 
 
 //Globálna páska na inštrukcie týkajúce sa inštrukcií globálnych premenných
 ilist globalList;
 ilist * currentList;
-labelStack lStack;
 
 //Generovanie inštrukcií na koniec danej inštrukčnej pásky
 
 item * generateItem(eInstrType type, void *op1, void *op2, void *dest){
     instr *tmpInstruction;
 
-    tmpInstruction = malloc(sizeof(instr));
+    tmpInstruction = mymalloc(sizeof(instr));
 
     if(tmpInstruction == NULL){
         return NULL;
@@ -26,7 +26,7 @@ item * generateItem(eInstrType type, void *op1, void *op2, void *dest){
 
     item* tmpItem;
 
-    tmpItem = malloc(sizeof(item));
+    tmpItem = (item *)mymalloc(sizeof(item));
     if(tmpItem == NULL){
         return NULL;
     }
@@ -59,7 +59,7 @@ void generateLastInstruction(eInstrType type, void *op1, void *op2, void *dest, 
 {
     instr *tmp;
 
-    tmp = malloc(sizeof(instr));
+    tmp = (instr *)mymalloc(sizeof(instr));
 
     if(tmp == NULL){
         return;
@@ -116,7 +116,7 @@ void insertLastInstruction(ilist *L, instr *I)
 {
     item* tmp;
 
-    tmp = malloc(sizeof(item));
+    tmp = (item *)mymalloc(sizeof(item));
     if(tmp == NULL){
         return;
     }
@@ -233,59 +233,3 @@ void stackDestroy(instrStack *stack){
         free(tmp);
     }
 }
-
-void labelStackInit(labelStack *stack){
-    stack->top=NULL;
-}
-
-void labelStackPush(labelStack *stack, item *label1){
-    labelItem * tmp;
-    tmp=malloc(sizeof(labelItem));
-    if(tmp == NULL){
-        exit(99);
-    }
-
-    if(stack->top==NULL){
-        tmp->label=label1;
-        stack->top=tmp;
-        tmp->nextItem=NULL;
-    }
-
-    if(stack->top != NULL){
-        tmp->label = label1;
-        tmp->nextItem=stack->top;
-        stack->top=tmp;
-    }
-}
-
-item * labelStackTop(labelStack * stack){
-    if(stack->top != NULL){
-        return stack->top->label;
-    }
-    return NULL;
-}
-
-item * labelStackPrevTop(labelStack * stack){
-    if(stack->top != NULL){
-        if(stack->top->nextItem != NULL){
-            return stack->top->nextItem->label;
-        }
-    }
-    return NULL;
-}
-
-void labelStackPop(labelStack * stack){
-    labelItem * tmp;
-    if(stack->top != NULL){
-        tmp = stack->top;
-        stack->top=stack->top->nextItem;
-        free(tmp);
-    }
-    if(stack->top != NULL){
-        tmp = stack->top;
-        stack->top=stack->top->nextItem;
-        free(tmp);
-    }
-}
-
-
