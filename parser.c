@@ -108,7 +108,7 @@ int parser()
    if(STable == NULL)
       return INTERNAL_ERR;
 
-   labelStackInit(&lStack);   //inicializovanie pasky
+   //inicializovanie pasky
    listInit(&globalList);     
 
 
@@ -1872,8 +1872,6 @@ int main_body_scnd()   //pravidlo <MB> -> <SL> <MB>
    {
       item* LABEL1 = generateItem(I_LABEL, NULL, NULL, NULL);
       item* LABEL2 = generateItem(I_LABEL, NULL, NULL, NULL);
-      labelStackPush(&lStack, LABEL1);
-      labelStackPush(&lStack, LABEL2);
 
 
       front_token();   //cakam (
@@ -1882,13 +1880,13 @@ int main_body_scnd()   //pravidlo <MB> -> <SL> <MB>
 
       front_token();
 
-      insertItem(labelStackPrevTop(&lStack), currentList);
+      insertItem(LABEL1, currentList);
 
       error = expresion_parser();
       if(error != SUCCESS)
          return error;
 
-      generateLastInstruction(I_IFJMP, labelStackTop(&lStack), destExpr, NULL, currentList);
+      generateLastInstruction(I_IFJMP, LABEL2, destExpr, NULL, currentList);
 
       if(token2.stav != S_PZAT)
          return SYNTAX_ERR;
@@ -1899,9 +1897,8 @@ int main_body_scnd()   //pravidlo <MB> -> <SL> <MB>
       front_token();
       error = main_body_riadiace_scnd();    // v tele whilu moze byt hocico, preto volame main_body
 
-      generateLastInstruction(I_JMP, labelStackPrevTop(&lStack), NULL, NULL, currentList);
-      insertItem(labelStackTop(&lStack), currentList);
-      labelStackPop(&lStack);
+      generateLastInstruction(I_JMP, LABEL1, NULL, NULL, currentList);
+      insertItem(LABEL2, currentList);
 
       if(error != SUCCESS)
             return error;
@@ -1914,8 +1911,6 @@ int main_body_scnd()   //pravidlo <MB> -> <SL> <MB>
 
       item* LABEL1 = generateItem(I_LABEL, NULL, NULL, NULL);
       item* LABEL2 = generateItem(I_LABEL, NULL, NULL, NULL);
-      labelStackPush(&lStack, LABEL1);
-      labelStackPush(&lStack, LABEL2);
 
 
       front_token();
@@ -1927,7 +1922,7 @@ int main_body_scnd()   //pravidlo <MB> -> <SL> <MB>
       if(error != SUCCESS)
          return error;
 
-      generateLastInstruction(I_IFJMP, labelStackTop(&lStack), destExpr, NULL, currentList);
+      generateLastInstruction(I_IFJMP, LABEL1, destExpr, NULL, currentList);
 
       if(token2.stav != S_PZAT)
          return SYNTAX_ERR;
@@ -1941,8 +1936,8 @@ int main_body_scnd()   //pravidlo <MB> -> <SL> <MB>
       if(error != SUCCESS)
          return error;
 
-      generateLastInstruction(I_JMP, labelStackTop(&lStack), NULL, NULL, currentList);
-      insertItem(labelStackPrevTop(&lStack), currentList);
+      generateLastInstruction(I_JMP, LABEL2, NULL, NULL, currentList);
+      insertItem(LABEL1, currentList);
 
       if(error != SUCCESS)
          return error;
@@ -1964,8 +1959,7 @@ int main_body_scnd()   //pravidlo <MB> -> <SL> <MB>
       if(error != SUCCESS)
          return error;
 
-      insertItem(labelStackTop(&lStack), currentList);
-      labelStackPop(&lStack);
+      insertItem(LABEL2, currentList);
 
       if(token2.stav != S_P_KOSZ)
          return SYNTAX_ERR;
@@ -2257,8 +2251,7 @@ int main_body_riadiace_scnd()   //pravidlo <MB> -> <SL> <MB>
    {
       item* LABEL1 = generateItem(I_LABEL, NULL, NULL, NULL);
       item* LABEL2 = generateItem(I_LABEL, NULL, NULL, NULL);
-      labelStackPush(&lStack, LABEL1);
-      labelStackPush(&lStack, LABEL2);
+
 
 
       front_token();   //cakam (
@@ -2267,13 +2260,13 @@ int main_body_riadiace_scnd()   //pravidlo <MB> -> <SL> <MB>
 
       front_token();
 
-      insertItem(labelStackPrevTop(&lStack), currentList);
+      insertItem(LABEL1, currentList);
 
       error = expresion_parser();
       if(error != SUCCESS)
          return error;
 
-      generateLastInstruction(I_IFJMP, labelStackTop(&lStack), destExpr, NULL, currentList);
+      generateLastInstruction(I_IFJMP, LABEL2, destExpr, NULL, currentList);
 
       if(token2.stav != S_PZAT)
          return SYNTAX_ERR;
@@ -2284,9 +2277,8 @@ int main_body_riadiace_scnd()   //pravidlo <MB> -> <SL> <MB>
       front_token();
       error = main_body_riadiace_scnd();    // v tele whilu moze byt hocico az na lokalnu deklaraciu, preto volame main_body
 
-      generateLastInstruction(I_JMP, labelStackPrevTop(&lStack), NULL, NULL, currentList);
-      insertItem(labelStackTop(&lStack), currentList);
-      labelStackPop(&lStack);
+      generateLastInstruction(I_JMP, LABEL1, NULL, NULL, currentList);
+      insertItem(LABEL2, currentList);
 
       if(error != SUCCESS)
             return error;
@@ -2298,8 +2290,6 @@ int main_body_riadiace_scnd()   //pravidlo <MB> -> <SL> <MB>
    {
       item* LABEL1 = generateItem(I_LABEL, NULL, NULL, NULL);
       item* LABEL2 = generateItem(I_LABEL, NULL, NULL, NULL);
-      labelStackPush(&lStack, LABEL1);
-      labelStackPush(&lStack, LABEL2);
 
 
       front_token();
@@ -2311,7 +2301,7 @@ int main_body_riadiace_scnd()   //pravidlo <MB> -> <SL> <MB>
       if(error != SUCCESS)
          return error;
 
-      generateLastInstruction(I_IFJMP, labelStackTop(&lStack), destExpr, NULL, currentList);
+      generateLastInstruction(I_IFJMP, LABEL1, destExpr, NULL, currentList);
 
       if(token2.stav != S_PZAT)
          return SYNTAX_ERR;
@@ -2325,8 +2315,8 @@ int main_body_riadiace_scnd()   //pravidlo <MB> -> <SL> <MB>
       if(error != SUCCESS)
          return error;
 
-      generateLastInstruction(I_JMP, labelStackTop(&lStack), NULL, NULL, currentList);
-      insertItem(labelStackPrevTop(&lStack), currentList);
+      generateLastInstruction(I_JMP, LABEL2, NULL, NULL, currentList);
+      insertItem(LABEL1, currentList);
 
       if(error != SUCCESS)
          return error;
@@ -2348,8 +2338,7 @@ int main_body_riadiace_scnd()   //pravidlo <MB> -> <SL> <MB>
       if(error != SUCCESS)
          return error;
 
-      insertItem(labelStackTop(&lStack), currentList);
-      labelStackPop(&lStack);
+      insertItem(LABEL2, currentList);
 
       if(token2.stav != S_P_KOSZ)
          return SYNTAX_ERR;
