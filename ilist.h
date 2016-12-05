@@ -73,20 +73,11 @@ typedef struct instrStack{
     int pocet;
 }instrStack;
 
-typedef struct labelItem{
-    item* label;
-    struct labelItem* nextItem;
-}labelItem;
-
-typedef struct labelStack{
-    labelItem * top;
-}labelStack;
 
 //Globálna páska na inštrukcie súvisiace s globálnymi premennými
 extern ilist globalList;
 //Globálna páska na inštrukcie v rámci Mainu, aby bola prístupnejšia nie len z TS
 extern ilist * currentList;
-extern labelStack lStack;
 
 //Inicializácia globálnej pásky
 void listInit(ilist *L);
@@ -127,11 +118,5 @@ void stackPopList(instrStack *stack);
 ilist * stackTopList(instrStack *stack);
 item * stackTopInstruction(instrStack *stack);
 void stackDestroyList(instrStack * stack);
-
-void labelStackInit(labelStack * stack);
-void labelStackPush(labelStack * stack, item * label1);
-item * labelStackTop(labelStack * stack);
-item * labelStackPrevTop(labelStack * stack);
-void labelStackPop(labelStack * stack);
 
 #endif // ILIST_H_INCLUDED
