@@ -1,0 +1,11 @@
+
+class Main{
+	static void run()
+	{
+		int 9var;
+		
+		9var= 10;
+
+		int $variable;
+	}
+}
