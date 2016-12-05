@@ -2947,6 +2947,15 @@ int user_function_call()
      front_token();
       if(token2.stav != S_SEMICOLON)
          return SYNTAX_ERR;
+      if(priradenie == false)
+      {
+         generateLastInstruction(I_CALL, UFCTemp_symbol->data, NULL, NULL, currentList);
+      }
+      else if(priradenie == true)
+      {
+         generateLastInstruction(I_CALL, UFCTemp_symbol->data, destination, NULL, currentList);
+      }
+
       return error;
 
    }
