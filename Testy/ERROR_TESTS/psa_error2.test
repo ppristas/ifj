@@ -1,0 +1,10 @@
+class Main
+{
+	static void run()
+	{
+		double f1=4.0;
+		double f2=7.5;
+		double f3= 5.0;
+		double dbl=100.7 * 8 + ((f1+f2) * f3; 
+	}
+}

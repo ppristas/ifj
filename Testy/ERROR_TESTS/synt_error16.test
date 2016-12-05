@@ -1,0 +1,23 @@
+ class MyClass{
+
+	static void play()
+	{
+		static int inner(int a, int b)
+		{
+			int local=5;
+			return local;
+		}
+
+		int local_play=3;
+	}
+
+}
+
+class Main 
+{
+	static void run()
+	{
+		MyClass.play();
+	}
+
+}

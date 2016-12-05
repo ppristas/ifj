@@ -1,0 +1,16 @@
+
+class MyClass {
+
+	static int variable=30;
+
+}
+
+ class Mai{n {
+	
+	static void run()
+	{
+		MyClass.variable=4;
+	}
+	
+}
+

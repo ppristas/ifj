@@ -1,0 +1,21 @@
+ class MyClass{
+
+	static void play()
+	{
+		
+		int local_play=3;
+	}
+
+}
+
+return i;
+
+
+class Main 
+{
+	static void run()
+	{
+		MyClass.play();
+	}
+
+}

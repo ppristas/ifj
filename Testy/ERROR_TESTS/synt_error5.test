@@ -1,0 +1,12 @@
+class static Main {
+	
+	static int prem;
+	
+	static void run()
+	{
+		int local= 22;
+		
+		local=45;
+	}
+
+}

@@ -1,0 +1,11 @@
+class MyClass{
+
+	static int void i=44;
+
+	static void run()
+	{
+		ifj16.("Hello World");
+	}
+
+
+}

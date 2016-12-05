@@ -1,0 +1,11 @@
+
+	class Main{
+
+		class void run()
+		{
+			ifj16.print("Hello World");
+		}
+	
+
+
+	}	

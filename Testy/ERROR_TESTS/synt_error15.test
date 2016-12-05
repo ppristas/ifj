@@ -1,0 +1,22 @@
+class Main
+{
+
+	static void run()
+	{
+		MyClass.print4values(10,9, , , );
+	}
+
+}
+
+class MyClass
+{
+
+	static void print4values(int a, double b, int c, double x)
+	{
+		ifj16.print(a+"\n");
+		ifj16.print(b+"\n");
+		ifj16.print(c+"\n");
+		ifj16.print(d+"\n");
+	}
+
+}

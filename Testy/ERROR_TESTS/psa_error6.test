@@ -1,0 +1,19 @@
+class Main
+{
+
+	static void run()
+	{
+		int x=10;
+		int j=10;
+
+		if x < j) 
+		{
+			ifj16.print("True");
+		}
+		else
+		{
+			ifj16.print("False");
+		}
+	}
+
+}

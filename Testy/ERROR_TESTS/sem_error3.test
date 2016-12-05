@@ -1,0 +1,27 @@
+class MyClass
+{
+
+	static int premenna=10;
+	
+	static void play()
+	{
+		ifj16.print("Nieco");
+	}
+
+}
+
+
+class MyClass
+{
+	static int x;
+}
+
+class Main
+{
+
+	static void run()
+	{
+		ifj16.print("Hello World");
+	}
+
+}

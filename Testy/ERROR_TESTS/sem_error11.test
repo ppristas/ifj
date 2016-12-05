@@ -1,0 +1,22 @@
+class MyClass
+{
+	static int x;
+}
+
+
+class Main
+{
+
+	static void run()
+	{
+		String str="Retazec 1";
+		
+		int i =4;
+
+		int j =5;
+
+		j=MyClass.func(i,j);
+
+	}
+
+}

@@ -1,0 +1,24 @@
+class MyClass
+{
+
+	static int x;
+
+	static void func(int a,int b,int c)
+	{
+		ifj16.print("Do something");
+	}
+
+}
+
+
+class Main
+{
+
+	static void run()
+	{
+		int a,b,c;
+
+		MyClass.func(a,b);
+	}
+
+}

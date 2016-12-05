@@ -1,0 +1,14 @@
+
+class Main {
+
+
+	static void run()
+	{
+		double dbl = 10.77eib;
+
+		int ok=46;		
+		
+	}
+
+
+}

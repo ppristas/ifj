@@ -1,0 +1,12 @@
+class Main 
+{
+
+	static void run()
+	{
+		int i=10;
+		int k=5;
+		
+		int i=40;
+	}
+
+}

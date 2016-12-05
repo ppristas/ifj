@@ -1,0 +1,3 @@
+class Main {
+	static void run() { double f= 21.48e+7; }
+}
