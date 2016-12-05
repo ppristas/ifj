@@ -458,8 +458,10 @@ int reduction(tStack *stack1,tStack *stack2){
                 }
               if((hhelp2.sym_data->type == tInt) || (hhelp4.sym_data->type == tInt)){
                 neterminal.sym_data->type = tInt;   //vysledny by mal byt int
+                neterminal.sym_data->funcdata_union.offset=-1;
               }else{
                 neterminal.sym_data->type = tDouble;  //vysledny by mat byt double
+                neterminal.sym_data->funcdata_union.offset=-1;
               }
               str = mymalloc(sizeof(char)*30);
               sprintf(str,"@Gen_Target_VAR_ARIT%u",name++);
@@ -486,19 +488,24 @@ int reduction(tStack *stack1,tStack *stack2){
                 sprintf(str,"@Gen_Target_VAR_COM%u",name++);
                 neterminal.nameID = str;
                 neterminal.sym_data->type = tBool;
+                neterminal.sym_data->funcdata_union.offset=-1;
                 tmp_htab_insert(const_table, neterminal.sym_data->type,NULL ,neterminal.nameID,-1);
                 generateLastInstruction(instruction, hhelp2.sym_data, hhelp4.sym_data, neterminal.sym_data, currentList);
                 //TODO instrukcna paska
         }else if (instruction == I_ADD){
               //konkatenacia
-              if((hhelp2.sym_data->type == tString) || (hhelp4.sym_data->type == tString))
+              if((hhelp2.sym_data->type == tString) || (hhelp4.sym_data->type == tString)){
                   neterminal.sym_data->type = tString;
+                  neterminal.sym_data->funcdata_union.offset=-1;
+              }
               else{
                   if((hhelp2.sym_data->type == tDouble) || (hhelp4.sym_data->type == tDouble)){
                     neterminal.sym_data->type = tDouble;
+                    neterminal.sym_data->funcdata_union.offset=-1;
                   }else{
 
                     neterminal.sym_data->type = tInt;
+                    neterminal.sym_data->funcdata_union.offset=-1;
 
                   }
               }
