@@ -1739,6 +1739,7 @@ int after_class_scnd()
 
                offset_counter = 0;
                error = main_body_scnd();
+               symbol->data->funcdata_union.var_count = offset_counter;
 
                if(error != SUCCESS)
                   return error;
