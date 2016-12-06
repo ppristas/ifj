@@ -2940,6 +2940,12 @@ int user_function_call()
 {
    locSymbol* isLoc_symbol = NULL;
    iSymbol* UFCTemp_symbol = isTemp_symbol;     //UFCTemp_symbol = ukazatel na volanu funkciu
+   symData *temporary = mymalloc(sizeof(symData));
+   if(temporary == NULL)
+   {
+      return INTERNAL_ERR;
+   }
+
    front_token();
    if(token2.stav != S_LZAT)
    {
@@ -2995,89 +3001,156 @@ int user_function_call()
          {
             break;
          }
-         else if(strchr(token2.data, '.'))  //zlozeny id
+         else if(token2.stav == S_INT)
          {
-            error = return_class();
-            if(error != SUCCESS)
-               return error;
-
-            Hash_class* argument_class = class_search(STable, class_part);   //hladame ci existuje dana class
-
-            if(argument_class == NULL)
+            if(argument_type != tInt)
             {
-               fprintf(stderr, "SEMANTIC_PROG_ERR. Class \"%s\" undefined.\n", class_part);  //dana classa neexsituje
-               return SEMANTIC_PROG_ERR;
-            }
-
-            iSymbol* id_symbol = Htab_search(argument_class->ptr, id_part); //v danej classe hladame symbol
-            if(id_symbol == NULL)
-            {
-               fprintf(stderr, "SEMANTIC_PROG_ERR. \"%s\" undefined in class \"%s\".\n", id_part, class_part); //dana staticka premenna/funckia neexistuje
-               return SEMANTIC_PROG_ERR;
-            }
-            if(id_symbol->fce == true) //to co sme nasli je premmena
-            {
-               fprintf(stderr, "SEMANTIC_TYPE_ERR. \"%s\" is function, not variable in class \"%s\".\n", id_part, class_part);
+               fprintf(stderr, "SEMANTIC_TYPE_ERR. Wrong argument type of \"int\" in function \"%s\".\n", UFCTemp_symbol->name);
                return SEMANTIC_TYPE_ERR;
             }
-            if(id_symbol->data->init == false)
+            temporary->type = tInt;
+            temporary->funcdata_union.offset = -1;
+            temporary->ptr_union.i = atoi(token2.data);
+            temporary->init = true;
+            if(i > 0)
             {
-               fprintf(stderr, "RUNTIME_INIT_ERR. Using uninitialized \"%s\" in \"%s\".\n", id_part, funcname);
-               return RUNTIME_INIT_ERR;
-            }
-            else if(id_symbol->fce == false) //je to premenna
-            {
-               if(argument_type != id_symbol->data->type)
-               {
-                  fprintf(stderr, "SEMANTIC_TYPE_ERR. Wrong argument type of \"%s\" in function \"%s\".\n", id_part, class_part);
-                  return SEMANTIC_TYPE_ERR;
-               }
-               if(i > 0)
-               {
-                  generateLastInstruction(I_PUSHPARAM,isLoc_symbol->data, NULL, NULL, currentList);
-                  Node = Node->next;
-                  if(Node != NULL)
-                     argument_type = Node->type;
-               }
+               generateLastInstruction(I_PUSHPARAM,temporary, NULL, NULL, currentList);
+               Node = Node->next;
+               if(Node != NULL)
+                  argument_type = Node->type;
             }
          }
-         else  //ID je jednoduche   /****************************************************************************************************************/
+         else if(token2.stav == S_DOUBLE)
          {
-            nazov_len = strlen(token2.data); //vracia nazov statickeho symbolu
-            nazov = mymalloc(nazov_len*sizeof(char) + 2);
-            if(nazov == NULL)
+            if(argument_type != tDouble)
             {
-               error = INTERNAL_ERR;
+               fprintf(stderr, "SEMANTIC_TYPE_ERR. Wrong argument type of \"double\" in function \"%s\".\n", UFCTemp_symbol->name);
+               return SEMANTIC_TYPE_ERR;
+            }
+            temporary->type = tDouble;
+            temporary->funcdata_union.offset = -1;
+            temporary->ptr_union.d = atof(token2.data);
+            temporary->init = true;
+            if(i > 0)
+            {
+               generateLastInstruction(I_PUSHPARAM,temporary, NULL, NULL, currentList);
+               Node = Node->next;
+               if(Node != NULL)
+                  argument_type = Node->type;
+            }
+         }
+         else if(token2.stav == S_STRING)
+         {
+            if(argument_type != tString)
+            {
+               fprintf(stderr, "SEMANTIC_TYPE_ERR. Wrong argument type of \"String\" in function \"%s\".\n", UFCTemp_symbol->name);
+               return SEMANTIC_TYPE_ERR;
+            }
+            nazov_len = strlen(token2.data);
+            temporary->ptr_union.str = mymalloc(nazov_len*sizeof(char) + 2);
+            if(temporary->ptr_union.str == NULL)
+            {
+               return INTERNAL_ERR;
+            }
+            strcpy(temporary->ptr_union.str,token2.data);
+            temporary->ptr_union.str[strlen(token2.data)+1] = '\0';
+            temporary->funcdata_union.offset = -1;
+            temporary->type = tString;
+            temporary->init=true;
+            if(i > 0)
+            {
+               generateLastInstruction(I_PUSHPARAM,temporary, NULL, NULL, currentList);
+               Node = Node->next;
+               if(Node != NULL)
+                  argument_type = Node->type;
+            }
+         }
+         else if(token2.stav == S_ID)
+         {
+            if(strchr(token2.data, '.'))  //zlozeny id
+            {
+               error = return_class();
+               if(error != SUCCESS)
+                  return error;
 
-               return error;
-            }
-            strcpy(nazov,token2.data);
-            nazov[strlen(token2.data)+1] = '\0';   //dostali sme nazov ID
+               Hash_class* argument_class = class_search(STable, class_part);   //hladame ci existuje dana class
 
-            isLoc_symbol = loc_symbol_search(local_table, nazov); //overenie, ci uz dana lokalna premenna existuje ako premenna
-            if(isLoc_symbol == NULL)
-            {
-               fprintf(stderr, "SEMANTIC_PROG_ERR. Using \"%s\" undeclared in \"%s\".\n", nazov, funcname);
-               return SEMANTIC_PROG_ERR;
-            }
-            if(isLoc_symbol->data->init == false)
-            {
-               fprintf(stderr, "RUNTIME_INIT_ERR. Using uninitialized \"%s\" in \"%s\".\n", nazov, funcname);
-               return RUNTIME_INIT_ERR;
-            }
-            else if(isLoc_symbol->data->init == true)
-            {
-               if(argument_type != isLoc_symbol->data->type)
+               if(argument_class == NULL)
                {
-                  fprintf(stderr, "SEMANTIC_TYPE_ERR. Wrong argument type of \"%s\" in function \"%s\".\n", nazov, funcname);
+                  fprintf(stderr, "SEMANTIC_PROG_ERR. Class \"%s\" undefined.\n", class_part);  //dana classa neexsituje
+                  return SEMANTIC_PROG_ERR;
+               }
+
+               iSymbol* id_symbol = Htab_search(argument_class->ptr, id_part); //v danej classe hladame symbol
+               if(id_symbol == NULL)
+               {
+                  fprintf(stderr, "SEMANTIC_PROG_ERR. \"%s\" undefined in class \"%s\".\n", id_part, class_part); //dana staticka premenna/funckia neexistuje
+                  return SEMANTIC_PROG_ERR;
+               }
+               if(id_symbol->fce == true) //to co sme nasli je premmena
+               {
+                  fprintf(stderr, "SEMANTIC_TYPE_ERR. \"%s\" is function, not variable in class \"%s\".\n", id_part, class_part);
                   return SEMANTIC_TYPE_ERR;
                }
-               if(i > 0)
+               if(id_symbol->data->init == false)
                {
-                  generateLastInstruction(I_PUSHPARAM,isLoc_symbol->data, NULL, NULL, currentList);
-                  Node = Node->next;
-                  if(Node != NULL)
-                     argument_type = Node->type;
+                  fprintf(stderr, "RUNTIME_INIT_ERR. Using uninitialized \"%s\" in \"%s\".\n", id_part, funcname);
+                  return RUNTIME_INIT_ERR;
+               }
+               else if(id_symbol->fce == false) //je to premenna
+               {
+                  if(argument_type != id_symbol->data->type)
+                  {
+                     fprintf(stderr, "SEMANTIC_TYPE_ERR. Wrong argument type of \"%s\" in function \"%s\".\n", id_part, class_part);
+                     return SEMANTIC_TYPE_ERR;
+                  }
+                  if(i > 0)
+                  {
+                     generateLastInstruction(I_PUSHPARAM,isLoc_symbol->data, NULL, NULL, currentList);
+                     Node = Node->next;
+                     if(Node != NULL)
+                        argument_type = Node->type;
+                  }
+               }
+            }
+            else  //ID je jednoduche   /****************************************************************************************************************/
+            {
+               nazov_len = strlen(token2.data); //vracia nazov statickeho symbolu
+               nazov = mymalloc(nazov_len*sizeof(char) + 2);
+               if(nazov == NULL)
+               {
+                  error = INTERNAL_ERR;
+
+                  return error;
+               }
+               strcpy(nazov,token2.data);
+               nazov[strlen(token2.data)+1] = '\0';   //dostali sme nazov ID
+
+               isLoc_symbol = loc_symbol_search(local_table, nazov); //overenie, ci uz dana lokalna premenna existuje ako premenna
+               if(isLoc_symbol == NULL)
+               {
+                  fprintf(stderr, "SEMANTIC_PROG_ERR. Using \"%s\" undeclared in \"%s\".\n", nazov, funcname);
+                  return SEMANTIC_PROG_ERR;
+               }
+               if(isLoc_symbol->data->init == false)
+               {
+                  fprintf(stderr, "RUNTIME_INIT_ERR. Using uninitialized \"%s\" in \"%s\".\n", nazov, funcname);
+                  return RUNTIME_INIT_ERR;
+               }
+               else if(isLoc_symbol->data->init == true)
+               {
+                  if(argument_type != isLoc_symbol->data->type)
+                  {
+                     fprintf(stderr, "SEMANTIC_TYPE_ERR. Wrong argument type of \"%s\" in function \"%s\".\n", nazov, funcname);
+                     return SEMANTIC_TYPE_ERR;
+                  }
+                  if(i > 0)
+                  {
+                     generateLastInstruction(I_PUSHPARAM,isLoc_symbol->data, NULL, NULL, currentList);
+                     Node = Node->next;
+                     if(Node != NULL)
+                        argument_type = Node->type;
+                  }
                }
             }
          }
