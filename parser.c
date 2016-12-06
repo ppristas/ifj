@@ -3068,7 +3068,7 @@ int user_function_call()
 
          i--;
       }
-       if(i > 0)
+      if(i > 0)
          return SEMANTIC_TYPE_ERR;
    }
 
