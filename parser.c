@@ -2537,8 +2537,8 @@ int main_body_riadiace_scnd()   //pravidlo <MB> -> <SL> <MB>
 int build_function_call_scnd(int decider)
 {
    locSymbol* isLoc_symbol = NULL;
-   symData *temporary = mymalloc(sizeof(symData));
-   symData *temporary2 = mymalloc(sizeof(symData));
+   temporary = mymalloc(sizeof(symData));
+   temporary2 = mymalloc(sizeof(symData));
    if(temporary == NULL || temporary2 == NULL)
    {
       return INTERNAL_ERR;
@@ -2940,7 +2940,6 @@ int user_function_call()
 {
    locSymbol* isLoc_symbol = NULL;
    iSymbol* UFCTemp_symbol = isTemp_symbol;     //UFCTemp_symbol = ukazatel na volanu funkciu
-   symData *temporary = mymalloc(sizeof(symData));
    if(temporary == NULL)
    {
       return INTERNAL_ERR;
@@ -3009,6 +3008,8 @@ int user_function_call()
                return SEMANTIC_TYPE_ERR;
             }
             temporary = mymalloc(sizeof(symData));
+            if(temporary == NULL)
+               return INTERNAL_ERR;
             temporary->type = tInt;
             temporary->funcdata_union.offset = -1;
             temporary->ptr_union.i = atoi(token2.data);
@@ -3029,6 +3030,8 @@ int user_function_call()
                return SEMANTIC_TYPE_ERR;
             }
             temporary = mymalloc(sizeof(symData));
+            if(temporary == NULL)
+               return INTERNAL_ERR;
             temporary->type = tDouble;
             temporary->funcdata_union.offset = -1;
             temporary->ptr_union.d = atof(token2.data);
@@ -3055,6 +3058,8 @@ int user_function_call()
                return INTERNAL_ERR;
             }
             temporary = mymalloc(sizeof(symData));
+            if(temporary == NULL)
+               return INTERNAL_ERR;
             strcpy(temporary->ptr_union.str,token2.data);
             temporary->ptr_union.str[strlen(token2.data)+1] = '\0';
             temporary->funcdata_union.offset = -1;
