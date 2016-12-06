@@ -452,7 +452,7 @@ int reduction(tStack *stack1,tStack *stack2){
             (instruction == I_DIV)   ||
             (instruction == I_MUL)) {
                 if((hhelp2.sym_data->type == tString) || (hhelp4.sym_data->type == tString)){
-                  clearAll();
+                  //clearAll();
                   error = SEMANTIC_TYPE_ERR;
                   return error;
                 }
@@ -695,7 +695,7 @@ int expresion_parser()
 			case 'E':
 				printf("nastala chyba indexovanie do preced.table\n");
 				error = SYNTAX_ERR;
-				clearAll();
+				//clearAll();
         return error;
 				break;
 		}
