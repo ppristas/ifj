@@ -60,8 +60,8 @@ void stack_frame_push(stackFrame_t* stack_frame,symData* function) //create fram
     {
         stack_frame->top++;
         stack_frame->frame[stack_frame->top]=(frame_data_t*)malloc(sizeof(frame_data_t));
-        stack_frame->frame[stack_frame->top]->var_array=(symData*)malloc(sizeof(symData)* 20);
-        stack_frame->frame[stack_frame->top]->max=20;
+        stack_frame->frame[stack_frame->top]->var_array=(symData*)malloc(sizeof(symData)* function->funcdata_union.var_count);
+        stack_frame->frame[stack_frame->top]->max=function->funcdata_union.var_count;
         stack_frame->frame[stack_frame->top]->args_counter=0;
         stack_frame->frame[stack_frame->top]->return_type=function->type;
     }
@@ -183,17 +183,17 @@ void arg_push(stackFrame_t *stack_frame,symData *data)
     {
         stack_frame->frame[stack_frame->top]->var_array[stack_frame->frame[stack_frame->top]->args_counter].ptr_union.str=(char*)malloc(sizeof(char)*((int)strlen(parameter->ptr_union.str)+1));
         strcpy(stack_frame->frame[stack_frame->top]->var_array[stack_frame->frame[stack_frame->top]->args_counter].ptr_union.str,parameter->ptr_union.str);
-        printf("Ulozim na %d\n",stack_frame->frame[stack_frame->top]->args_counter);
+        //printf("Ulozim na %d\n",stack_frame->frame[stack_frame->top]->args_counter);
     }
     else if (data->type == tInt)
     {
         stack_frame->frame[stack_frame->top]->var_array[stack_frame->frame[stack_frame->top]->args_counter].ptr_union.i=parameter->ptr_union.i;
-        printf("Ulozim na %d\n",stack_frame->frame[stack_frame->top]->args_counter);
+        //printf("Ulozim na %d\n",stack_frame->frame[stack_frame->top]->args_counter);
     }
     else if (data->type == tDouble)
     {
         stack_frame->frame[stack_frame->top]->var_array[stack_frame->frame[stack_frame->top]->args_counter].ptr_union.d=parameter->ptr_union.d;
-        printf("Ulozim na %d\n",stack_frame->frame[stack_frame->top]->args_counter);
+        //printf("Ulozim na %d\n",stack_frame->frame[stack_frame->top]->args_counter);
     }
     stack_frame->frame[stack_frame->top]->var_array[stack_frame->frame[stack_frame->top]->args_counter].init=true;
     stack_frame->frame[stack_frame->top]->var_array[stack_frame->frame[stack_frame->top]->args_counter].type=parameter->type;
