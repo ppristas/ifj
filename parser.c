@@ -2195,6 +2195,7 @@ int main_body_scnd()   //pravidlo <MB> -> <SL> <MB>
             error = expresion_parser();
             if(error != SUCCESS)
                return error;
+            priradenie = false;
             if(token2.stav != S_SEMICOLON)
                return SYNTAX_ERR;
             generateLastInstruction(I_RET, destExpr, NULL, NULL, currentList);
@@ -2472,6 +2473,7 @@ int main_body_riadiace_scnd()   //pravidlo <MB> -> <SL> <MB>
             }
             if(token2.stav != S_SEMICOLON)
                return SYNTAX_ERR;
+            generateLastInstruction(I_RET, NULL, NULL, NULL, currentList);
          }
          else
          {
@@ -2480,8 +2482,10 @@ int main_body_riadiace_scnd()   //pravidlo <MB> -> <SL> <MB>
             error = expresion_parser();
             if(error != SUCCESS)
                return error;
+            priradenie = false;
             if(token2.stav != S_SEMICOLON)
                return SYNTAX_ERR;
+            generateLastInstruction(I_RET, destExpr, NULL, NULL, currentList);
          }
    }
 
