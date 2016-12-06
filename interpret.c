@@ -966,6 +966,28 @@ void interpret(ilist *L){
             }
             break;
         case I_STRCMP:
+            op1=I->op1;
+            op2=I->op2;
+            dest=I->dest;
+            getOperands(&op1, &op2, &dest);
+            if(op1->init == false || op2->init == false){
+                exit(8);
+            }
+            if(dest != NULL){
+                if(op1->type == tString && op2->type==tString){
+                    if(dest->type==tInt){
+                        dest->init=true;
+                        dest->ptr_union.i=strcmp(op1->ptr_union.str, op2->ptr_union.str);
+                    }
+                    else if(dest->type==tDouble){
+                        dest->init=true;
+                        dest->ptr_union.d=strcmp(op1->ptr_union.str, op2->ptr_union.str);
+                    }
+                    else{
+                        exit(4);
+                    }
+                }
+            }
             break;
         case I_STRSUB:
             break;
