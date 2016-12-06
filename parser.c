@@ -3008,6 +3008,7 @@ int user_function_call()
                fprintf(stderr, "SEMANTIC_TYPE_ERR. Wrong argument type of \"int\" in function \"%s\".\n", UFCTemp_symbol->name);
                return SEMANTIC_TYPE_ERR;
             }
+            temporary = mymalloc(sizeof(symData));
             temporary->type = tInt;
             temporary->funcdata_union.offset = -1;
             temporary->ptr_union.i = atoi(token2.data);
@@ -3027,6 +3028,7 @@ int user_function_call()
                fprintf(stderr, "SEMANTIC_TYPE_ERR. Wrong argument type of \"double\" in function \"%s\".\n", UFCTemp_symbol->name);
                return SEMANTIC_TYPE_ERR;
             }
+            temporary = mymalloc(sizeof(symData));
             temporary->type = tDouble;
             temporary->funcdata_union.offset = -1;
             temporary->ptr_union.d = atof(token2.data);
@@ -3052,6 +3054,7 @@ int user_function_call()
             {
                return INTERNAL_ERR;
             }
+            temporary = mymalloc(sizeof(symData));
             strcpy(temporary->ptr_union.str,token2.data);
             temporary->ptr_union.str[strlen(token2.data)+1] = '\0';
             temporary->funcdata_union.offset = -1;
