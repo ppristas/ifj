@@ -324,10 +324,12 @@ int reduction(tStack *stack1,tStack *stack2){
   hhelp4.sym_data = NULL;
   neterminal.sym_data = NULL;
 
+
   neterminal.sym_data = mymalloc(sizeof(struct sym_Data));
+
   if(neterminal.sym_data == NULL){
     error= INTERNAL_ERR;
-    clearAll();
+  //  clearAll();
     return error;
   }
   eInstrType instruction;
@@ -339,7 +341,6 @@ int reduction(tStack *stack1,tStack *stack2){
 		stackPush(stack2,&hhelp2);
 		stackTop(stack1,&hhelp1);
 	}
-
 	if( hhelp1.indexibus == L_HANDLE){
 		stackTopPop(stack2,&hhelp2);
 
@@ -347,15 +348,10 @@ int reduction(tStack *stack1,tStack *stack2){
 		//*******
 		//*******
 		if(hhelp2.indexibus == ID){
-
 			stackPop(stack1);		//dam dofaka leftHandle
-
-
 			neterminal = hhelp2 ;
 			neterminal.indexibus = NETERM;
             //TODO vlozit do tabulky sybolov
-
-
 
 			stackPush(stack1,&neterminal);
 			return SUCCESS;
@@ -365,11 +361,13 @@ int reduction(tStack *stack1,tStack *stack2){
 		//******
 		}else if(hhelp2.indexibus == NETERM){
 			//na top stack1 je L_HANDLE!!TODO
-			if(stackEmpty(stack2)){
+
+  		if(stackEmpty(stack2)){
 				error = SYNTAX_ERR;
-				clearAll();
+				//clearAll();
 				return error;
 			}
+
 			stackTopPop(stack2,&hhelp3);
 			//musi byt operator za neterminalom
 			if( hhelp3.indexibus == PLUS    ||
@@ -385,8 +383,8 @@ int reduction(tStack *stack1,tStack *stack2){
 					;
 			}else{
 				error = SYNTAX_ERR;
-				errorFce();
-				clearAll();
+				//errorFce();
+				//clearAll();
 				return error;
 			}
 
@@ -424,8 +422,9 @@ int reduction(tStack *stack1,tStack *stack2){
           instruction = I_NOTEQ;
           break;
         default:
+
           error = SEMANTIC_ERR;
-          clearAll();
+    //      clearAll();
           return error;
           break;
 			}
@@ -434,12 +433,13 @@ int reduction(tStack *stack1,tStack *stack2){
 
 			if(stackEmpty(stack2)){		//ak je prazdny nastava chyba -> nedocitali sme pravidlo
                 error = SYNTAX_ERR;
-                clearAll();
+            //    clearAll();
                 return error;
       }
 			//mal by byt dalsi neterminal
 
 			stackTopPop(stack2,&hhelp4);
+
 
 			//mozem redukovat, kedze je prazdny stack2 a bol neterminal na vrchole
 			if((hhelp4.indexibus == NETERM) && (stackEmpty(stack2))){
@@ -522,7 +522,7 @@ int reduction(tStack *stack1,tStack *stack2){
 				return error;
 			}else{
 				error = SYNTAX_ERR;
-        clearAll();
+        //clearAll();
         return error;
       }
 
@@ -532,20 +532,20 @@ int reduction(tStack *stack1,tStack *stack2){
 		}else if(hhelp2.indexibus == LZATV){
 			if(stackEmpty(stack2)){
 				error = SYNTAX_ERR;
-        clearAll();
+        //clearAll();
         return error;
 			}
 			stackTopPop(stack2,&hhelp3);
 			//musi byt neterminal na vrchole zasobnika
 			if(hhelp3.indexibus != NETERM){
 				error = SYNTAX_ERR;
-        clearAll();
+        //learAll();
         return error;
 			}
 
 			if(stackEmpty(stack2)){
         error = SYNTAX_ERR;
-        clearAll();
+        //clearAll();
         return error;
       }
 			//na vrchole musela byt prava zatvorka a zasobnik musel skoncit prazdny
@@ -563,15 +563,16 @@ int reduction(tStack *stack1,tStack *stack2){
 
 			//ak sa dostane sem tak je syntakticka chyba
 			error = SYNTAX_ERR;
-			clearAll();
+			//clearAll();
 			return error;
 		}else{
 			error = SYNTAX_ERR;
       errorFce();
-      clearAll();
+      //clearAll();
       return error;
 		}		//pre pravu zatvorku
 				//pre neterminal
+
 	}
 
 	error = SYNTAX_ERR;
@@ -652,7 +653,6 @@ int expresion_parser()
 		if(bracket_counter == -1){
 			right_index.indexibus = DOLAR;
 		}
-
 		switch (precedense_table[left_index.indexibus][right_index.indexibus]){	//case by takto fakci uz "len" doplnit :D
 			case '=':
 				readToken = true;
