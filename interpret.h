@@ -7,7 +7,7 @@
 #include "ial.h"
 #include "stack_frame.h"
 
-extern symData* lastReturnedValue;
+
 void interpret(ilist *L);
 void getOperands(symData ** op1, symData ** op2, symData ** op3);
 
