@@ -1449,9 +1449,7 @@ int prog_scnd()
    {
       error = class_scnd();
       if(error != SUCCESS)
-      {
          return error;
-      }
    }
    else
    {
@@ -1461,6 +1459,8 @@ int prog_scnd()
    if(!(strcmp(token2.data, "class"))) //nacital som class -> idem znova od zaciatku
    {
       error = prog_scnd();
+      if(error != SUCCESS)
+         return error;
    }
    if(token2.stav != S_EOF)
       error = SYNTAX_ERR;
