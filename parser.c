@@ -2601,6 +2601,8 @@ int build_function_call_scnd(int decider)
             strcpy(temporary->ptr_union.str,token2.data);
             temporary->ptr_union.str[strlen(token2.data)+1] = '\0';
             temporary->funcdata_union.offset = -1;
+            temporary->type = tString;
+            temporary->init=true;
             break;
 
          case S_ID:        //pripad sort(s);
@@ -2611,14 +2613,16 @@ int build_function_call_scnd(int decider)
 
          default: return SEMANTIC_TYPE_ERR;
 
-         if(decider == F_length)
-         {
-            generateLastInstruction(I_STRLEN, temporary, NULL, destination, currentList);
-         }
-         else if(decider == F_sort)
-         {
-            generateLastInstruction(I_STRSORT, temporary, NULL, destination, currentList);
-         }
+
+      }
+
+      if(decider == F_length)
+      {
+         generateLastInstruction(I_STRLEN, temporary, NULL, destination, currentList);
+      }
+      else if(decider == F_sort)
+      {
+         generateLastInstruction(I_STRSORT, temporary, NULL, destination, currentList);
       }
 
       front_token();   //musi byt )
@@ -2649,6 +2653,8 @@ int build_function_call_scnd(int decider)
             strcpy(temporary->ptr_union.str,token2.data);
             temporary->ptr_union.str[strlen(token2.data)+1] = '\0';
             temporary->funcdata_union.offset = -1;
+            temporary->type = tString;
+            temporary->init=true;
 
             break;
          case S_ID:        //pripad compare(s, .....);
@@ -2679,6 +2685,8 @@ int build_function_call_scnd(int decider)
             strcpy(temporary2->ptr_union.str,token2.data);
             temporary2->ptr_union.str[strlen(token2.data)+1] = '\0';
             temporary2->funcdata_union.offset = -1;
+            temporary2->type = tString;
+            temporary2->init=true;
 
             break;
          case S_ID:        //pripad compare(s, p);
@@ -2688,16 +2696,18 @@ int build_function_call_scnd(int decider)
             break;
          default: return SEMANTIC_TYPE_ERR;
 
-         if(decider == F_find)
-         {
-            generateLastInstruction(I_STRFIND, temporary, temporary2, destination, currentList);
-         }
-         else if(decider == F_compare)
-         {
-            generateLastInstruction(I_STRCMP, temporary, temporary2, destination, currentList);
-         }
+
 
       }
+      if(decider == F_find)
+      {
+         generateLastInstruction(I_STRFIND, temporary, temporary2, destination, currentList);
+      }
+      else if(decider == F_compare)
+      {
+         generateLastInstruction(I_STRCMP, temporary, temporary2, destination, currentList);
+      }
+
       front_token();   //musi byt )
       if(token2.stav == S_ID || token2.stav == S_INT || token2.stav == S_STRING || token2.stav == S_DOUBLE)
          return SEMANTIC_TYPE_ERR;
