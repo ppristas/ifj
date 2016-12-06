@@ -109,7 +109,7 @@ int parser()
       return INTERNAL_ERR;
 
    //inicializovanie pasky
-   listInit(&globalList);     
+   listInit(&globalList);
 
 
    /************************************************************/
@@ -272,7 +272,7 @@ int after_class()
       return error;
    //ak pride static pravidlo: AC -> static <SD> <AC>
    if((strcmp(token.data, "static")))
-      return SYNTAX_ERR;  
+      return SYNTAX_ERR;
                 //ak pride void pravidlo: <SD> -> void id <SDA>
    get_token();
    if(error != SUCCESS)
@@ -280,7 +280,7 @@ int after_class()
    if(!(strcmp(token.data, "void")))
    {
       symbol_type = sym_type(token);  //vrati typ statickeho symbolu
-      
+
 
       get_token();
       if(error != SUCCESS)
@@ -592,7 +592,7 @@ int after_class()
                return error;
 
                error = main_body();
-   
+
                if(error != SUCCESS)
                   return error;
 
@@ -640,10 +640,10 @@ int params_after()
 
    nazov_len = strlen(token.data); //vracia nazov  symbolu
    nazov = mymalloc(nazov_len*sizeof(char) + 2);
-   if(nazov == NULL) 
+   if(nazov == NULL)
    {
       error = INTERNAL_ERR;
-      
+
       return error;
    }
    strcpy(nazov,token.data);
@@ -1546,7 +1546,7 @@ int after_class_scnd()
       {
          return INTERNAL_ERR;
       }
-      listInit(L);   
+      listInit(L);
       symbol->data->instrPtr = L;
       currentList = L;
 
@@ -1726,7 +1726,7 @@ int after_class_scnd()
             {
                return INTERNAL_ERR;
             }
-            listInit(L); 
+            listInit(L);
             symbol->data->instrPtr = L;
             currentList = L;
 
@@ -1831,9 +1831,9 @@ int params_after_scnd()
 
    nazov_len = strlen(token2.data); //vracia nazov  symbolu
    nazov = mymalloc(nazov_len*sizeof(char) + 2);
-   if(nazov == NULL) 
+   if(nazov == NULL)
    {
-      error = INTERNAL_ERR; 
+      error = INTERNAL_ERR;
       return error;
    }
    strcpy(nazov,token2.data);
@@ -2186,6 +2186,7 @@ int main_body_scnd()   //pravidlo <MB> -> <SL> <MB>
             }
             if(token2.stav != S_SEMICOLON)
                return SYNTAX_ERR;
+            generateLastInstruction(I_RET, NULL, NULL, NULL, currentList);
          }
          else
          {
@@ -2194,9 +2195,11 @@ int main_body_scnd()   //pravidlo <MB> -> <SL> <MB>
             error = expresion_parser();
             if(error != SUCCESS)
                return error;
+            priradenie = false;
             if(token2.stav != S_SEMICOLON)
                return SYNTAX_ERR;
-         }        
+            generateLastInstruction(I_RET, destExpr, NULL, NULL, currentList);
+         }
    }
 
    else if(token2.stav == S_L_KOSZ)
@@ -2470,6 +2473,7 @@ int main_body_riadiace_scnd()   //pravidlo <MB> -> <SL> <MB>
             }
             if(token2.stav != S_SEMICOLON)
                return SYNTAX_ERR;
+            generateLastInstruction(I_RET, NULL, NULL, NULL, currentList);
          }
          else
          {
@@ -2478,9 +2482,11 @@ int main_body_riadiace_scnd()   //pravidlo <MB> -> <SL> <MB>
             error = expresion_parser();
             if(error != SUCCESS)
                return error;
+            priradenie = false;
             if(token2.stav != S_SEMICOLON)
                return SYNTAX_ERR;
-         }  
+            generateLastInstruction(I_RET, destExpr, NULL, NULL, currentList);
+         }
    }
 
 
@@ -2901,7 +2907,7 @@ int build_function_call_scnd(int decider)
       }
       if(token2.stav != S_LZAT)
          return SYNTAX_ERR;
-     
+
       front_token();
       error = expresion_parser();
       if(error != SUCCESS)
@@ -2943,7 +2949,7 @@ int user_function_call()
       }
       if(token2.stav != S_PZAT)
          return SYNTAX_ERR;
-     
+
      front_token();
       if(token2.stav != S_SEMICOLON)
          return SYNTAX_ERR;
