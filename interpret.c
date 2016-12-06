@@ -39,13 +39,9 @@ void getOperands(symData **op1, symData **op2, symData **op3){
     }
 }
 
-symData * lastReturnedValue;
 
 
 void interpret(ilist *L){
-    lastReturnedValue=malloc(sizeof(symData));
-    lastReturnedValue->init=false;
-    lastReturnedValue->type=tNan;
 
     ilist * tmpList;
     tmpList = L;
@@ -62,6 +58,7 @@ void interpret(ilist *L){
     symData *op1;
     symData *op2;
     symData *dest;
+    char * tmpString;
 
 
 
@@ -72,7 +69,6 @@ void interpret(ilist *L){
 
 
     while(tmpList != NULL){
-
         if(tmpList -> active == NULL){
             tmpList = stackTopList(&stack);
             if(tmpList != NULL){
@@ -826,28 +822,11 @@ void interpret(ilist *L){
                     global_stack_frame->frame[global_stack_frame->top]->return_addres->init=true;
                 }
                 if(op1->type == tString && global_stack_frame->frame[global_stack_frame->top]->return_addres->type == tString ){
-                    global_stack_frame->frame[global_stack_frame->top]->return_addres->ptr_union.str = malloc(sizeof(char) * strlen(op1->ptr_union.str) + 1);
-                    lastReturnedValue->ptr_union.str=malloc(strlen(op1->ptr_union.str) * sizeof(char)  + 1);
-                    if(lastReturnedValue->ptr_union.str == NULL){
-                        exit(99);
-                    }
+                    global_stack_frame->frame[global_stack_frame->top]->return_addres->ptr_union.str = malloc(sizeof(char) * strlen(op1->ptr_union.str) + 2);
                     if(global_stack_frame->frame[global_stack_frame->top]->return_addres->ptr_union.str == NULL){
                         exit(99);
                     }
                     strcpy(global_stack_frame->frame[global_stack_frame->top]->return_addres->ptr_union.str, op1->ptr_union.str);
-                    strcpy(lastReturnedValue->ptr_union.str, op1->ptr_union.str);
-                    lastReturnedValue->init=true;
-                }
-            }
-
-            if(op1 != NULL){
-                if(op1->init==true && op1->type==tInt){
-                    lastReturnedValue->init=true;
-                    lastReturnedValue->ptr_union.i = op1->ptr_union.i;
-                }
-                if(op1->init==true && op1->type==tDouble){
-                    lastReturnedValue->init=true;
-                    lastReturnedValue->ptr_union.d = op1->ptr_union.d;
                 }
             }
             tmpList = stackTopList(&stack);
@@ -921,6 +900,7 @@ void interpret(ilist *L){
                     exit(4);
                 }
             }
+            break;
         case I_STRSORT:
             op1=I->op1;
             op2=NULL;
@@ -930,7 +910,11 @@ void interpret(ilist *L){
                 if(dest->type==tString){
                     if(op1->init==true){
                     dest->init=true;
-                    dest->ptr_union.str = sort(op1->ptr_union.str);
+                    tmpString = malloc(sizeof(char) * strlen(op1->ptr_union.str) + 2);
+                    strcpy(tmpString, sort(op1->ptr_union.str));
+                    dest->ptr_union.str = malloc(sizeof(char ) * strlen(op1->ptr_union.str) + 2);
+                    strcpy(dest->ptr_union.str, tmpString);
+                    free(tmpString);
                     }
                     else{
                         exit(8);
