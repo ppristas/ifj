@@ -2940,10 +2940,6 @@ int user_function_call()
 {
    locSymbol* isLoc_symbol = NULL;
    iSymbol* UFCTemp_symbol = isTemp_symbol;     //UFCTemp_symbol = ukazatel na volanu funkciu
-   if(temporary == NULL)
-   {
-      return INTERNAL_ERR;
-   }
 
    front_token();
    if(token2.stav != S_LZAT)
