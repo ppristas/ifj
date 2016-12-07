@@ -963,6 +963,12 @@ void interpret(ilist *L){
                     if(dest->type==tInt){
                         dest->init=true;
                         dest->ptr_union.i=strcmp(op1->ptr_union.str, op2->ptr_union.str);
+                        if(dest->ptr_union.i < 0){
+                            dest->ptr_union.i = -1;
+                        }
+                        else if(dest->ptr_union.i > 0){
+                            dest->ptr_union.i = 1;
+                        }
                     }
                     else if(dest->type==tDouble){
                         dest->init=true;
