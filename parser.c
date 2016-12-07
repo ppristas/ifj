@@ -2626,7 +2626,7 @@ int build_function_call_scnd(int decider)
       }
 
       front_token();   //musi byt )
-      if(token2.stav == S_ID || token2.stav == S_INT || token2.stav == S_STRING || token2.stav == S_DOUBLE)
+      if(token2.stav == S_ID || token2.stav == S_INT || token2.stav == S_STRING || token2.stav == S_DOUBLE || token2.stav == S_CIARKA)
          return SEMANTIC_TYPE_ERR;
       if(token2.stav != S_PZAT)
          return SYNTAX_ERR;
@@ -2669,6 +2669,8 @@ int build_function_call_scnd(int decider)
       }
 
       front_token();
+      if(token2.stav == S_PZAT)
+         return SEMANTIC_TYPE_ERR;
       if(token2.stav != S_CIARKA) //musi byt ciarka medzi argumentami
          return SYNTAX_ERR;
 
@@ -2709,7 +2711,7 @@ int build_function_call_scnd(int decider)
       }
 
       front_token();   //musi byt )
-      if(token2.stav == S_ID || token2.stav == S_INT || token2.stav == S_STRING || token2.stav == S_DOUBLE)
+      if(token2.stav == S_ID || token2.stav == S_INT || token2.stav == S_STRING || token2.stav == S_DOUBLE || token2.stav == S_CIARKA)
          return SEMANTIC_TYPE_ERR;
       if(token2.stav != S_PZAT)
          return SYNTAX_ERR;
@@ -2720,6 +2722,12 @@ int build_function_call_scnd(int decider)
    }
    else if(decider == F_substr)
    {
+      temporary3 = mymalloc(sizeof(symData));
+      if(temporary3 == NULL)
+         return INTERNAL_ERR;
+      temporary3->funcdata_union.var_count = 3;
+      generateLastInstruction(I_FRAME, temporary3, NULL, NULL, currentList);
+
       if(token2.stav != S_LZAT)
          return SYNTAX_ERR;
 
@@ -2727,16 +2735,31 @@ int build_function_call_scnd(int decider)
       switch(token2.stav)
       {
          case S_STRING:    //pripad substr("awadawdawdaw", ...., .....);
-             break;
+            nazov_len = strlen(token2.data);
+            temporary->ptr_union.str = mymalloc(nazov_len*sizeof(char) + 2);
+            if(temporary->ptr_union.str == NULL)
+            {
+               return INTERNAL_ERR;
+            }
+            strcpy(temporary->ptr_union.str,token2.data);
+            temporary->ptr_union.str[strlen(token2.data)+1] = '\0';
+            temporary->funcdata_union.offset = -1;
+            temporary->type = tString;
+            temporary->init=true;
+            break;
          case S_ID:        //pripad substr(s, ...., .....);
-            error = build_in_ID();
+            error = build_in_ID(1);
             if(error != SUCCESS)
                return error;
             break;
          default: return SEMANTIC_TYPE_ERR;
       }
 
+      generateLastInstruction(I_PUSHPARAM, temporary, NULL, NULL, currentList);
+
       front_token();
+      if(token2.stav == S_PZAT)
+         return SEMANTIC_TYPE_ERR;
       if(token2.stav != S_CIARKA) //musi byt ciarka medzi argumentami
          return SYNTAX_ERR;
 
@@ -2744,6 +2767,10 @@ int build_function_call_scnd(int decider)
       switch(token2.stav)
       {
          case S_INT:    //pripad substr("awadawdawdaw", 2, .....);
+             temporary->type = tInt;
+             temporary->funcdata_union.offset = -1;
+             temporary->ptr_union.i = atoi(token2.data);
+             temporary->init = true;
              break;
          case S_ID:        //pripad substr("awadawdawdaw", smf, .....);
             if(strchr(token2.data, '.'))
@@ -2780,6 +2807,7 @@ int build_function_call_scnd(int decider)
                   fprintf(stderr, "RUNTIME_INIT_ERR. Using uninitialized \"%s\" in \"%s\".\n", id_part, funcname);
                   return RUNTIME_INIT_ERR;
                }
+               temporary = isTemp_symbol->data;
 
             }
             else
@@ -2811,13 +2839,18 @@ int build_function_call_scnd(int decider)
                   fprintf(stderr, "RUNTIME_INIT_ERR. Using uninitialized \"%s\" in \"%s\".\n", nazov, funcname);
                   return RUNTIME_INIT_ERR;
                }
+               temporary = isLoc_symbol->data;
             }
             break;
             //overenie v TS ci je dany ID string
          default: return SEMANTIC_TYPE_ERR;
       }
 
+      generateLastInstruction(I_PUSHPARAM, temporary, NULL, NULL, currentList);
+
       front_token();
+      if(token2.stav == S_PZAT)
+         return SEMANTIC_TYPE_ERR;
       if(token2.stav != S_CIARKA) //musi byt ciarka medzi argumentami
          return SYNTAX_ERR;
 
@@ -2825,6 +2858,10 @@ int build_function_call_scnd(int decider)
       switch(token2.stav)
       {
          case S_INT:    //pripad substr("awadawdawdaw", 2, 9);
+            temporary->type = tInt;
+            temporary->funcdata_union.offset = -1;
+            temporary->ptr_union.i = atoi(token2.data);
+            temporary->init = true;
             break;
          case S_ID:        //pripad substr("awadawdawdaw", mi,lf);
             if(strchr(token2.data, '.'))
@@ -2897,14 +2934,17 @@ int build_function_call_scnd(int decider)
          default: return SEMANTIC_TYPE_ERR;
       }
 
+      generateLastInstruction(I_PUSHPARAM, temporary, NULL, NULL, currentList);
+
       front_token();   //musi byt )
-      if(token2.stav == S_ID || token2.stav == S_INT || token2.stav == S_STRING || token2.stav == S_DOUBLE)
+      if(token2.stav == S_ID || token2.stav == S_INT || token2.stav == S_STRING || token2.stav == S_DOUBLE || token2.stav == S_CIARKA)
          return SEMANTIC_TYPE_ERR;
       if(token2.stav != S_PZAT)
          return SYNTAX_ERR;
       front_token();   //musi byt ;
       if(token2.stav != S_SEMICOLON)
          return SYNTAX_ERR;
+      generateLastInstruction(I_STRSUB, NULL, NULL, destination, currentList);
       return error;
    }
    else if(decider == F_print)
