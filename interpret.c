@@ -5,6 +5,8 @@
 #include <string.h>
 #include "buildin.h"
 #include "cleaner.h"
+#include "scaner.h"
+#include "error.h"
 
 
 
@@ -48,12 +50,9 @@ void interpret(ilist *L){
     tmpList = L;
     actFirst(tmpList);
 
-    stack_frame_create(&global_stack_frame);
-    stack_frame_init(global_stack_frame);
-
     instrStack stack;
     stackInitList(&stack);
-
+    int pom;
 
     instr *I;
     symData *op1;
@@ -65,6 +64,7 @@ void interpret(ilist *L){
 
     char tmpDouble[30];
     char tmpInt[20];
+    symbolType tmpType;
 
 
 
@@ -98,7 +98,9 @@ void interpret(ilist *L){
                     dest->init=true;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
 
             }
@@ -108,7 +110,9 @@ void interpret(ilist *L){
                     dest->init=true;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else if(op1->type == tDouble && dest->type == tInt){
@@ -117,7 +121,9 @@ void interpret(ilist *L){
                     dest->init=true;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else if(op1->type == tDouble && dest->type == tDouble){
@@ -126,24 +132,45 @@ void interpret(ilist *L){
                     dest->init=true;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else if(op1->type == tString && dest->type == tString){
                 if(op1->init == true){
-                    dest->init=true;
-                    dest->ptr_union.str = malloc(strlen(op1->ptr_union.str) * sizeof(char) + 1);
+                    if(dest->funcdata_union.offset == -1){
+                        dest->ptr_union.str = mymalloc(strlen(op1->ptr_union.str) * sizeof(char) + 1);
+                    }
+                    else{
+                        if(dest->init == true){
+                            free(dest->ptr_union.str);
+                        }
+                        if(dest->funcdata_union.offset == -1){
+                            dest->ptr_union.str = mymalloc(strlen(op1->ptr_union.str) * sizeof(char) + 1);
+                        }
+                        else{
+                            dest->ptr_union.str = malloc(strlen(op1->ptr_union.str) * sizeof(char) + 1);
+                        }
+                    }
                     if(dest->ptr_union.str == NULL){
-                        exit(99);
+                        stackDestroyList(&stack);
+                        error = 99;
+                        return;
                     }
                     strcpy(dest->ptr_union.str, op1->ptr_union.str);
+                    dest->init=true;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else{
-                exit(4);
+                stackDestroyList(&stack);
+                error = 4;
+                return;
             }
             break;
 
@@ -159,7 +186,9 @@ void interpret(ilist *L){
                     dest->ptr_union.i = op1->ptr_union.i + op2->ptr_union.i;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else if(op1->type == tDouble && op2->type == tInt ){
@@ -169,7 +198,9 @@ void interpret(ilist *L){
                     dest->ptr_union.d = op1->ptr_union.d + op2->ptr_union.i;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else if(op1->type == tInt && op2->type == tDouble){
@@ -179,7 +210,9 @@ void interpret(ilist *L){
                     dest->ptr_union.d = op1->ptr_union.i + op2->ptr_union.d;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else if(op1->type == tDouble && op2->type == tDouble ){
@@ -189,7 +222,9 @@ void interpret(ilist *L){
                     dest->ptr_union.d = op1->ptr_union.d + op2->ptr_union.d;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else if(op1->type == tString && op2->type == tString){
@@ -198,13 +233,17 @@ void interpret(ilist *L){
                     dest->type = tString;
                     dest->ptr_union.str=mymalloc(sizeof(char) * (strlen(op1->ptr_union.str) + strlen(op2->ptr_union.str)) + 1);
                     if(dest->ptr_union.str == NULL){
-                        exit(99);
+                        stackDestroyList(&stack);
+                        error = 99;
+                        return;
                     }
                     strcpy(dest->ptr_union.str, op1->ptr_union.str);
                     strcat(dest->ptr_union.str, op2->ptr_union.str);
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else if(op1->type == tString && op2->type == tInt){
@@ -214,13 +253,17 @@ void interpret(ilist *L){
                     sprintf(tmpInt, "%d", op2->ptr_union.i);
                     dest->ptr_union.str=mymalloc(sizeof(char) * (strlen(op1->ptr_union.str) + strlen(tmpInt)) + 1);
                     if(dest->ptr_union.str == NULL){
-                        exit(99);
+                        stackDestroyList(&stack);
+                        error = 99;
+                        return;
                     }
                     strcpy(dest->ptr_union.str, op1->ptr_union.str);
                     strcat(dest->ptr_union.str, tmpInt);
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else if(op1->type == tInt && op2->type == tString ){
@@ -230,13 +273,17 @@ void interpret(ilist *L){
                     sprintf(tmpInt, "%d", op1->ptr_union.i);
                     dest->ptr_union.str=mymalloc(sizeof(char) * (strlen(tmpInt) + strlen(op2->ptr_union.str)) + 1);
                     if(dest->ptr_union.str == NULL){
-                        exit(99);
+                        stackDestroyList(&stack);
+                        error = 99;
+                        return;
                     }
                     strcpy(dest->ptr_union.str, tmpInt);
                     strcat(dest->ptr_union.str, op2->ptr_union.str);
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return ;
                 }
             }
             else if(op1->type == tString && op2->type == tDouble ){
@@ -246,13 +293,17 @@ void interpret(ilist *L){
                     sprintf(tmpDouble, "%g", op2->ptr_union.d);
                     dest->ptr_union.str=mymalloc(sizeof(char) * (strlen(op1->ptr_union.str) + strlen(tmpDouble)) + 1);
                     if(dest->ptr_union.str == NULL){
-                        exit(99);
+                        stackDestroyList(&stack);
+                        error = 99;
+                        return ;
                     }
                     strcpy(dest->ptr_union.str, op1->ptr_union.str);
                     strcat(dest->ptr_union.str, tmpDouble);
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else if(op1->type == tDouble && op2->type == tString){
@@ -262,17 +313,23 @@ void interpret(ilist *L){
                     sprintf(tmpDouble, "%g", op1->ptr_union.d);
                     dest->ptr_union.str=mymalloc(sizeof(char) * (strlen(tmpDouble) + strlen(op2->ptr_union.str)) + 1);
                     if(dest->ptr_union.str == NULL){
-                        exit(99);
+                        stackDestroyList(&stack);
+                        error = 99;
+                        return;
                     }
                     strcpy(dest->ptr_union.str, tmpDouble);
                     strcat(dest->ptr_union.str, op2->ptr_union.str);
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else{
-                exit(4);
+                stackDestroyList(&stack);
+                error = 4;
+                return;
             }
             break;
 
@@ -288,7 +345,9 @@ void interpret(ilist *L){
                     dest->ptr_union.i = op1->ptr_union.i - op2->ptr_union.i;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else if(op1->type == tDouble && op2->type == tInt){
@@ -298,7 +357,9 @@ void interpret(ilist *L){
                     dest->ptr_union.d = op1->ptr_union.d - op2->ptr_union.i;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else if(op1->type == tInt && op2->type == tDouble){
@@ -308,7 +369,9 @@ void interpret(ilist *L){
                     dest->ptr_union.d = op1->ptr_union.i - op2->ptr_union.d;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else if(op1->type == tDouble && op2->type == tDouble){
@@ -318,11 +381,15 @@ void interpret(ilist *L){
                     dest->ptr_union.d = op1->ptr_union.d - op2->ptr_union.d;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else{
-                exit(4);
+                stackDestroyList(&stack);
+                error = 4;
+                return;
             }
             break;
 
@@ -338,7 +405,9 @@ void interpret(ilist *L){
                     dest->ptr_union.i = op1->ptr_union.i * op2->ptr_union.i;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else if(op1->type == tDouble && op2->type == tInt){
@@ -348,7 +417,9 @@ void interpret(ilist *L){
                     dest->ptr_union.d = op1->ptr_union.d * op2->ptr_union.i;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else if(op1->type == tInt && op2->type == tDouble){
@@ -358,7 +429,9 @@ void interpret(ilist *L){
                     dest->ptr_union.d = op1->ptr_union.i * op2->ptr_union.d;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else if(op1->type == tDouble && op2->type == tDouble){
@@ -368,11 +441,15 @@ void interpret(ilist *L){
                     dest->ptr_union.d = op1->ptr_union.d * op2->ptr_union.d;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else{
-                exit(4);
+                stackDestroyList(&stack);
+                error = 4;
+                return;
             }
             break;
         case I_DIV:
@@ -385,12 +462,16 @@ void interpret(ilist *L){
                     dest->init=true;
                     dest->type = tInt;
                     if(op2->ptr_union.i == 0){
-                        exit(9);
+                        stackDestroyList(&stack);
+                        error = 9;
+                        return;
                     }
                     dest->ptr_union.i = op1->ptr_union.i / op2->ptr_union.i;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else if(op1->type == tDouble && op2->type == tInt){
@@ -398,12 +479,16 @@ void interpret(ilist *L){
                     dest->init=true;
                     dest->type = tDouble;
                     if(op2->ptr_union.i == 0){
-                        exit(9);
+                        stackDestroyList(&stack);
+                        error = 9;
+                        return;
                     }
                     dest->ptr_union.d = op1->ptr_union.d / op2->ptr_union.i;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else if(op1->type == tInt && op2->type == tDouble){
@@ -411,12 +496,16 @@ void interpret(ilist *L){
                     dest->init=true;
                     dest->type = tDouble;
                     if(op2->ptr_union.d == 0.0){
-                        exit(9);
+                        stackDestroyList(&stack);
+                        error = 9;
+                        return;
                     }
                     dest->ptr_union.d = op1->ptr_union.i / op2->ptr_union.d;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else if(op1->type == tDouble && op2->type == tDouble){
@@ -424,16 +513,22 @@ void interpret(ilist *L){
                     dest->init=true;
                     dest->type = tDouble;
                     if(op2->ptr_union.d == 0.0){
-                        exit(9);
+                        stackDestroyList(&stack);
+                        error = 9;
+                        return;
                     }
                     dest->ptr_union.d = op1->ptr_union.d / op2->ptr_union.d;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else{
-                exit(4);
+                stackDestroyList(&stack);
+                error = 4;
+                return;
             }
             break;
         case I_LESSEQ:
@@ -448,7 +543,9 @@ void interpret(ilist *L){
                     dest->ptr_union.is_bool = op1->ptr_union.i <= op2->ptr_union.i;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else if(op1->type == tDouble && op2->type == tInt){
@@ -458,7 +555,9 @@ void interpret(ilist *L){
                     dest->ptr_union.is_bool = op1->ptr_union.d <= (double)op2->ptr_union.i;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else if(op1->type == tInt && op2->type == tDouble){
@@ -468,7 +567,9 @@ void interpret(ilist *L){
                     dest->ptr_union.is_bool = (double)op1->ptr_union.i <= op2->ptr_union.d;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else if(op1->type == tDouble && op2->type == tDouble){
@@ -478,11 +579,15 @@ void interpret(ilist *L){
                     dest->ptr_union.is_bool= op1->ptr_union.d <= op2->ptr_union.d;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else{
-                exit(4);
+                stackDestroyList(&stack);
+                error = 4;
+                return;
             }
             break;
         case I_LESS:
@@ -497,7 +602,9 @@ void interpret(ilist *L){
                     dest->ptr_union.is_bool = op1->ptr_union.i < op2->ptr_union.i;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else if(op1->type == tDouble && op2->type == tInt){
@@ -507,7 +614,9 @@ void interpret(ilist *L){
                     dest->ptr_union.is_bool = op1->ptr_union.d < (double)op2->ptr_union.i;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else if(op1->type == tInt && op2->type == tDouble){
@@ -517,7 +626,9 @@ void interpret(ilist *L){
                     dest->ptr_union.is_bool = (double) op1->ptr_union.i < op2->ptr_union.d;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else if(op1->type == tDouble && op2->type == tDouble){
@@ -527,11 +638,15 @@ void interpret(ilist *L){
                     dest->ptr_union.is_bool = op1->ptr_union.d < op2->ptr_union.d;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else{
-                exit(4);
+                stackDestroyList(&stack);
+                error = 4;
+                return;
             }
             break;
         case I_BIGGER:
@@ -546,7 +661,9 @@ void interpret(ilist *L){
                     dest->ptr_union.is_bool = op1->ptr_union.i > op2->ptr_union.i;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else if(op1->type == tDouble && op2->type == tInt){
@@ -556,7 +673,9 @@ void interpret(ilist *L){
                     dest->ptr_union.is_bool = op1->ptr_union.d > (double)op2->ptr_union.i;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else if(op1->type == tInt && op2->type == tDouble){
@@ -566,7 +685,9 @@ void interpret(ilist *L){
                     dest->ptr_union.is_bool = (double) op1->ptr_union.i > op2->ptr_union.d;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else if(op1->type == tDouble && op2->type == tDouble){
@@ -576,11 +697,15 @@ void interpret(ilist *L){
                     dest->ptr_union.is_bool = op1->ptr_union.d > op2->ptr_union.d;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else{
-                exit(4);
+                stackDestroyList(&stack);
+                error = 4;
+                return;
             }
             break;
 
@@ -596,7 +721,9 @@ void interpret(ilist *L){
                     dest->ptr_union.is_bool = op1->ptr_union.i >= op2->ptr_union.i;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else if(op1->type == tDouble && op2->type == tInt){
@@ -606,7 +733,9 @@ void interpret(ilist *L){
                     dest->ptr_union.is_bool = op1->ptr_union.d >= (double) op2->ptr_union.i;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else if(op1->type == tInt && op2->type == tDouble){
@@ -616,7 +745,9 @@ void interpret(ilist *L){
                     dest->ptr_union.is_bool = (double) op1->ptr_union.i >= op2->ptr_union.d;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else if(op1->type == tDouble && op2->type == tDouble){
@@ -626,11 +757,15 @@ void interpret(ilist *L){
                     dest->ptr_union.is_bool = op1->ptr_union.d >= op2->ptr_union.d;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else{
-                exit(4);
+                stackDestroyList(&stack);
+                error = 4;
+                return;
             }
             break;
         case I_EQ:
@@ -645,7 +780,9 @@ void interpret(ilist *L){
                     dest->ptr_union.is_bool = op1->ptr_union.i == op2->ptr_union.i;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else if(op1->type == tDouble && op2->type == tInt){
@@ -655,7 +792,9 @@ void interpret(ilist *L){
                     dest->ptr_union.is_bool = op1->ptr_union.d == (double)op2->ptr_union.i;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else if(op1->type == tInt && op2->type == tDouble){
@@ -665,7 +804,9 @@ void interpret(ilist *L){
                     dest->ptr_union.is_bool = (double)op1->ptr_union.i == op2->ptr_union.d;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else if(op1->type == tDouble && op2->type == tDouble){
@@ -675,11 +816,15 @@ void interpret(ilist *L){
                     dest->ptr_union.is_bool = op1->ptr_union.d == op2->ptr_union.d;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else{
-                exit(4);
+                stackDestroyList(&stack);
+                error = 4;
+                return;
             }
             break;
 
@@ -695,7 +840,9 @@ void interpret(ilist *L){
                     dest->ptr_union.is_bool = op1->ptr_union.i != op2->ptr_union.i;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else if(op1->type == tDouble && op2->type == tInt){
@@ -705,7 +852,9 @@ void interpret(ilist *L){
                     dest->ptr_union.is_bool = op1->ptr_union.d != (double)op2->ptr_union.i;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else if(op1->type == tInt && op2->type == tDouble){
@@ -715,7 +864,9 @@ void interpret(ilist *L){
                     dest->ptr_union.is_bool = (double)op1->ptr_union.i != op2->ptr_union.d;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else if(op1->type == tDouble && op2->type == tDouble){
@@ -725,11 +876,15 @@ void interpret(ilist *L){
                     dest->ptr_union.is_bool = op1->ptr_union.d != op2->ptr_union.d;
                 }
                 else{
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
             }
             else{
-                exit(4);
+                stackDestroyList(&stack);
+                error = 4;
+                return;
             }
             break;
 
@@ -780,6 +935,11 @@ void interpret(ilist *L){
             dest = NULL;
             global_stack_frame->frame[global_stack_frame->top]->return_addres=set_return_value(global_stack_frame, op2);
             if(global_stack_frame->frame[global_stack_frame->top]->return_addres != NULL){
+                if(global_stack_frame->frame[global_stack_frame->top]->return_addres->type == tString){
+                    if(global_stack_frame->frame[global_stack_frame->top]->return_addres->init == true && global_stack_frame->frame[global_stack_frame->top]->return_addres->funcdata_union.offset == 0){
+                        free(global_stack_frame->frame[global_stack_frame->top]->return_addres->ptr_union.str);
+                    }
+                }
                 global_stack_frame->frame[global_stack_frame->top]->return_addres->init=false;
             }
             stackPushList(&stack, tmpList->active->nextItem, tmpList);
@@ -804,7 +964,9 @@ void interpret(ilist *L){
 
             if(op1 != NULL && global_stack_frame->frame[global_stack_frame->top]->return_addres != NULL){
                 if(op1->init == false){
-                    exit(8);
+                    stackDestroyList(&stack);
+                    error = 8;
+                    return;
                 }
                 if(op1->type == tInt && global_stack_frame->frame[global_stack_frame->top]->return_addres->type == tInt){
                     global_stack_frame->frame[global_stack_frame->top]->return_addres->ptr_union.i = op1->ptr_union.i;
@@ -823,11 +985,14 @@ void interpret(ilist *L){
                     global_stack_frame->frame[global_stack_frame->top]->return_addres->init=true;
                 }
                 if(op1->type == tString && global_stack_frame->frame[global_stack_frame->top]->return_addres->type == tString ){
-                    global_stack_frame->frame[global_stack_frame->top]->return_addres->ptr_union.str = malloc(sizeof(char) * strlen(op1->ptr_union.str) + 2);
+                    global_stack_frame->frame[global_stack_frame->top]->return_addres->ptr_union.str = malloc(sizeof(char) * strlen(op1->ptr_union.str) + 1);
                     if(global_stack_frame->frame[global_stack_frame->top]->return_addres->ptr_union.str == NULL){
-                        exit(99);
+                        stackDestroyList(&stack);
+                        error = 99;
+                        return;
                     }
                     strcpy(global_stack_frame->frame[global_stack_frame->top]->return_addres->ptr_union.str, op1->ptr_union.str);
+                    global_stack_frame->frame[global_stack_frame->top]->return_addres->init = true;
                 }
             }
             tmpList = stackTopList(&stack);
@@ -847,7 +1012,9 @@ void interpret(ilist *L){
             getOperands(&op1, &op2, &dest);
 
             if(op1->init==false){
-                exit(8);
+                stackDestroyList(&stack);
+                error = 8;
+                return;
             }
             if(op1->type == tInt){
                 printf("%d", op1->ptr_union.i);
@@ -864,14 +1031,24 @@ void interpret(ilist *L){
             op2 = NULL;
             dest = I->dest;
             getOperands(&op1, &op2, &dest);
-            readInt(dest);
+            pom = readInt(dest);
+            if(pom == 7 || pom == 4) {
+                stackDestroyList(&stack);
+                error = pom;
+                return;
+            }
             break;
         case I_READD:
             dest = I->dest;
             op2 = NULL;
             op1 = NULL;
             getOperands(&op1,&op2,&dest);
-            readDouble(dest);
+            pom = readDouble(dest);
+            if(pom == 7 || pom == 4) {
+                stackDestroyList(&stack);
+                error = pom;
+                return;
+            }
             break;
         case I_READS:
             dest = I->dest;
@@ -886,7 +1063,9 @@ void interpret(ilist *L){
             dest=I->dest;
             getOperands(&op1,&op2,&dest);
             if(op1->init==false){
-                exit(8);
+                stackDestroyList(&stack);
+                error = 8;
+                return ;
             }
             if(dest != NULL){
                 if(dest->type == tInt){
@@ -898,7 +1077,9 @@ void interpret(ilist *L){
                     dest->init=true;
                 }
                 else{
-                    exit(4);
+                    stackDestroyList(&stack);
+                    error = 4;
+                    return;
                 }
             }
             break;
@@ -910,19 +1091,26 @@ void interpret(ilist *L){
             if(dest != NULL){
                 if(dest->type==tString){
                     if(op1->init==true){
-                    dest->init=true;
-                    tmpString = malloc(sizeof(char) * strlen(op1->ptr_union.str) + 2);
-                    strcpy(tmpString, sort(op1->ptr_union.str));
-                    dest->ptr_union.str = malloc(sizeof(char ) * strlen(op1->ptr_union.str) + 2);
-                    strcpy(dest->ptr_union.str, tmpString);
-                    free(tmpString);
+                        tmpString = malloc(sizeof(char) * strlen(op1->ptr_union.str) + 2);
+                        strcpy(tmpString, sort(op1->ptr_union.str));
+                        if(dest->init == true){
+                            free(dest->ptr_union.str);
+                        }
+                        dest->ptr_union.str = malloc(sizeof(char ) * strlen(tmpString) + 2);
+                        strcpy(dest->ptr_union.str, tmpString);
+                        free(tmpString);
+                        dest->init=true;
                     }
                     else{
-                        exit(8);
+                        stackDestroyList(&stack);
+                        error = 8;
+                        return;
                     }
                 }
                 else{
-                    exit(4);
+                    stackDestroyList(&stack);
+                    error = 4;
+                    return;
                 }
             }
             break;
@@ -932,7 +1120,9 @@ void interpret(ilist *L){
             dest=I->dest;
             getOperands(&op1, &op2, &dest);
             if(op1->init == false || op2->init == false){
-                exit(8);
+                stackDestroyList(&stack);
+                error = 8;
+                return;
             }
             if(dest != NULL){
                 if(op1->type == tString && op2->type==tString){
@@ -945,7 +1135,9 @@ void interpret(ilist *L){
                         dest->ptr_union.d=find(op1->ptr_union.str, op2->ptr_union.str);
                     }
                     else{
-                        exit(4);
+                        stackDestroyList(&stack);
+                        error = 4;
+                        return;
                     }
                 }
             }
@@ -956,7 +1148,9 @@ void interpret(ilist *L){
             dest=I->dest;
             getOperands(&op1, &op2, &dest);
             if(op1->init == false || op2->init == false){
-                exit(8);
+                stackDestroyList(&stack);
+                error = 8;
+                return;
             }
             if(dest != NULL){
                 if(op1->type == tString && op2->type==tString){
@@ -975,12 +1169,46 @@ void interpret(ilist *L){
                         dest->ptr_union.d=strcmp(op1->ptr_union.str, op2->ptr_union.str);
                     }
                     else{
-                        exit(4);
+                        stackDestroyList(&stack);
+                        error = 4;
+                        return;
                     }
                 }
             }
             break;
         case I_STRSUB:
+            dest = I->dest;
+            tmpString = NULL;
+            if(dest != NULL){
+                tmpType = dest->type;
+                dest=pre_decode_addres(global_stack_frame, dest->funcdata_union.offset);
+                dest->type = tmpType;
+            }
+            if(global_stack_frame->frame[global_stack_frame->top]->var_array[2].init == false || global_stack_frame->frame[global_stack_frame->top]->var_array[1].init == false || global_stack_frame->frame[global_stack_frame->top]->var_array[0].init == false){
+                stackDestroyList(&stack);
+                error = 8;
+                return;
+            }
+            if(dest != NULL){
+                tmpString = malloc(sizeof(char) * global_stack_frame->frame[global_stack_frame->top]->var_array[2].ptr_union.i + 1);
+                if(tmpString == NULL){
+                    stackDestroyList(&stack);
+                    error = 99;
+                    return;
+                }
+                strcpy(tmpString, substring(global_stack_frame->frame[global_stack_frame->top]->var_array[0].ptr_union.str, global_stack_frame->frame[global_stack_frame->top]->var_array[1].ptr_union.i, global_stack_frame->frame[global_stack_frame->top]->var_array[2].ptr_union.i));
+                if(dest->init == true){
+                    free(dest->ptr_union.str);
+                }
+                dest->ptr_union.str = malloc(sizeof(char) * (global_stack_frame->frame[global_stack_frame->top]->var_array[2].ptr_union.i) + 1);
+                strcpy(dest->ptr_union.str, tmpString);
+                if(tmpString != NULL){
+                    free(tmpString);
+                }
+                dest->init=true;
+            }
+
+            stack_frame_pop(global_stack_frame);
             break;
 
 
@@ -1048,4 +1276,6 @@ void interpret(ilist *L){
 
 
     }//UZAVIERKA WHILE-U
+    error = 0;
+    return ;
 }
