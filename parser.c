@@ -164,6 +164,7 @@ int parser()
    generateLastInstruction(I_CALL, symbol->data, NULL, NULL, &globalList);
    interpret(&globalList);
 
+   free(global_stack_frame);
 
    return error;
 }
@@ -2077,10 +2078,24 @@ int main_body_scnd()   //pravidlo <MB> -> <SL> <MB>
                if(error != SUCCESS)
                   return error;
             }
-            else
+            else  //narazili sme na globalnu premennu s jednoduchym volanim nazvu
             {
-               fprintf(stderr, "SEMANTIC_PROG_ERR. When using \"%s\" you must enter fully quialified ID.\n", nazov);
-               return SEMANTIC_PROG_ERR;
+               front_token();
+               if(token2.stav != S_PRIR)
+               return SYNTAX_ERR;
+
+               priradenie = true;
+               assSymbol = temp_symbol->data->type;
+               destination = temp_symbol->data;
+               error = is_function_call_or_ass();
+               if(error != SUCCESS)
+                  return error;
+
+               temp_symbol->data->init = true;
+               priradenie = false;
+
+               if(token2.stav != S_SEMICOLON)
+                  return SYNTAX_ERR;
             }
          }
          else if(temp_symbol != NULL && local_symbol != NULL)   //pripad ze sa zhoduju staticka a lokalna ID tak sa bude pouzivat lokalna
@@ -2254,8 +2269,6 @@ int main_body_riadiace_scnd()   //pravidlo <MB> -> <SL> <MB>
    {
       item* LABEL1 = generateItem(I_LABEL, NULL, NULL, NULL);
       item* LABEL2 = generateItem(I_LABEL, NULL, NULL, NULL);
-
-
 
       front_token();   //cakam (
       if(token2.stav != S_LZAT)
@@ -2454,7 +2467,48 @@ int main_body_riadiace_scnd()   //pravidlo <MB> -> <SL> <MB>
                if(error != SUCCESS)
                   return error;
             }
+            else
+            {
+               front_token();
+               if(token2.stav != S_PRIR)
+                  return SYNTAX_ERR;
+
+               priradenie = true;
+               assSymbol = temp_symbol->data->type;
+               destination = temp_symbol->data;
+               error = is_function_call_or_ass();
+               if(error != SUCCESS)
+                  return error;
+
+               temp_symbol->data->init = true;
+               priradenie = false;
+
+               if(token2.stav != S_SEMICOLON)
+                  return SYNTAX_ERR;
+            }
          }
+         else if(temp_symbol != NULL && local_symbol != NULL)
+         {
+            front_token();
+            if(token2.stav != S_PRIR)
+               return SYNTAX_ERR;
+
+            priradenie = true;
+            assSymbol = local_symbol->data->type;
+            destination = local_symbol->data;
+            error = is_function_call_or_ass();
+            if(error != SUCCESS)
+               return error;
+
+            local_symbol->data->init = true;
+            priradenie = false;
+
+            if(token2.stav != S_SEMICOLON)
+               return SYNTAX_ERR;
+         }
+         else
+            return SEMANTIC_PROG_ERR;
+         
       }
    }
    else if(!((strcmp(token2.data, "String"))&&(strcmp(token2.data, "int"))&&(strcmp(token2.data, "double"))))  //pravidlo <SL> -> <PARS> <VD>
@@ -2824,22 +2878,54 @@ int build_function_call_scnd(int decider)
                nazov[strlen(token2.data)+1] = '\0';   //dostali sme nazov ID
 
                isLoc_symbol = loc_symbol_search(local_table, nazov); //overenie, ci uz dana lokalna premenna neexistuje ako premenna
-               if(isLoc_symbol == NULL)
+               isTemp_symbol = Htab_search(ptrclass->ptr, nazov);
+               if(isLoc_symbol == NULL && isTemp_symbol == NULL)  //ak sa nenaslo ani v jednej tabulke
                {
                   fprintf(stderr, "SEMANTIC_PROG_ERR. Using \"%s\" undeclared in \"%s\".\n", nazov, funcname);
                   return SEMANTIC_PROG_ERR;
                }
-               if(isLoc_symbol->data->type != tInt)
+               else if(isLoc_symbol != NULL && isTemp_symbol == NULL)
                {
-                  fprintf(stderr, "SEMANTIC_TYPE_ERR. Expected type \"int\" in \"%s\".\n", nazov);
-                  return SEMANTIC_TYPE_ERR;
+                  if(isLoc_symbol->data->type != tInt)
+                  {
+                     fprintf(stderr, "SEMANTIC_TYPE_ERR. Expected type \"int\" in \"%s\".\n", nazov);
+                     return SEMANTIC_TYPE_ERR;
+                  }
+                  if(isLoc_symbol->data->init == false)
+                  {
+                     fprintf(stderr, "RUNTIME_INIT_ERR. Using uninitialized \"%s\" in \"%s\".\n", nazov, funcname);
+                     return RUNTIME_INIT_ERR;
+                  }
+                  temporary = isLoc_symbol->data;
                }
-               if(isLoc_symbol->data->init == false)
+               else if(isLoc_symbol == NULL && isTemp_symbol != NULL)
                {
-                  fprintf(stderr, "RUNTIME_INIT_ERR. Using uninitialized \"%s\" in \"%s\".\n", nazov, funcname);
-                  return RUNTIME_INIT_ERR;
+                  if(isTemp_symbol->data->type != tInt)
+                  {
+                     fprintf(stderr, "SEMANTIC_TYPE_ERR. Expected type \"int\" in \"%s\".\n", nazov);
+                     return SEMANTIC_TYPE_ERR;
+                  }
+                  if(isTemp_symbol->data->init == false)
+                  {
+                     fprintf(stderr, "RUNTIME_INIT_ERR. Using uninitialized \"%s\" in \"%s\".\n", nazov, funcname);
+                     return RUNTIME_INIT_ERR;
+                  }
+                  temporary = isTemp_symbol->data;
                }
-               temporary = isLoc_symbol->data;
+               else if(isLoc_symbol != NULL && isTemp_symbol != NULL)  //lokalna zatieni globalnu
+               {
+                  if(isLoc_symbol->data->type != tInt)
+                  {
+                     fprintf(stderr, "SEMANTIC_TYPE_ERR. Expected type \"int\" in \"%s\".\n", nazov);
+                     return SEMANTIC_TYPE_ERR;
+                  }
+                  if(isLoc_symbol->data->init == false)
+                  {
+                     fprintf(stderr, "RUNTIME_INIT_ERR. Using uninitialized \"%s\" in \"%s\".\n", nazov, funcname);
+                     return RUNTIME_INIT_ERR;
+                  }
+                  temporary = isLoc_symbol->data;
+               }
             }
             break;
             //overenie v TS ci je dany ID string
@@ -2897,6 +2983,7 @@ int build_function_call_scnd(int decider)
                   fprintf(stderr, "RUNTIME_INIT_ERR. Using uninitialized \"%s\" in \"%s\".\n", id_part, funcname);
                   return RUNTIME_INIT_ERR;
                }
+               temporary = isTemp_symbol->data;
 
             }
             else
@@ -2913,20 +3000,53 @@ int build_function_call_scnd(int decider)
                nazov[strlen(token2.data)+1] = '\0';   //dostali sme nazov ID
 
                isLoc_symbol = loc_symbol_search(local_table, nazov); //overenie, ci uz dana lokalna premenna neexistuje ako premenna
-               if(isLoc_symbol == NULL)
+               isTemp_symbol = Htab_search(ptrclass->ptr, nazov);
+               if(isLoc_symbol == NULL && isTemp_symbol == NULL)  //ak sa nenaslo ani v jednej tabulke
                {
                   fprintf(stderr, "SEMANTIC_PROG_ERR. Using \"%s\" undeclared in \"%s\".\n", nazov, funcname);
                   return SEMANTIC_PROG_ERR;
                }
-               if(isLoc_symbol->data->type != tInt)
+               else if(isLoc_symbol != NULL && isTemp_symbol == NULL)
                {
-                  fprintf(stderr, "SEMANTIC_TYPE_ERR. Expected type \"int\" in \"%s\".\n", nazov);
-                  return SEMANTIC_TYPE_ERR;
+                  if(isLoc_symbol->data->type != tInt)
+                  {
+                     fprintf(stderr, "SEMANTIC_TYPE_ERR. Expected type \"int\" in \"%s\".\n", nazov);
+                     return SEMANTIC_TYPE_ERR;
+                  }
+                  if(isLoc_symbol->data->init == false)
+                  {
+                     fprintf(stderr, "RUNTIME_INIT_ERR. Using uninitialized \"%s\" in \"%s\".\n", nazov, funcname);
+                     return RUNTIME_INIT_ERR;
+                  }
+                  temporary = isLoc_symbol->data;
                }
-               if(isLoc_symbol->data->init == false)
+               else if(isLoc_symbol == NULL && isTemp_symbol != NULL)
                {
-                  fprintf(stderr, "RUNTIME_INIT_ERR. Using uninitialized \"%s\" in \"%s\".\n", nazov, funcname);
-                  return RUNTIME_INIT_ERR;
+                  if(isTemp_symbol->data->type != tInt)
+                  {
+                     fprintf(stderr, "SEMANTIC_TYPE_ERR. Expected type \"int\" in \"%s\".\n", nazov);
+                     return SEMANTIC_TYPE_ERR;
+                  }
+                  if(isTemp_symbol->data->init == false)
+                  {
+                     fprintf(stderr, "RUNTIME_INIT_ERR. Using uninitialized \"%s\" in \"%s\".\n", nazov, funcname);
+                     return RUNTIME_INIT_ERR;
+                  }
+                  temporary = isTemp_symbol->data;
+               }
+               else if(isLoc_symbol != NULL && isTemp_symbol != NULL)  //lokalna zatieni globalnu
+               {
+                  if(isLoc_symbol->data->type != tInt)
+                  {
+                     fprintf(stderr, "SEMANTIC_TYPE_ERR. Expected type \"int\" in \"%s\".\n", nazov);
+                     return SEMANTIC_TYPE_ERR;
+                  }
+                  if(isLoc_symbol->data->init == false)
+                  {
+                     fprintf(stderr, "RUNTIME_INIT_ERR. Using uninitialized \"%s\" in \"%s\".\n", nazov, funcname);
+                     return RUNTIME_INIT_ERR;
+                  }
+                  temporary = isLoc_symbol->data;
                }
             }
             break;
@@ -3171,29 +3291,79 @@ int user_function_call()
                nazov[strlen(token2.data)+1] = '\0';   //dostali sme nazov ID
 
                isLoc_symbol = loc_symbol_search(local_table, nazov); //overenie, ci uz dana lokalna premenna existuje ako premenna
-               if(isLoc_symbol == NULL)
+               isTemp_symbol = Htab_search(ptrclass->ptr, nazov);
+               if(isLoc_symbol == NULL && isTemp_symbol == NULL)
                {
                   fprintf(stderr, "SEMANTIC_PROG_ERR. Using \"%s\" undeclared in \"%s\".\n", nazov, funcname);
                   return SEMANTIC_PROG_ERR;
                }
-               if(isLoc_symbol->data->init == false)
+               else if(isLoc_symbol != NULL && isTemp_symbol == NULL)
                {
-                  fprintf(stderr, "RUNTIME_INIT_ERR. Using uninitialized \"%s\" in \"%s\".\n", nazov, funcname);
-                  return RUNTIME_INIT_ERR;
-               }
-               else if(isLoc_symbol->data->init == true)
-               {
-                  if(argument_type != isLoc_symbol->data->type)
+                  if(isLoc_symbol->data->init == false)
                   {
-                     fprintf(stderr, "SEMANTIC_TYPE_ERR. Wrong argument type of \"%s\" in function \"%s\".\n", nazov, funcname);
-                     return SEMANTIC_TYPE_ERR;
+                     fprintf(stderr, "RUNTIME_INIT_ERR. Using uninitialized \"%s\" in \"%s\".\n", nazov, funcname);
+                     return RUNTIME_INIT_ERR;
                   }
-                  if(i > 0)
+                  else if(isLoc_symbol->data->init == true)
                   {
-                     generateLastInstruction(I_PUSHPARAM,isLoc_symbol->data, NULL, NULL, currentList);
-                     Node = Node->next;
-                     if(Node != NULL)
-                        argument_type = Node->type;
+                     if(argument_type != isLoc_symbol->data->type)
+                     {
+                        fprintf(stderr, "SEMANTIC_TYPE_ERR. Wrong argument type of \"%s\" in function \"%s\".\n", nazov, funcname);
+                        return SEMANTIC_TYPE_ERR;
+                     }
+                     if(i > 0)
+                     {
+                        generateLastInstruction(I_PUSHPARAM,isLoc_symbol->data, NULL, NULL, currentList);
+                        Node = Node->next;
+                        if(Node != NULL)
+                           argument_type = Node->type;
+                     }
+                  }
+               }
+               else if(isLoc_symbol == NULL && isTemp_symbol != NULL)
+               {
+                  if(isTemp_symbol->data->init == false)
+                  {
+                     fprintf(stderr, "RUNTIME_INIT_ERR. Using uninitialized \"%s\" in \"%s\".\n", nazov, funcname);
+                     return RUNTIME_INIT_ERR;
+                  }
+                  else if(isTemp_symbol->data->init == true)
+                  {
+                     if(argument_type != isTemp_symbol->data->type)
+                     {
+                        fprintf(stderr, "SEMANTIC_TYPE_ERR. Wrong argument type of \"%s\" in function \"%s\".\n", nazov, funcname);
+                        return SEMANTIC_TYPE_ERR;
+                     }
+                     if(i > 0)
+                     {
+                        generateLastInstruction(I_PUSHPARAM,isTemp_symbol->data, NULL, NULL, currentList);
+                        Node = Node->next;
+                        if(Node != NULL)
+                           argument_type = Node->type;
+                     }
+                  }
+               }
+               else if(isLoc_symbol != NULL && isTemp_symbol != NULL)   //nasli sa oba ale pouzivame lokalny -> zastienenie
+               {
+                  if(isLoc_symbol->data->init == false)
+                  {
+                     fprintf(stderr, "RUNTIME_INIT_ERR. Using uninitialized \"%s\" in \"%s\".\n", nazov, funcname);
+                     return RUNTIME_INIT_ERR;
+                  }
+                  else if(isLoc_symbol->data->init == true)
+                  {
+                     if(argument_type != isLoc_symbol->data->type)
+                     {
+                        fprintf(stderr, "SEMANTIC_TYPE_ERR. Wrong argument type of \"%s\" in function \"%s\".\n", nazov, funcname);
+                        return SEMANTIC_TYPE_ERR;
+                     }
+                     if(i > 0)
+                     {
+                        generateLastInstruction(I_PUSHPARAM,isLoc_symbol->data, NULL, NULL, currentList);
+                        Node = Node->next;
+                        if(Node != NULL)
+                           argument_type = Node->type;
+                     }
                   }
                }
             }
@@ -3235,6 +3405,8 @@ if(token2.stav != S_ID)
    error = expresion_parser();
    if(error != SUCCESS)
       return error;
+   if(token2.stav != S_SEMICOLON)
+      return SYNTAX_ERR;
    generateLastInstruction(I_ASSIGN, destExpr, NULL, destination, currentList);
 }
 else
@@ -3282,6 +3454,8 @@ else
                   error = expresion_parser();
                   if(error != SUCCESS)
                      return error;
+                  if(token2.stav != S_SEMICOLON)
+                     return SYNTAX_ERR;
                   generateLastInstruction(I_ASSIGN, destExpr, NULL, destination, currentList);
                }
                else  //je to funkcia
@@ -3291,8 +3465,6 @@ else
                      fprintf(stderr, "RUNTIME_INIT_ERR. \"%s\" in \"%s\" has return type of void.\n", id_part, class_part); //dana staticka premenna/funckia neexistuje
                      return RUNTIME_INIT_ERR;
                   }
-                  /*printf("%d\n", isTemp_symbol->data->type);
-                  printf("%d\n", assSymbol);*/
                   if(isTemp_symbol->data->type != assSymbol && priradenie == true)
                   {
                      fprintf(stderr, "RUNTIME_INIT_ERR. Colliding return type of function \"%s\"\n", id_part); //dana staticka premenna/funckia neexistuje
@@ -3326,6 +3498,9 @@ else
          error = expresion_parser();
          if(error != SUCCESS)
             return error;
+         if(token2.stav != S_SEMICOLON)
+            return SYNTAX_ERR;
+
          generateLastInstruction(I_ASSIGN, destExpr, NULL, destination, currentList);
       }
       else if(isLoc_symbol == NULL && isTemp_symbol != NULL)
@@ -3345,6 +3520,14 @@ else
             error = user_function_call();
             if(error != SUCCESS)
                return error;
+         }
+         else if(isTemp_symbol->fce == false)
+         {
+            error = expresion_parser();
+            if(error != SUCCESS)
+               return error;
+            if(token2.stav != S_SEMICOLON)
+               return SYNTAX_ERR;
          }
       }
       else
@@ -3416,47 +3599,73 @@ int build_in_ID(int witch)
                strcpy(nazov,token2.data);
                nazov[strlen(token2.data)+1] = '\0';   //dostali sme nazov ID
 
-
-               /*Hash_class* class_table_symbol = class_search(STable, classname);
-               if(class_table_symbol != NULL)
-               {
-                  isTemp_symbol = Htab_search(class_table_symbol->ptr, nazov);
-                  if(isTemp_symbol == NULL)
-                  {
-                     fprintf(stderr, "SEMANTIC_PROG_ERR. Using \"%s\" which is not declared in funcion \"%s\".\n", nazov, funcname);
-                     return SEMANTIC_PROG_ERR;
-                  }
-                  if(isTemp_symbol->fce == true && isTemp_symbol->isstatic == true)
-                  {
-                     fprintf(stderr, "SEMANTIC_TYPE_ERR. Using \"%s\" which is funcion in \"%s\".\n", nazov, funcname);
-                     return SEMANTIC_TYPE_ERR;
-                  }
-               }
-               else
-                  return SEMANTIC_PROG_ERR; */
-
                isLoc_symbol = loc_symbol_search(local_table, nazov); //overenie, ci uz dana lokalna premenna neexistuje ako premenna
-               if(isLoc_symbol == NULL)
+               isTemp_symbol = Htab_search(ptrclass->ptr, nazov);
+               if(isLoc_symbol == NULL && isTemp_symbol == NULL)
                {
                   fprintf(stderr, "SEMANTIC_PROG_ERR. Using \"%s\" undeclared in \"%s\".\n", nazov, funcname);
                   return SEMANTIC_PROG_ERR;
                }
-               if(isLoc_symbol->data->type != tString)
+               else if(isLoc_symbol != NULL && isTemp_symbol == NULL)
                {
-                  fprintf(stderr, "SEMANTIC_TYPE_ERR. Expected type \"String\" in \"%s\".\n", nazov);
-                  return SEMANTIC_TYPE_ERR;
+                  if(isLoc_symbol->data->type != tString)
+                  {
+                     fprintf(stderr, "SEMANTIC_TYPE_ERR. Expected type \"String\" in \"%s\".\n", nazov);
+                     return SEMANTIC_TYPE_ERR;
+                  }
+                  if(isLoc_symbol->data->init == false)
+                  {
+                     fprintf(stderr, "RUNTIME_INIT_ERR. Using uninitialized \"%s\" in \"%s\".\n", nazov, funcname);
+                     return RUNTIME_INIT_ERR;
+                  }
+
+                  if(witch == 1)
+                     temporary = isLoc_symbol->data;
+                  else if(witch == 2)
+                     temporary2 = isLoc_symbol->data;
+                  else if(witch == 3)
+                     temporary3 = isLoc_symbol->data;
                }
-               if(isLoc_symbol->data->init == false)
+               else if(isLoc_symbol != NULL && isTemp_symbol != NULL)
                {
-                  fprintf(stderr, "RUNTIME_INIT_ERR. Using uninitialized \"%s\" in \"%s\".\n", nazov, funcname);
-                  return RUNTIME_INIT_ERR;
+                  if(isLoc_symbol->data->type != tString)
+                  {
+                     fprintf(stderr, "SEMANTIC_TYPE_ERR. Expected type \"String\" in \"%s\".\n", nazov);
+                     return SEMANTIC_TYPE_ERR;
+                  }
+                  if(isLoc_symbol->data->init == false)
+                  {
+                     fprintf(stderr, "RUNTIME_INIT_ERR. Using uninitialized \"%s\" in \"%s\".\n", nazov, funcname);
+                     return RUNTIME_INIT_ERR;
+                  }
+
+                  if(witch == 1)
+                     temporary = isLoc_symbol->data;
+                  else if(witch == 2)
+                     temporary2 = isLoc_symbol->data;
+                  else if(witch == 3)
+                     temporary3 = isLoc_symbol->data;
                }
-               if(witch == 1)
-                  temporary = isLoc_symbol->data;
-               else if(witch == 2)
-                  temporary2 = isLoc_symbol->data;
-               else if(witch == 3)
-                  temporary3 = isLoc_symbol->data;
+               else if(isLoc_symbol == NULL && isTemp_symbol != NULL)
+               {
+                  if(isTemp_symbol->data->type != tString)
+                  {
+                     fprintf(stderr, "SEMANTIC_TYPE_ERR. Expected type \"String\" in \"%s\".\n", nazov);
+                     return SEMANTIC_TYPE_ERR;
+                  }
+                  if(isTemp_symbol->data->init == false)
+                  {
+                     fprintf(stderr, "RUNTIME_INIT_ERR. Using uninitialized \"%s\" in \"%s\".\n", nazov, funcname);
+                     return RUNTIME_INIT_ERR;
+                  }
+
+                  if(witch == 1)
+                     temporary = isTemp_symbol->data;
+                  else if(witch == 2)
+                     temporary2 = isTemp_symbol->data;
+                  else if(witch == 3)
+                     temporary3 = isTemp_symbol->data;
+               }
             }
             return error;
 }
