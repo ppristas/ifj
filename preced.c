@@ -116,8 +116,10 @@ int catch_index(SAData *pom,int *count){
       extern char* id_part;            // Rovnako po zavolani return_class() ale bude obsahovat cast tvorenu ID
       extern symbolType assSymbol;     // Typ symbola, do ktoreho sa bude priradovat
 */    //locSymbol* loc_symbol_search(locTable* ptrloctable,char *data); //ukazatel na lokalny symbol
+      //printf("%s\n",token2.data);
       if(strchr(token2.data, '.')){
         return_class();
+
         class_table_pom = class_search(STable,class_part);
         if(class_table_pom == NULL){
           error = SEMANTIC_PROG_ERR;
@@ -140,22 +142,28 @@ int catch_index(SAData *pom,int *count){
         pom->sym_data = symbol_pom->data;
         pom->nameID = symbol_pom->name;
       }else{
+          
           //Hash_class *ptrclass
           //lokalna tabulka
+
           if((locsymbol_pom = loc_symbol_search(local_table, token2.data)) == NULL){
-              if((symbol_pom = Htab_search(ptrclass->ptr, token2.data)) == NULL){
+
+              symbol_pom = Htab_search(ptrclass->ptr, token2.data);
+              if(symbol_pom == NULL){
                   error = SEMANTIC_PROG_ERR;
                   return error;
               }
+
           }
-          if(symbol_pom != NULL){}
+
+          if(symbol_pom != NULL){
               if(!(symbol_pom->data->init)){
                 error = RUNTIME_INIT_ERR;
                 return error;
               }
               pom->sym_data = symbol_pom->data;
               pom->nameID = symbol_pom->name;
-
+          }
           if( locsymbol_pom != NULL){
               if(!(locsymbol_pom->data->init)){
                 error = RUNTIME_INIT_ERR;
@@ -176,6 +184,7 @@ int catch_index(SAData *pom,int *count){
       //pom->sym_data =
       break;
     case S_INT:
+
       pom->indexibus = ID;
       pom->sym_data = mymalloc(sizeof(struct sym_Data));
       if(pom->sym_data == NULL){
@@ -196,6 +205,7 @@ int catch_index(SAData *pom,int *count){
       break;
 		case S_DOUBLE:
 		case S_EXP:
+
       //key = vygenerovat sprintfom
       //data->arg_count = 0;
       //data->args = NULL;
@@ -233,7 +243,6 @@ int catch_index(SAData *pom,int *count){
       pom->sym_data = mymalloc(sizeof(struct sym_Data));
       if(pom->sym_data == NULL){
         error = INTERNAL_ERR;
-        clearAll();
         return error;
       }
       pom->sym_data->init = true;
