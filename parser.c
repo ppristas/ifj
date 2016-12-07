@@ -2800,6 +2800,7 @@ int build_function_call_scnd(int decider)
       {
          case S_STRING:    //pripad substr("awadawdawdaw", ...., .....);
             nazov_len = strlen(token2.data);
+            temporary= mymalloc(sizeof(symData));
             temporary->ptr_union.str = mymalloc(nazov_len*sizeof(char) + 2);
             if(temporary->ptr_union.str == NULL)
             {
@@ -2831,6 +2832,7 @@ int build_function_call_scnd(int decider)
       switch(token2.stav)
       {
          case S_INT:    //pripad substr("awadawdawdaw", 2, .....);
+             temporary= mymalloc(sizeof(symData));
              temporary->type = tInt;
              temporary->funcdata_union.offset = -1;
              temporary->ptr_union.i = atoi(token2.data);
@@ -2954,6 +2956,7 @@ int build_function_call_scnd(int decider)
       switch(token2.stav)
       {
          case S_INT:    //pripad substr("awadawdawdaw", 2, 9);
+            temporary= mymalloc(sizeof(symData));
             temporary->type = tInt;
             temporary->funcdata_union.offset = -1;
             temporary->ptr_union.i = atoi(token2.data);
