@@ -195,7 +195,12 @@ void interpret(ilist *L){
                 if(op1->init == true && op2->init == true){
                     dest->init=true;
                     dest->type = tString;
-                    dest->ptr_union.str=malloc(sizeof(char) * (strlen(op1->ptr_union.str) + strlen(op2->ptr_union.str)) + 1);
+                    if(dest->funcdata_union.offset == -1){
+                        dest->ptr_union.str=mymalloc(sizeof(char) * (strlen(op1->ptr_union.str) + strlen(op2->ptr_union.str)) + 1);
+                    }
+                    else{
+                        dest->ptr_union.str=malloc(sizeof(char) * (strlen(op1->ptr_union.str) + strlen(op2->ptr_union.str)) + 1);
+                    }
                     if(dest->ptr_union.str == NULL){
                         exit(99);
                     }
@@ -211,7 +216,12 @@ void interpret(ilist *L){
                     dest->init=true;
                     dest->type = tString;
                     sprintf(tmpInt, "%d", op2->ptr_union.i);
-                    dest->ptr_union.str=malloc(sizeof(char) * (strlen(op1->ptr_union.str) + strlen(tmpInt)) + 1);
+                    if(dest->funcdata_union.offset == -1){
+                        dest->ptr_union.str=mymalloc(sizeof(char) * (strlen(op1->ptr_union.str) + strlen(tmpInt)) + 1);
+                    }
+                    else{
+                        dest->ptr_union.str=malloc(sizeof(char) * (strlen(op1->ptr_union.str) + strlen(tmpInt)) + 1);
+                    }
                     if(dest->ptr_union.str == NULL){
                         exit(99);
                     }
@@ -227,7 +237,12 @@ void interpret(ilist *L){
                     dest->init=true;
                     dest->type = tString;
                     sprintf(tmpInt, "%d", op1->ptr_union.i);
-                    dest->ptr_union.str=malloc(sizeof(char) * (strlen(tmpInt) + strlen(op2->ptr_union.str)) + 1);
+                    if(dest->funcdata_union.offset == -1){
+                        dest->ptr_union.str=mymalloc(sizeof(char) * (strlen(tmpInt) + strlen(op2->ptr_union.str)) + 1);
+                    }
+                    else{
+                        dest->ptr_union.str=malloc(sizeof(char) * (strlen(tmpInt) + strlen(op2->ptr_union.str)) + 1);
+                    }
                     if(dest->ptr_union.str == NULL){
                         exit(99);
                     }
@@ -243,7 +258,12 @@ void interpret(ilist *L){
                     dest->init=true;
                     dest->type = tString;
                     sprintf(tmpDouble, "%g", op2->ptr_union.d);
-                    dest->ptr_union.str=malloc(sizeof(char) * (strlen(op1->ptr_union.str) + strlen(tmpDouble)) + 1);
+                    if(dest->funcdata_union.offset == -1){
+                        dest->ptr_union.str=mymalloc(sizeof(char) * (strlen(op1->ptr_union.str) + strlen(tmpDouble)) + 1);
+                    }
+                    else{
+                        dest->ptr_union.str=malloc(sizeof(char) * (strlen(op1->ptr_union.str) + strlen(tmpDouble)) + 1);
+                    }
                     if(dest->ptr_union.str == NULL){
                         exit(99);
                     }
@@ -259,7 +279,12 @@ void interpret(ilist *L){
                     dest->init=true;
                     dest->type = tString;
                     sprintf(tmpDouble, "%g", op1->ptr_union.d);
-                    dest->ptr_union.str=malloc(sizeof(char) * (strlen(tmpDouble) + strlen(op2->ptr_union.str)) + 1);
+                    if(dest->funcdata_union.offset == -1){
+                        dest->ptr_union.str=mymalloc(sizeof(char) * (strlen(tmpDouble) + strlen(op2->ptr_union.str)) + 1);
+                    }
+                    else{
+                        dest->ptr_union.str=malloc(sizeof(char) * (strlen(tmpDouble) + strlen(op2->ptr_union.str)) + 1);
+                    }
                     if(dest->ptr_union.str == NULL){
                         exit(99);
                     }
