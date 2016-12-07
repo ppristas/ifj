@@ -3222,12 +3222,12 @@ int user_function_call()
                return SEMANTIC_TYPE_ERR;
             }
             nazov_len = strlen(token2.data);
+            temporary = mymalloc(sizeof(symData));
             temporary->ptr_union.str = mymalloc(nazov_len*sizeof(char) + 2);
             if(temporary->ptr_union.str == NULL)
             {
                return INTERNAL_ERR;
             }
-            temporary = mymalloc(sizeof(symData));
             if(temporary == NULL)
                return INTERNAL_ERR;
             strcpy(temporary->ptr_union.str,token2.data);
