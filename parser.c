@@ -114,6 +114,8 @@ int is_build_function() //ratam s tym ze token uz bol nacitany
 
 int parser()
 {
+   stack_frame_create(&global_stack_frame);
+   stack_frame_init(global_stack_frame);
    STable = class_init();  //inicializacia tabulky symbolov
    if(STable == NULL)
       return INTERNAL_ERR;
