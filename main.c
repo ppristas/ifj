@@ -22,6 +22,7 @@
 #include "parser.h"
 #include "preced.h"
 #include "temp_tab.h"
+#include "stack_frame.h"
 
 char *filename = NULL;
 
@@ -90,6 +91,8 @@ int main(int argc, char *argv[])
   free(token.data);
   //free(filename);
 	free(Mem);
+	vycisti_mi_cely_stak(global_stack_frame);
+    free(global_stack_frame);
 	if(filename == NULL)
   	if(fclose(file) == EOF){
       	return INTERNAL_ERR;
