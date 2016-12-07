@@ -176,7 +176,6 @@ int parser()
    generateLastInstruction(I_CALL, symbol->data, NULL, NULL, &globalList);
    interpret(&globalList);
 
-   free(global_stack_frame);
 
    return error;
 }
