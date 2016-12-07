@@ -225,7 +225,7 @@ ilist * stackTopList(instrStack * stack){
     }
 }
 
-void stackDestroy(instrStack *stack){
+void stackDestroyList(instrStack *stack){
     stackItem * tmp;
     while(stack->top != NULL){
         tmp = stack->top;
