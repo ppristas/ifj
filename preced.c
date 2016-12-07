@@ -140,17 +140,31 @@ int catch_index(SAData *pom,int *count){
         pom->sym_data = symbol_pom->data;
         pom->nameID = symbol_pom->name;
       }else{
+          //Hash_class *ptrclass
           //lokalna tabulka
           if((locsymbol_pom = loc_symbol_search(local_table, token2.data)) == NULL){
-            error = SEMANTIC_PROG_ERR;
-            return error;
+              if((symbol_pom = Htab_search(ptrclass->ptr, token2.data)) == NULL){
+                  error = SEMANTIC_PROG_ERR;
+                  return error;
+              }
           }
-          if(!(locsymbol_pom->data->init)){
-            error = RUNTIME_INIT_ERR;
-            return error;
-          }
-          pom->sym_data = locsymbol_pom->data;
-          pom->nameID = locsymbol_pom->name;
+          if(symbol_pom != NULL){}
+              if(!(symbol_pom->data->init)){
+                error = RUNTIME_INIT_ERR;
+                return error;
+              }
+              pom->sym_data = symbol_pom->data;
+              pom->nameID = symbol_pom->name;
+
+          if( locsymbol_pom != NULL){
+              if(!(locsymbol_pom->data->init)){
+                error = RUNTIME_INIT_ERR;
+                return error;
+              }
+              pom->sym_data = locsymbol_pom->data;
+              pom->nameID = locsymbol_pom->name;
+
+        }
       }
 //ak tam bude bodka
 //Hash_class* class_search(clHTable *clptr,char *classname);
@@ -200,6 +214,7 @@ int catch_index(SAData *pom,int *count){
       pom->sym_data->instrPtr = NULL;
       pom->sym_data->funcdata_union.offset = -1;
       intoTableDouble = pom->sym_data->ptr_union.d = strtod(token2.data,&endptr);
+
       str = mymalloc(sizeof(char)*25);
       sprintf(str,"@double_pom_%u",name++);  //TODO vygenerovat premennu;
       pom->nameID = str;
@@ -218,6 +233,7 @@ int catch_index(SAData *pom,int *count){
       pom->sym_data = mymalloc(sizeof(struct sym_Data));
       if(pom->sym_data == NULL){
         error = INTERNAL_ERR;
+        clearAll();
         return error;
       }
       pom->sym_data->init = true;
@@ -245,7 +261,7 @@ int catch_index(SAData *pom,int *count){
 			break;
 		default:
 			error = SYNTAX_ERR;
-			clearAll();
+			//clearAll();
       return error;
 			break;
 	}
@@ -480,7 +496,7 @@ int reduction(tStack *stack1,tStack *stack2){
             /* code */
             //semanticka kontrola pri porovnaniach
                 if((hhelp2.sym_data->type == tString) || (hhelp4.sym_data->type == tString)){
-                  clearAll();
+                  //clearAll();
                   error = SEMANTIC_TYPE_ERR;
                   return error;
                 }
@@ -500,6 +516,7 @@ int reduction(tStack *stack1,tStack *stack2){
               }
               else{
                   if((hhelp2.sym_data->type == tDouble) || (hhelp4.sym_data->type == tDouble)){
+
                     neterminal.sym_data->type = tDouble;
                     neterminal.sym_data->funcdata_union.offset=-1;
                   }else{
@@ -567,7 +584,7 @@ int reduction(tStack *stack1,tStack *stack2){
 			return error;
 		}else{
 			error = SYNTAX_ERR;
-      errorFce();
+      //errorFce();
       //clearAll();
       return error;
 		}		//pre pravu zatvorku
@@ -693,7 +710,7 @@ int expresion_parser()
 				readToken = false;
 				break;
 			case 'E':
-				printf("nastala chyba indexovanie do preced.table\n");
+				//fprintf("nastala chyba indexovanie do preced.table\n");
 				error = SYNTAX_ERR;
 				//clearAll();
         return error;
@@ -719,7 +736,7 @@ int expresion_parser()
 			front_token();
 			if(error != SUCCESS){
 				//errorFce();
-				clearAll();
+				//clearAll();
         return error;
 			}
 		}
