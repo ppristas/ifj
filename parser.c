@@ -58,25 +58,15 @@ int return_class()   //CLASS.ID rozdeli na class -> class_part a id -> id_part
    if(token2.data != NULL)
    {
       char *search = ".";
-
-      int TMPstring_len = strlen(token2.data);      //Odtialto sa uchovava nazov
-      char *TMPstring = mymalloc(TMPstring_len*sizeof(char) + 2);
-      if(TMPstring == NULL)
-      {
-         error = INTERNAL_ERR;
-         return error;
-      }
-      strcpy(TMPstring,token2.data);
-      TMPstring[strlen(token2.data)+1] = '\0';
-
-      class_part = mymalloc(TMPstring_len*sizeof(char) + 2);
-      id_part = mymalloc(TMPstring_len*sizeof(char) + 2);
+      nazov_len = strlen(token2.data);
+      class_part = mymalloc(nazov_len*sizeof(char) + 2);
+      id_part = mymalloc(nazov_len*sizeof(char) + 2);
 
       if(class_part == NULL || id_part == NULL)
          return INTERNAL_ERR;
       else
       {
-         class_part = strtok(TMPstring, search);
+         class_part = strtok(token2.data, search);
          id_part = strtok(NULL, search);
 
          if(class_part == NULL || id_part == NULL)
@@ -114,6 +104,10 @@ int is_build_function() //ratam s tym ze token uz bol nacitany
 
 int parser()
 {
+
+   stack_frame_create(&global_stack_frame);
+   stack_frame_init(global_stack_frame);
+
    STable = class_init();  //inicializacia tabulky symbolov
    if(STable == NULL)
       return INTERNAL_ERR;
@@ -174,7 +168,6 @@ int parser()
    generateLastInstruction(I_CALL, symbol->data, NULL, NULL, &globalList);
    interpret(&globalList);
 
-   free(global_stack_frame);
 
    return error;
 }
@@ -2518,7 +2511,7 @@ int main_body_riadiace_scnd()   //pravidlo <MB> -> <SL> <MB>
          }
          else
             return SEMANTIC_PROG_ERR;
-         
+
       }
    }
    else if(!((strcmp(token2.data, "String"))&&(strcmp(token2.data, "int"))&&(strcmp(token2.data, "double"))))  //pravidlo <SL> -> <PARS> <VD>
@@ -2832,7 +2825,7 @@ int build_function_call_scnd(int decider)
       switch(token2.stav)
       {
          case S_INT:    //pripad substr("awadawdawdaw", 2, .....);
-             temporary= mymalloc(sizeof(symData));
+             temporary = mymalloc(sizeof(symData));
              temporary->type = tInt;
              temporary->funcdata_union.offset = -1;
              temporary->ptr_union.i = atoi(token2.data);
@@ -2956,7 +2949,7 @@ int build_function_call_scnd(int decider)
       switch(token2.stav)
       {
          case S_INT:    //pripad substr("awadawdawdaw", 2, 9);
-            temporary= mymalloc(sizeof(symData));
+            temporary = mymalloc(sizeof(symData));
             temporary->type = tInt;
             temporary->funcdata_union.offset = -1;
             temporary->ptr_union.i = atoi(token2.data);
