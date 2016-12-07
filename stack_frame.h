@@ -25,15 +25,16 @@ typedef struct _stack_frame
 extern stackFrame_t* global_stack_frame;
 
 void stack_frame_create(stackFrame_t ** stack_frame);
+void vycisti_mi_cely_stak(stackFrame_t *stack_frame);
 void stack_frame_init(stackFrame_t *stack_frame);
 bool stack_frame_empty(stackFrame_t* stack_frame);
 bool stack_frame_full(stackFrame_t* stack_frame);
 void stack_frame_top(stackFrame_t* stack_frame, int *top);
 void stack_frame_pop(stackFrame_t* stack_frame);
 void stack_frame_push(stackFrame_t* stack_frame,symData* function);
-void frame_push_variable(stackFrame_t* stack_frame,symData* variable);
+//void frame_push_variable(stackFrame_t* stack_frame,symData* variable);
 void frame_free(symData* data_array,int max);
-void frame_fill_variable(stackFrame_t* stack_frame,symData* variable);
+//void frame_fill_variable(stackFrame_t* stack_frame,symData* variable);
 symData* decode_addres(stackFrame_t* stack_frame, int offset);
 symData* pre_decode_addres(stackFrame_t* stack_frame,int offset);
 symData *set_return_value(stackFrame_t* stack_frame, symData *data);
