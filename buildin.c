@@ -21,31 +21,25 @@ char* sort(const char *str)
     return heapsort(str_tmp,n);
 }
 
-//Dlzka retazca
-int length(const char* s){
-    int i;
-    for(i=0; s[i] != '\0'; i++){}
-    return i;
-}
-
 
 // tmp treba uvolnit
 char* substring(const char *s, const int i, const int n){
-    if(i < 0 || i >= length(s)){
-        return NULL;
-    }
-
-    if(i+n > length(s)){
-        return NULL;
-    }
-
     if (s == NULL){
         return NULL;
     }
 
+    if((i) < 0 || i >= (int)strlen(s)){
+        return NULL;
+    }
+
+    if(i+n > (int)strlen(s)){
+        return NULL;
+    }
+
+
 
     char* tmp;
-    if ((tmp = (char *) malloc(n+1 * sizeof(char))) == NULL){
+    if ((tmp = (char *) mymalloc(n+1 * sizeof(char))) == NULL){
         return NULL;
     }
     int index=0;
@@ -62,36 +56,6 @@ char* substring(const char *s, const int i, const int n){
 }
 
 
-
-int compare(const char *s1, const char *s2){
-    int index=0;
-    if(length(s1) <= length(s2)){
-        while(s1[index] != '\0'){
-            if(s1[index] != s2[index]){
-                return s1[index] - s2[index];
-            }
-            index++;
-        }
-        if(s1[index] == '\0' && s2[index] != '\0'){
-        return length(s1)-length(s2);
-        }
-    }
-
-    else if(length(s2) < length(s1)){
-        while(s2[index] != '\0'){
-            if(s2[index] != s1[index]){
-                return s1[index] - s2[index];
-            }
-            index++;
-        }
-        if(s2[index] == '\0' && s1[index] != '\0'){
-        return length(s1)-length(s2);
-        }
-
-    }
-
-    return 0;
-}
 
 void readString(symData * dest)
 {
@@ -115,7 +79,10 @@ void readString(symData * dest)
     *(save1+counter)='\0';
 
     if(dest != NULL){
-        dest->ptr_union.str=malloc(sizeof(char) * strlen(save1));
+        if(dest->init == true){
+            free(dest->ptr_union.str);
+        }
+        dest->ptr_union.str=malloc(sizeof(char) * strlen(save1) + 1);
         if(dest->ptr_union.str == NULL){
             exit(99);
         }
@@ -125,7 +92,7 @@ void readString(symData * dest)
     free(save1);
 }
 
-void readInt(symData * dest)
+int readInt(symData * dest)
 {
     int i=0;
     int chunk=10;
@@ -160,18 +127,21 @@ void readInt(symData * dest)
                 dest->ptr_union.d = i;
             }
             else{
-                exit(4);
+                free(save1);
+                return 4;
             }
         }
     }
     else{
-        exit(7);
+        free(save1);
+        return 7;
     }
 
     free(save1);
+    return 0;
 }
 
-void readDouble(symData * dest)
+int readDouble(symData * dest)
 {
     double d=0.0;
     int chunk=10;
@@ -206,15 +176,18 @@ void readDouble(symData * dest)
                 dest->ptr_union.d = d;
             }
             else{
-                exit(4);
+                free(save1);
+                return 4;
             }
         }
     }
     else{
-        exit(7);
+        free(save1);
+        return 7;
     }
 
     free(save1);
+    return 0;
 }
 
 int find(char* s,char* search)
