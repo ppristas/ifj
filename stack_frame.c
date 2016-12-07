@@ -64,11 +64,27 @@ void stack_frame_push(stackFrame_t* stack_frame,symData* function) //create fram
         stack_frame->frame[stack_frame->top]->max=function->funcdata_union.var_count;
         stack_frame->frame[stack_frame->top]->args_counter=0;
         stack_frame->frame[stack_frame->top]->return_type=function->type;
+
+        for (int i=0;i<stack_frame->frame[stack_frame->top]->max;++i)
+        {
+            stack_frame->frame[stack_frame->top]->var_array[i].type=tNan;
+            stack_frame->frame[stack_frame->top]->var_array[i].init=false;
+            stack_frame->frame[stack_frame->top]->var_array[i].funcdata_union.offset=0;
+        }
+
     }
     else{
-        printf("STACK FULL");
-        exit(1);
+        //mozne osetrenie
+        exit(99);
     }
+}
+
+void vycisti_mi_cely_stak(stackFrame_t *stack_frame)
+{
+      while(!stack_frame_empty(stack_frame))
+      {
+          stack_frame_pop(stack_frame);
+      }
 }
 
 symData* set_return_value(stackFrame_t *stack_frame, symData* data)
@@ -89,7 +105,7 @@ symData* set_return_value(stackFrame_t *stack_frame, symData* data)
     }
 }
 
-
+/*
 void frame_push_variable(stackFrame_t* stack_frame,symData* variable)
 {
     if (variable->type == tInt)
@@ -106,6 +122,7 @@ void frame_push_variable(stackFrame_t* stack_frame,symData* variable)
     }
 }
 
+*/
 
 symData* decode_addres(stackFrame_t* stack_frame, int offset)
 {
@@ -144,7 +161,7 @@ void Print_addres(symData* addres)
     }
 }
 
-
+/*
 void frame_fill_variable(stackFrame_t* stack_frame,symData* variable)
 {
     if (variable->type == tInt)
@@ -163,6 +180,7 @@ void frame_fill_variable(stackFrame_t* stack_frame,symData* variable)
 
     stack_frame->frame[stack_frame->top]->var_array[variable->funcdata_union.offset].type=variable->type;
 }
+*/
 
 void arg_push(stackFrame_t *stack_frame,symData *data)
 {
@@ -175,7 +193,6 @@ void arg_push(stackFrame_t *stack_frame,symData *data)
         parameter=pre_decode_addres(stack_frame,data->funcdata_union.offset);
 
     }
-
 
     //Print_addres(parameter);
 
@@ -206,7 +223,8 @@ void frame_free(symData* data_array,int max)
     {
         if (data_array[i].type == tString)
         {
-            free(data_array[i].ptr_union.str);
+            if (data_array[i].ptr_union.str != NULL)
+                free(data_array[i].ptr_union.str);
         }
         else if (data_array[i].type == tInt)
         {
