@@ -1189,6 +1189,23 @@ void interpret(ilist *L){
                 error = 8;
                 return;
             }
+            if(global_stack_frame->frame[global_stack_frame->top]->var_array[0].ptr_union.str == NULL){
+                stackDestroyList(&stack);
+                error = 10;
+                return;
+            }
+            if(global_stack_frame->frame[global_stack_frame->top]->var_array[1].ptr_union.i < 0 || global_stack_frame->frame[global_stack_frame->top]->var_array[1].ptr_union.i >= (int)strlen(global_stack_frame->frame[global_stack_frame->top]->var_array[0].ptr_union.str)){
+                stackDestroyList(&stack);
+                error = 10;
+                return;
+            }
+
+            if(global_stack_frame->frame[global_stack_frame->top]->var_array[1].ptr_union.i + global_stack_frame->frame[global_stack_frame->top]->var_array[2].ptr_union.i > (int)strlen(global_stack_frame->frame[global_stack_frame->top]->var_array[0].ptr_union.str)){
+                stackDestroyList(&stack);
+                error = 10;
+                return;
+            }
+            
             if(dest != NULL){
                 tmpString = malloc(sizeof(char) * global_stack_frame->frame[global_stack_frame->top]->var_array[2].ptr_union.i + 1);
                 if(tmpString == NULL){
