@@ -1179,7 +1179,6 @@ int main_body_riadiace()   //pravidlo <MB> -> <SL> <MB>
    get_token();
    if(error != SUCCESS)
       return error;
-   //printf("%s\n", token.data);
 
    if(token.stav != S_P_KOSZ)
       error = main_body_riadiace();
@@ -1690,7 +1689,6 @@ int after_class_scnd()
             break;
 
          case S_PRIR:               // pravidlo <Decl> ->
-
             currentList = &globalList;
 
             front_token();
@@ -2184,6 +2182,7 @@ int main_body_scnd()   //pravidlo <MB> -> <SL> <MB>
          error = is_function_call_or_ass();
 
          local_symbol->data->init = true;
+
          priradenie = false;
          if(error != SUCCESS)
             return error;
@@ -3507,7 +3506,7 @@ else
 
       isLoc_symbol = loc_symbol_search(local_table, nazov); //overenie, ci uz dana lokalna premenna neexistuje ako premenna
       isTemp_symbol = Htab_search(ptrclass->ptr, nazov);  //overenei ci existuje ako funkcia
-      if(isLoc_symbol != NULL)   //existuje ako lokalna premenna
+      if((isLoc_symbol != NULL && isTemp_symbol == NULL) || (isLoc_symbol != NULL && isTemp_symbol != NULL))   //existuje ako lokalna premenna
       {
          error = expresion_parser();
          if(error != SUCCESS)
@@ -3542,6 +3541,7 @@ else
                return error;
             if(token2.stav != S_SEMICOLON)
                return SYNTAX_ERR;
+            generateLastInstruction(I_ASSIGN, destExpr, NULL, destination, currentList);
          }
       }
       else
