@@ -26,6 +26,10 @@
    unsigned int name = 0;
    TMP_HTAB* const_table;
    symData *destExpr;
+   bool isMinus = false;
+   bool neguj = false;
+   bool isFirstOne = true;
+   char *stringMinus = NULL;
    #define TAB_SIZE (16)
 
 
@@ -134,15 +138,10 @@ int catch_index(SAData *pom,int *count){
           error = RUNTIME_INIT_ERR;
           return error;
         }
-
-      /*  if((locsymbol_pom = loc_symbol_search(local_table, token2.data)) == NULL){
-          error = SEMANTIC_PROG_ERR;
-          return error;
-        }*/
         pom->sym_data = symbol_pom->data;
         pom->nameID = symbol_pom->name;
       }else{
-          
+
           //Hash_class *ptrclass
           //lokalna tabulka
 
@@ -174,10 +173,10 @@ int catch_index(SAData *pom,int *count){
 
         }
       }
-//ak tam bude bodka
-//Hash_class* class_search(clHTable *clptr,char *classname);
-
-    iSymbol* Htab_search(tHTable *ST, char *id);
+      if(isMinus){
+          neguj = true;
+          isMinus = false;
+      }
 
       pom->indexibus = ID;
       //pom->nameID =
@@ -200,6 +199,10 @@ int catch_index(SAData *pom,int *count){
       str = mymalloc(sizeof(char)*25);
       sprintf(str,"@int_pom_%u",name++);  //TODO vygenerovat premennu;
       pom->nameID = str;
+      if(isMinus){
+        neguj = true;
+        isMinus = false;
+      }
     //printf("vygenerovane meno:%s\n",pom->nameID);
       tmp_htab_insert(const_table, pom->sym_data->type, &intoTableInt,pom->nameID,-1);
       break;
@@ -228,6 +231,10 @@ int catch_index(SAData *pom,int *count){
       str = mymalloc(sizeof(char)*25);
       sprintf(str,"@double_pom_%u",name++);  //TODO vygenerovat premennu;
       pom->nameID = str;
+      if(isMinus){
+        neguj = true;
+        isMinus = false;
+      }
     //  printf("vygenerovane meno:%s\n",pom->nameID);
       tmp_htab_insert(const_table, pom->sym_data->type, &intoTableDouble,pom->nameID,-1);
 
@@ -278,78 +285,32 @@ int catch_index(SAData *pom,int *count){
 }
 
 
-void show_stacks(tStack *s1,tStack *s2)
-{
-    SAData pom1, pom2;
-    printf("\t1.zasobnik\t2.zasobnik\n");
-	int i = 0;
-	int a = 0;
-
-	stackTop(s1,&pom1);
-	stackTop(s2,&pom2);
-    while((!(stackEmpty(s1)) || (!(stackEmpty(s2))))){
-
-	    stackTopPop(s1,&pom1);
-        stackTopPop(s2,&pom2);
-		if(!stackEmpty(s1)){
-			printf("\t[ %d ]",pom1.indexibus);
-		}else{
-			i++;
-			if(i == 1)
-	            printf("\t[ %d ]",pom1.indexibus);
-			else
-			printf("\t");
-		}
-		if(!stackEmpty(s2)){
-			printf("\t\t[ %d ]\n",pom2.indexibus);
-		}else{
-			a++;
-			if(a == 1)
-	            printf("\t\t[ %d ]",pom2.indexibus);
-			printf("\n");
-		}
-	 }
-}
-
-void show_stacks2(tStack *s1,tStack *s2){
-	SAData t;
-	printf("stack1\n");
-	if(stackEmpty(s1)){
-		printf("je prazdny\n\n");
-	}
-	while(!stackEmpty(s1)){
-		stackTopPop(s1,&t);
-		printf("\t[ %d ]\n",t.indexibus);
-	}
-	printf("\n\nstack2\n");
-	if(stackEmpty(s2))
-		printf("je prazdny\n\n");
-	while(!stackEmpty(s2)){
-		stackTopPop(s2,&t);
-		printf("\t[ %d ]\n",t.indexibus);
-	}
-}
-
-
-
 int reduction(tStack *stack1,tStack *stack2){
 	SAData hhelp1;
 	SAData hhelp2;
 	SAData hhelp3;
 	SAData hhelp4;
+  SAData pom;
 	SAData neterminal;
+  pom.nameID = NULL;
   hhelp1.nameID = NULL;
   hhelp2.nameID = NULL;
   hhelp3.nameID = NULL;
   hhelp4.nameID = NULL;
   neterminal.nameID = NULL;
+  pom.sym_data = NULL;
   hhelp1.sym_data = NULL;
   hhelp2.sym_data = NULL;
   hhelp3.sym_data = NULL;
   hhelp4.sym_data = NULL;
   neterminal.sym_data = NULL;
 
-
+  pom.sym_data = mymalloc(sizeof(struct sym_Data));
+  if(pom.sym_data == NULL){
+    error= INTERNAL_ERR;
+  //  clearAll();
+    return error;
+  }
   neterminal.sym_data = mymalloc(sizeof(struct sym_Data));
 
   if(neterminal.sym_data == NULL){
@@ -591,10 +552,57 @@ int reduction(tStack *stack1,tStack *stack2){
 			error = SYNTAX_ERR;
 			//clearAll();
 			return error;
-		}else{
+
+		}else if(hhelp2.indexibus == MINUS){
+      if(stackEmpty(stack2)){
+				error = SYNTAX_ERR;
+        return error;
+			}
+
+      stackTopPop(stack2,&hhelp3);
+			//musi byt neterminal na vrchole zasobnika
+			if(hhelp3.indexibus != NETERM){
+				error = SYNTAX_ERR;
+        //learAll();
+        return error;
+			}
+      stackPop(stack1);
+        if(neguj){
+          if(isFirstOne){
+            isFirstOne = false;
+            pom.sym_data = mymalloc(sizeof(struct sym_Data));
+            if(pom.sym_data == NULL){
+              error = INTERNAL_ERR;
+              return error;
+            }
+            int intoTableInt;
+            pom.sym_data->init = true;
+            pom.sym_data->args = NULL;
+            pom.sym_data->type = tInt;
+            pom.sym_data->instrPtr = NULL;
+            pom.sym_data->funcdata_union.offset=-1;
+            intoTableInt = pom.sym_data->ptr_union.i = -1;
+            stringMinus = mymalloc(sizeof(char)*25);
+            sprintf(stringMinus,"@int_pom_%u",name++);  //TODO vygenerovat premennu;
+            pom.nameID = stringMinus;
+          //printf("vygenerovane meno:%s\n",pom->nameID);
+            tmp_htab_insert(const_table, pom.sym_data->type, &intoTableInt,pom.nameID,-1);
+            //vlozim -1 do tabulky symbolov pre konstanty
+
+
+          }
+
+          neguj = false;
+
+        }
+        neterminal.nameID = stringMinus;
+        neterminal = hhelp3;
+        neterminal.indexibus = NETERM;
+        stackPush(stack1,&neterminal);
+        generateLastInstruction(I_MUL, pom.sym_data, hhelp3.sym_data, neterminal.sym_data, currentList);
+        return error;
+    }else{
 			error = SYNTAX_ERR;
-      //errorFce();
-      //clearAll();
       return error;
 		}		//pre pravu zatvorku
 				//pre neterminal
@@ -653,6 +661,12 @@ int expresion_parser()
 	do{
 //	for(int i = 0; i<6;i++){
 
+    if(token2.stav == S_MINUS){
+        stackTop(&Stack1,&vyber);
+        if (vyber.indexibus != ID) {
+            isMinus = true;
+        }
+    }
 		if(readToken){	//ziskam si index do tabulky symbolov podla typu tokenu
 			catch_index(&right_index,&bracket_counter);
       if(error != SUCCESS)
@@ -713,15 +727,11 @@ int expresion_parser()
 			case '>':
 				reduction(&Stack1,&Stack2);
         if(error != SUCCESS)
-            //TODO ak nahodou bude chyba tak tu nevymazavam memory
             return error;
-				//ak by bolo nieco zle tak sa sem nedostane;
 				readToken = false;
 				break;
 			case 'E':
-				//fprintf("nastala chyba indexovanie do preced.table\n");
 				error = SYNTAX_ERR;
-				//clearAll();
         return error;
 				break;
 		}
@@ -741,19 +751,13 @@ int expresion_parser()
 
 
 		if(readToken){
-//			printf("token: |%s|\n",token.data);
 			front_token();
 			if(error != SUCCESS){
-				//errorFce();
-				//clearAll();
         return error;
 			}
 		}
 
-
-//	}
 	}while(!((right_index.indexibus == DOLAR) && (end.indexibus == DOLAR)));
-	//show_stacks2(&Stack1,&Stack2);
   stackTopPop(&Stack1, &send);
   if(priradenie){
     if(send.sym_data->type == assSymbol){
@@ -772,20 +776,16 @@ int expresion_parser()
           error = SEMANTIC_TYPE_ERR;
       }
       if(send.sym_data->type == tString){
-          //clearAll();
           error = SEMANTIC_TYPE_ERR;
       }
       if(assSymbol == tString){
         if(send.sym_data->type == tInt){
-          //clearAll();
           error = SEMANTIC_TYPE_ERR;
         }
         if(send.sym_data->type == tDouble){
-          //clearAll();
           error = SEMANTIC_TYPE_ERR;
         }
         if(send.sym_data->type == tDouble){
-          //clearAll();
           error = SEMANTIC_TYPE_ERR;
         }
       }
