@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
 	//front_token();
     }
 */
-	parser();
+	error = parser();
 	if(error == SUCCESS)
 		printf("-----error: E_OK\n");
 
