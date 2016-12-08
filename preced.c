@@ -26,10 +26,6 @@
    unsigned int name = 0;
    TMP_HTAB* const_table;
    symData *destExpr;
-   bool isMinus = false;
-   bool neguj = false;
-   bool isFirstOne = true;
-   char *stringMinus = NULL;
    #define TAB_SIZE (16)
 
 
@@ -173,10 +169,7 @@ int catch_index(SAData *pom,int *count){
 
         }
       }
-      if(isMinus){
-          neguj = true;
-          isMinus = false;
-      }
+
 
       pom->indexibus = ID;
       //pom->nameID =
@@ -199,10 +192,7 @@ int catch_index(SAData *pom,int *count){
       str = mymalloc(sizeof(char)*25);
       sprintf(str,"@int_pom_%u",name++);  //TODO vygenerovat premennu;
       pom->nameID = str;
-      if(isMinus){
-        neguj = true;
-        isMinus = false;
-      }
+
     //printf("vygenerovane meno:%s\n",pom->nameID);
       tmp_htab_insert(const_table, pom->sym_data->type, &intoTableInt,pom->nameID,-1);
       break;
@@ -231,10 +221,7 @@ int catch_index(SAData *pom,int *count){
       str = mymalloc(sizeof(char)*25);
       sprintf(str,"@double_pom_%u",name++);  //TODO vygenerovat premennu;
       pom->nameID = str;
-      if(isMinus){
-        neguj = true;
-        isMinus = false;
-      }
+
     //  printf("vygenerovane meno:%s\n",pom->nameID);
       tmp_htab_insert(const_table, pom->sym_data->type, &intoTableDouble,pom->nameID,-1);
 
@@ -553,55 +540,7 @@ int reduction(tStack *stack1,tStack *stack2){
 			//clearAll();
 			return error;
 
-		}else if(hhelp2.indexibus == MINUS){
-      if(stackEmpty(stack2)){
-				error = SYNTAX_ERR;
-        return error;
-			}
-
-      stackTopPop(stack2,&hhelp3);
-			//musi byt neterminal na vrchole zasobnika
-			if(hhelp3.indexibus != NETERM){
-				error = SYNTAX_ERR;
-        //learAll();
-        return error;
-			}
-      stackPop(stack1);
-        if(neguj){
-          if(isFirstOne){
-            isFirstOne = false;
-            pom.sym_data = mymalloc(sizeof(struct sym_Data));
-            if(pom.sym_data == NULL){
-              error = INTERNAL_ERR;
-              return error;
-            }
-            int intoTableInt;
-            pom.sym_data->init = true;
-            pom.sym_data->args = NULL;
-            pom.sym_data->type = tInt;
-            pom.sym_data->instrPtr = NULL;
-            pom.sym_data->funcdata_union.offset=-1;
-            intoTableInt = pom.sym_data->ptr_union.i = -1;
-            stringMinus = mymalloc(sizeof(char)*25);
-            sprintf(stringMinus,"@int_pom_%u",name++);  //TODO vygenerovat premennu;
-            pom.nameID = stringMinus;
-          //printf("vygenerovane meno:%s\n",pom->nameID);
-            tmp_htab_insert(const_table, pom.sym_data->type, &intoTableInt,pom.nameID,-1);
-            //vlozim -1 do tabulky symbolov pre konstanty
-
-
-          }
-
-          neguj = false;
-
-        }
-        neterminal.nameID = stringMinus;
-        neterminal = hhelp3;
-        neterminal.indexibus = NETERM;
-        stackPush(stack1,&neterminal);
-        generateLastInstruction(I_MUL, pom.sym_data, hhelp3.sym_data, neterminal.sym_data, currentList);
-        return error;
-    }else{
+		}else{
 			error = SYNTAX_ERR;
       return error;
 		}		//pre pravu zatvorku
@@ -659,14 +598,6 @@ int expresion_parser()
 	//pushnuty dolar na prvom zasobniku
 
 	do{
-//	for(int i = 0; i<6;i++){
-
-    if(token2.stav == S_MINUS){
-        stackTop(&Stack1,&vyber);
-        if (vyber.indexibus != ID) {
-            isMinus = true;
-        }
-    }
 		if(readToken){	//ziskam si index do tabulky symbolov podla typu tokenu
 			catch_index(&right_index,&bracket_counter);
       if(error != SUCCESS)
