@@ -692,6 +692,13 @@ int main_body()   //pravidlo <MB> -> <SL> <MB>
    if(error != SUCCESS)
       return error;
 
+   else if(!((strcmp(token.data, "static"))&&(strcmp(token.data, "boolean"))&&(strcmp(token.data, "class"))&&(strcmp(token.data, "continue"))
+         &&(strcmp(token.data, "do"))&&(strcmp(token.data, "false"))&&(strcmp(token.data, "for"))&&(strcmp(token.data, "true"))
+         &&(strcmp(token.data, "void"))))  //pravidlo <SL> -> <PARS> <VD>
+   {
+         return SYNTAX_ERR;
+   }
+
    if(!(strcmp(token.data, "while")))  //pravidlo <SL> -> while ( <E> ) { main body }
    {
       get_token();
@@ -961,6 +968,13 @@ int main_body_riadiace()   //pravidlo <MB> -> <SL> <MB>
    if(error != SUCCESS)
       return error;
 
+   else if(!((strcmp(token.data, "static"))&&(strcmp(token.data, "boolean"))&&(strcmp(token.data, "class"))&&(strcmp(token.data, "continue"))
+         &&(strcmp(token.data, "do"))&&(strcmp(token.data, "false"))&&(strcmp(token.data, "for"))&&(strcmp(token.data, "true"))
+         &&(strcmp(token.data, "void"))))  //pravidlo <SL> -> <PARS> <VD>
+   {
+         return SYNTAX_ERR;
+   }
+
    if(!(strcmp(token.data, "while")))  //pravidlo <MBr> -> while ( <E> ) { main body }
    {
       get_token();
@@ -1128,7 +1142,7 @@ int main_body_riadiace()   //pravidlo <MB> -> <SL> <MB>
    }
    else if(!((strcmp(token.data, "String"))&&(strcmp(token.data, "int"))&&(strcmp(token.data, "double"))))  //pravidlo <SL> -> <PARS> <VD>
    {
-         return SEMANTIC_PROG_ERR;
+         return SYNTAX_ERR;
    }
    else if(!(strcmp(token.data, "return")))
    {
@@ -1896,6 +1910,9 @@ int main_body_scnd()   //pravidlo <MB> -> <SL> <MB>
       if(error != SUCCESS)
          return error;
 
+      if(destExpr->type != tBool)
+         return SEMANTIC_TYPE_ERR;
+
       generateLastInstruction(I_IFJMP, LABEL2, destExpr, NULL, currentList);
 
       if(token2.stav != S_PZAT)
@@ -1931,6 +1948,9 @@ int main_body_scnd()   //pravidlo <MB> -> <SL> <MB>
       error = expresion_parser();
       if(error != SUCCESS)
          return error;
+
+      if(destExpr->type != tBool)
+         return SEMANTIC_TYPE_ERR;
 
       generateLastInstruction(I_IFJMP, LABEL1, destExpr, NULL, currentList);
 
@@ -2292,6 +2312,9 @@ int main_body_riadiace_scnd()   //pravidlo <MB> -> <SL> <MB>
       if(error != SUCCESS)
          return error;
 
+      if(destExpr->type != tBool)
+         return SEMANTIC_TYPE_ERR;
+
       generateLastInstruction(I_IFJMP, LABEL2, destExpr, NULL, currentList);
 
       if(token2.stav != S_PZAT)
@@ -2326,6 +2349,9 @@ int main_body_riadiace_scnd()   //pravidlo <MB> -> <SL> <MB>
       error = expresion_parser();
       if(error != SUCCESS)
          return error;
+
+      if(destExpr->type != tBool)
+         return SEMANTIC_TYPE_ERR;
 
       generateLastInstruction(I_IFJMP, LABEL1, destExpr, NULL, currentList);
 
