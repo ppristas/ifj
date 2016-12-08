@@ -126,6 +126,10 @@ int catch_index(SAData *pom,int *count){
           return error;
         }
         symbol_pom = Htab_search(class_table_pom->ptr, id_part);
+        if((symbol_pom->fce)){
+          error = SYNTAX_ERR;
+          return error;
+        }
         if(symbol_pom == NULL){
           error = SEMANTIC_PROG_ERR;
           return error;
@@ -134,6 +138,7 @@ int catch_index(SAData *pom,int *count){
           error = RUNTIME_INIT_ERR;
           return error;
         }
+
         pom->sym_data = symbol_pom->data;
         pom->nameID = symbol_pom->name;
       }else{
@@ -152,18 +157,28 @@ int catch_index(SAData *pom,int *count){
           }
 
           if(symbol_pom != NULL){
+            if((symbol_pom->fce)){
+              error = SYNTAX_ERR;
+              return error;
+            }
               if(!(symbol_pom->data->init)){
                 error = RUNTIME_INIT_ERR;
                 return error;
               }
+
               pom->sym_data = symbol_pom->data;
               pom->nameID = symbol_pom->name;
           }
           if( locsymbol_pom != NULL){
+            if((locsymbol_pom->fce)){
+              error = SYNTAX_ERR;
+              return error;
+            }
               if(!(locsymbol_pom->data->init)){
                 error = RUNTIME_INIT_ERR;
                 return error;
               }
+
               pom->sym_data = locsymbol_pom->data;
               pom->nameID = locsymbol_pom->name;
 
