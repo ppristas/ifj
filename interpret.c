@@ -1091,12 +1091,12 @@ void interpret(ilist *L){
             if(dest != NULL){
                 if(dest->type==tString){
                     if(op1->init==true){
-                        tmpString = malloc(sizeof(char) * strlen(op1->ptr_union.str) + 2);
+                        tmpString = malloc(sizeof(char) * strlen(op1->ptr_union.str) + 1);
                         strcpy(tmpString, sort(op1->ptr_union.str));
                         if(dest->init == true){
                             free(dest->ptr_union.str);
                         }
-                        dest->ptr_union.str = malloc(sizeof(char ) * strlen(tmpString) + 2);
+                        dest->ptr_union.str = malloc(sizeof(char ) * strlen(tmpString) + 1);
                         strcpy(dest->ptr_union.str, tmpString);
                         free(tmpString);
                         dest->init=true;
