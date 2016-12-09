@@ -6,6 +6,7 @@
 
 //Globálna páska na inštrukcie týkajúce sa inštrukcií globálnych premenných
 ilist globalList;
+//Ukazatel na momentalnu pasku
 ilist * currentList;
 
 //Generovanie inštrukcií na koniec danej inštrukčnej pásky
@@ -38,6 +39,7 @@ item * generateItem(eInstrType type, void *op1, void *op2, void *dest){
     return tmpItem;
 }
 
+//Vladanie Navesti
 void insertItem(item * I, ilist * L){
     if(I != NULL && L != NULL){
         if(L->last == NULL){
@@ -54,7 +56,7 @@ void insertItem(item * I, ilist * L){
         }
     }
 }
-
+//Vlozi instrukciu na koniec momentalneho zoznamu
 void generateLastInstruction(eInstrType type, void *op1, void *op2, void *dest, ilist *L)
 {
     instr *tmp;
@@ -169,12 +171,12 @@ void setInstruction(ilist *L, item *instruction){
 
 
 
-
+//Inicializacia stacku na odkladanie pasok
 void stackInitList(instrStack *stack){
     stack->top=NULL;
     stack->pocet=0;
 }
-
+//Pushne poslednu pasku nastack
 void stackPushList(instrStack *stack, item * instrPtr, ilist * L){
     stackItem * tmp;
 
@@ -194,7 +196,7 @@ void stackPushList(instrStack *stack, item * instrPtr, ilist * L){
     }
     stack->pocet++;
 }
-
+//vypopne poslednu pasku
 void stackPopList(instrStack *stack){
     stackItem * tmp;
     if(stack->top != NULL){
@@ -204,7 +206,7 @@ void stackPopList(instrStack *stack){
         free(tmp);
     }
 }
-
+//ziska poslednu odlozenu instrukciu
 item *stackTopInstruction(instrStack * stack){
     if(stack->top != NULL){
      return stack->top->instrPtr;
@@ -214,7 +216,7 @@ item *stackTopInstruction(instrStack * stack){
         return NULL;
     }
 }
-
+//ziska poslednu odlozenu pasku
 ilist * stackTopList(instrStack * stack){
     if(stack->top != NULL){
      return stack->top->list;
@@ -224,7 +226,7 @@ ilist * stackTopList(instrStack * stack){
         return NULL;
     }
 }
-
+//zrusi stack na odkladanie pasok
 void stackDestroyList(instrStack *stack){
     stackItem * tmp;
     while(stack->top != NULL){
