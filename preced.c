@@ -127,14 +127,16 @@ int catch_index(SAData *pom,int *count){
           return error;
         }
         symbol_pom = Htab_search(class_table_pom->ptr, id_part);  //pozriem v tabulke triedy ci sa nachadza premenna
-        if((symbol_pom->fce)){
-          error = SYNTAX_ERR;
-          return error;
-        }
         if(symbol_pom == NULL){
           error = SEMANTIC_PROG_ERR;
           return error;
         }
+        
+        if((symbol_pom->fce)){
+          error = SYNTAX_ERR;
+          return error;
+        }
+
         if(!(symbol_pom->data->init)){  // zistujem ci je premenna inicializovana
           error = RUNTIME_INIT_ERR;
           return error;
