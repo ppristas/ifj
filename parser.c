@@ -3493,6 +3493,7 @@ else
                   error = expresion_parser();
                   if(error != SUCCESS)
                      return error;
+                  isTemp_symbol->data->init = true;
                   if(token2.stav != S_SEMICOLON)
                      return SYNTAX_ERR;
                   generateLastInstruction(I_ASSIGN, destExpr, NULL, destination, currentList);
@@ -3565,6 +3566,7 @@ else
             error = expresion_parser();
             if(error != SUCCESS)
                return error;
+            isTemp_symbol->data->init = true;
             if(token2.stav != S_SEMICOLON)
                return SYNTAX_ERR;
             generateLastInstruction(I_ASSIGN, destExpr, NULL, destination, currentList);
