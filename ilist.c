@@ -39,7 +39,7 @@ item * generateItem(eInstrType type, void *op1, void *op2, void *dest){
     return tmpItem;
 }
 
-//Vladanie Navesti
+//Vkladanie Navesti
 void insertItem(item * I, ilist * L){
     if(I != NULL && L != NULL){
         if(L->last == NULL){
