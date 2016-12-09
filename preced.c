@@ -104,7 +104,7 @@ int catch_index(SAData *pom,int *count){
 			break;
 		case S_ID:
 			pom->indexibus = ID;
-
+      /************ZLOZENY IDENTIFIKATOR***********/
 			//TODO TOKEN2.data
 			//overovat z tabulky symbolov ci sa tam nachadza
       //ziskat z find_symbol ukazatel s token2.data
@@ -120,12 +120,13 @@ int catch_index(SAData *pom,int *count){
       if(strchr(token2.data, '.')){
         return_class();
 
-        class_table_pom = class_search(STable,class_part);
+        class_table_pom = class_search(STable,class_part);  //overim ci existuje trieda
         if(class_table_pom == NULL){
+
           error = SEMANTIC_PROG_ERR;
           return error;
         }
-        symbol_pom = Htab_search(class_table_pom->ptr, id_part);
+        symbol_pom = Htab_search(class_table_pom->ptr, id_part);  //pozriem v tabulke triedy ci sa nachadza premenna
         if((symbol_pom->fce)){
           error = SYNTAX_ERR;
           return error;
@@ -134,7 +135,7 @@ int catch_index(SAData *pom,int *count){
           error = SEMANTIC_PROG_ERR;
           return error;
         }
-        if(!(symbol_pom->data->init)){
+        if(!(symbol_pom->data->init)){  // zistujem ci je premenna inicializovana
           error = RUNTIME_INIT_ERR;
           return error;
         }
@@ -142,25 +143,22 @@ int catch_index(SAData *pom,int *count){
         pom->sym_data = symbol_pom->data;
         pom->nameID = symbol_pom->name;
       }else{
+          /*********JEDNODUCHY INDENTIFIKATOR*********/
+          if((locsymbol_pom = loc_symbol_search(local_table, token2.data)) == NULL){  //overim ci je identifikator lokalny
 
-          //Hash_class *ptrclass
-          //lokalna tabulka
-
-          if((locsymbol_pom = loc_symbol_search(local_table, token2.data)) == NULL){
-
-              symbol_pom = Htab_search(ptrclass->ptr, token2.data);
-              if(symbol_pom == NULL){
+              symbol_pom = Htab_search(ptrclass->ptr, token2.data); //overim ci je identifikator staticky
+              if(symbol_pom == NULL){     //ak nie tak nastava semanticka chyba
                   error = SEMANTIC_PROG_ERR;
                   return error;
               }
 
           }
 
-          if(symbol_pom != NULL){
-            if((symbol_pom->fce)){
-              error = SYNTAX_ERR;
-              return error;
-            }
+          if(symbol_pom != NULL){   //ak sme nasli staticku premennu
+              if((symbol_pom->fce)){
+                error = SYNTAX_ERR;
+                return error;
+              }
               if(!(symbol_pom->data->init)){
                 error = RUNTIME_INIT_ERR;
                 return error;
@@ -169,11 +167,11 @@ int catch_index(SAData *pom,int *count){
               pom->sym_data = symbol_pom->data;
               pom->nameID = symbol_pom->name;
           }
-          if( locsymbol_pom != NULL){
-            if((locsymbol_pom->fce)){
-              error = SYNTAX_ERR;
-              return error;
-            }
+          if( locsymbol_pom != NULL){ //ak sme nasli lokalnu premennu
+              if((locsymbol_pom->fce)){
+                error = SYNTAX_ERR;
+                return error;
+              }
               if(!(locsymbol_pom->data->init)){
                 error = RUNTIME_INIT_ERR;
                 return error;
@@ -191,28 +189,30 @@ int catch_index(SAData *pom,int *count){
       //pom->sym_data =
       break;
     case S_INT:
-
+    /**KONSTANTY TYPU INTEGER**/
       pom->indexibus = ID;
-      pom->sym_data = mymalloc(sizeof(struct sym_Data));
+      pom->sym_data = mymalloc(sizeof(struct sym_Data));    //pomocne ID ktore budem davat do zasobniku
       if(pom->sym_data == NULL){
         error = INTERNAL_ERR;
         return error;
       }
-      pom->sym_data->init = true;
+      pom->sym_data->init = true;     //je inicializovana, lebo je konstanta
       pom->sym_data->args = NULL;
       pom->sym_data->type = tInt;
       pom->sym_data->instrPtr = NULL;
       pom->sym_data->funcdata_union.offset=-1;
-      intoTableInt = pom->sym_data->ptr_union.i = strtol(token2.data,&endptr,10);
+      intoTableInt = pom->sym_data->ptr_union.i = strtol(token2.data,&endptr,10);   //prevediem si hodnotu z token2.data
       str = mymalloc(sizeof(char)*25);
       sprintf(str,"@int_pom_%u",name++);  //TODO vygenerovat premennu;
       pom->nameID = str;
 
     //printf("vygenerovane meno:%s\n",pom->nameID);
-      tmp_htab_insert(const_table, pom->sym_data->type, &intoTableInt,pom->nameID,-1);
+      tmp_htab_insert(const_table, pom->sym_data->type, &intoTableInt,pom->nameID,-1);    //vlozim do tabulky s konstantami
       break;
 		case S_DOUBLE:
 		case S_EXP:
+      /**KONSTANTY TYPU DOUBLE**/
+
 
       //key = vygenerovat sprintfom
       //data->arg_count = 0;
@@ -231,14 +231,14 @@ int catch_index(SAData *pom,int *count){
       pom->sym_data->type = tDouble;
       pom->sym_data->instrPtr = NULL;
       pom->sym_data->funcdata_union.offset = -1;
-      intoTableDouble = pom->sym_data->ptr_union.d = strtod(token2.data,&endptr);
+      intoTableDouble = pom->sym_data->ptr_union.d = strtod(token2.data,&endptr);      //prevediem si hodnotu z token2.data
 
       str = mymalloc(sizeof(char)*25);
       sprintf(str,"@double_pom_%u",name++);  //TODO vygenerovat premennu;
       pom->nameID = str;
 
     //  printf("vygenerovane meno:%s\n",pom->nameID);
-      tmp_htab_insert(const_table, pom->sym_data->type, &intoTableDouble,pom->nameID,-1);
+      tmp_htab_insert(const_table, pom->sym_data->type, &intoTableDouble,pom->nameID,-1);      //vlozim do tabulky s konstantami
 
 
       //pom->sym_data->data = /priradim si vytvorenu premennu
@@ -248,6 +248,7 @@ int catch_index(SAData *pom,int *count){
 			//preconvertovat cez atoi
 			break;
 		case S_STRING:
+      /**KONSTANTY TYPU STRING**/
       pom->indexibus = ID;
       pom->sym_data = mymalloc(sizeof(struct sym_Data));
       if(pom->sym_data == NULL){
@@ -279,7 +280,6 @@ int catch_index(SAData *pom,int *count){
 			break;
 		default:
 			error = SYNTAX_ERR;
-			//clearAll();
       return error;
 			break;
 	}
@@ -287,32 +287,28 @@ int catch_index(SAData *pom,int *count){
 }
 
 
+/*
+ * function: zredukovanie vyrazu na neterminaly
+ * params: stack1 -> ukazatel na zasobnik 1
+ * params: stack2 -> ukazatel na zasobnik 2
+ */
 int reduction(tStack *stack1,tStack *stack2){
 	SAData hhelp1;
 	SAData hhelp2;
 	SAData hhelp3;
 	SAData hhelp4;
-  SAData pom;
 	SAData neterminal;
-  pom.nameID = NULL;
   hhelp1.nameID = NULL;
   hhelp2.nameID = NULL;
   hhelp3.nameID = NULL;
   hhelp4.nameID = NULL;
   neterminal.nameID = NULL;
-  pom.sym_data = NULL;
   hhelp1.sym_data = NULL;
   hhelp2.sym_data = NULL;
   hhelp3.sym_data = NULL;
   hhelp4.sym_data = NULL;
   neterminal.sym_data = NULL;
 
-  pom.sym_data = mymalloc(sizeof(struct sym_Data));
-  if(pom.sym_data == NULL){
-    error= INTERNAL_ERR;
-  //  clearAll();
-    return error;
-  }
   neterminal.sym_data = mymalloc(sizeof(struct sym_Data));
 
   if(neterminal.sym_data == NULL){
@@ -322,18 +318,23 @@ int reduction(tStack *stack1,tStack *stack2){
   }
   eInstrType instruction;
   char *str = NULL;
-	//odkladame na druhy zasobnik;
+
+	//odkladame na druhy zasobnik dokym nenarazim na < alebo je prazdny zasobnik 1;
 	stackTop(stack1,&hhelp1);
 	while((hhelp1.indexibus != L_HANDLE) && (!stackEmpty(stack1))){
 		stackTopPop(stack1,&hhelp2);
 		stackPush(stack2,&hhelp2);
 		stackTop(stack1,&hhelp1);
 	}
+
+  //***
+  //*** mozem redukovat
+  //***
 	if( hhelp1.indexibus == L_HANDLE){
 		stackTopPop(stack2,&hhelp2);
 
-		//******* E -> id
 		//*******
+		//******* E -> id
 		//*******
 		if(hhelp2.indexibus == ID){
 			stackPop(stack1);		//dam dofaka leftHandle
@@ -371,12 +372,10 @@ int reduction(tStack *stack1,tStack *stack2){
 					;
 			}else{
 				error = SYNTAX_ERR;
-				//errorFce();
-				//clearAll();
 				return error;
 			}
 
-			 //generovanie instrukcie TODO cez jednoduchy switch (hhelp3.indexibus){ }
+			 //vytvorim si pomocnu premennu ktoru budem predavat do instrukcnej pasky ako OPERATOR
 
 			switch(hhelp3.indexibus){
 				case PLUS:
@@ -412,7 +411,6 @@ int reduction(tStack *stack1,tStack *stack2){
         default:
 
           error = SEMANTIC_ERR;
-    //      clearAll();
           return error;
           break;
 			}
@@ -485,7 +483,7 @@ int reduction(tStack *stack1,tStack *stack2){
               if((hhelp2.sym_data->type == tString) || (hhelp4.sym_data->type == tString)){
                   neterminal.sym_data->type = tString;
                   neterminal.sym_data->funcdata_union.offset=-1;
-              }
+              }//normalne scitanie
               else{
                   if((hhelp2.sym_data->type == tDouble) || (hhelp4.sym_data->type == tDouble)){
 
@@ -566,7 +564,10 @@ int reduction(tStack *stack1,tStack *stack2){
 	error = SYNTAX_ERR;
 	return error;
 }
-
+/**
+  * function: funkcia ktora overi ci je spravne syntakticky/ semanticky zadany vyraz
+  *
+  **/
 int expresion_parser()
 {
 
@@ -705,6 +706,7 @@ int expresion_parser()
 
 	}while(!((right_index.indexibus == DOLAR) && (end.indexibus == DOLAR)));
   stackTopPop(&Stack1, &send);
+  //overim ci je priradovany vyraz kompatibilny s destinaciou
   if(priradenie){
     if(send.sym_data->type == assSymbol){
       destExpr = send.sym_data;
@@ -739,7 +741,5 @@ int expresion_parser()
     }
   }
   destExpr = send.sym_data;
-  ///printf("---%s----%d--\n\n",send.nameID,send.sym_data->type);
-  //Print_table(const_table);
 return error;
 }
