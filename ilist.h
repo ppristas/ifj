@@ -87,18 +87,14 @@ void insertItem(item * I, ilist *L);
 
 //Nagenerovanie a vloženie Inštrukcie do inštrukčnej pásky
 void generateLastInstruction(eInstrType type, void *op1, void *op2, void *dest, ilist *L);
-//Nagenerovanie a vloženie prvku za aktívny prvok, toto sa bude využívať pri podmienkach
-//void generatePostInstruction(eInstrType type, void *op1, void *op2, void *dest, ilist *L);
 
 //Nastavenie aktívneho prvku na prvý prvok
 void actFirst(ilist *L);
-//Nastavenie aktívneho prvku na posledný prvok, spolu s prevInstuction sa bude musieť použiť na podmienky
+//Nastavenie aktívneho prvku na posledný prvok
 void actLast(ilist *L);
-//Komentár o jedno vyššie
-//void prevInstruction(ilist *L);
 //Iterácia aktívneho prvku o jedno
 void succ(ilist *L);
-//Získa sa pointer na posledný prvok
+//Ziska sa pointer na posledný prvok
 item* getLast(ilist *L);
 
 
@@ -111,12 +107,17 @@ instr *getInstruction(ilist *L);
 //Inštrukcia na skoky
 void setInstruction(ilist *L, item* instruction);
 
-
+//Inicializuje stack na odkladanie pasok
 void stackInitList(instrStack *stack);
+//Pushne aktualnu pasku a instrukciu na stack
 void stackPushList(instrStack *stack, item* instrPtr, ilist *L);
+//Vypopne poslednú instrukciu a pasku
 void stackPopList(instrStack *stack);
+//Ziska sa adresa najvyssieho listu
 ilist * stackTopList(instrStack *stack);
+//Ziska sa adresa najvyssej instrukcie
 item * stackTopInstruction(instrStack *stack);
+//Zrusi sa list
 void stackDestroyList(instrStack * stack);
 
 #endif // ILIST_H_INCLUDED
