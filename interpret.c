@@ -10,7 +10,7 @@
 
 
 
-
+//Preklad adries podla toho ci je to pomocna, globalna alebo lokalna premenna
 void getOperands(symData **op1, symData **op2, symData **op3){
     symbolType type;
     if(op1 != NULL){
@@ -43,7 +43,7 @@ void getOperands(symData **op1, symData **op2, symData **op3){
 }
 
 
-
+//Implementacia instrukcii a vstavanych funkcii pouzivanych na interpretovanie zdrojoveho programu
 void interpret(ilist *L){
 
     ilist * tmpList;
