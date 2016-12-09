@@ -16,19 +16,32 @@
 #include "error.h"
 #include "cleaner.h"
 
+/**
+  * function: inicializuje zasobnik
+	* params: s-> zasobnik ktory sa ma pouzit
+	**/
 void stackInit(tStack* s){
 
 	s->top = NULL;
 }
 
+/**
+  * function: zisti ci je zasobnik prazdny
+	* params: s-> zasobnik ktory sa ma pouzit
+	* return value: true -> ak je prazdny inak false
+	**/
 bool stackEmpty(tStack* s){
 	return(s->top == NULL);
 }
 
-
+/**
+  * function: vlozi na vrchol zasobnika polozku
+	* params: s-> zasobnik ktory sa ma pouzit
+	* params: data -> data ktore sa maju vlozit do zasobnika
+	**/
 void stackPush(tStack *s, SAData *data){
 	tStackItem *pom;
-	pom = mymalloc(sizeof(tStackItem));	
+	pom = mymalloc(sizeof(tStackItem));
 	if( pom == NULL){
 		error = INTERNAL_ERR;
 		return;
@@ -38,7 +51,10 @@ void stackPush(tStack *s, SAData *data){
 	s->top = pom;
 }
 
-
+/**
+  * function: uvolni polozku na vrchole zasobnika
+	* params: s-> zasobnik ktory sa ma pouzit
+	**/
 void stackPop(tStack *s){
 
 	if(!stackEmpty(s)){
@@ -47,7 +63,11 @@ void stackPop(tStack *s){
 	}
 }
 
-
+/**
+  * function: preda hodnotu z vrcholu zasobnika
+	* params: s-> zasobnik ktory sa ma pouzit
+	* params: send-> v tejto premennej sa preda hodnota z vrcholu zasonika
+	**/
 void stackTop(tStack *s, SAData *send){
 	if(!stackEmpty(s)){
 		error = SUCCESS;
@@ -56,7 +76,11 @@ void stackTop(tStack *s, SAData *send){
 
 }
 
-
+/**
+  * function: preda a da prec hodnotu z vrcholu zasobnika
+	* params: s-> zasobnik ktory sa ma pouzit
+	* params: send -> v tejto premennej sa preda hodnota z vrcholu zasonika
+	**/
 void stackTopPop(tStack *s, SAData *send){
 	if(!(stackEmpty(s))){
 		stackTop(s, send);
@@ -65,12 +89,20 @@ void stackTopPop(tStack *s, SAData *send){
 
 }
 
+/**
+  * function: uvolni zasobnik
+	* params: s-> zasobnik ktory ma byt uvolneny
+	**/
 void stackFree(tStack *s){
 	while(s->top != NULL){
 		stackPop(s);
 	}
 }
 
+/**
+  * function: vypise polozky zasobniku
+	* params: s-> zasobnik ktory ma byt vypisany
+	**/
 void stackPrint(tStack* s){
 
 	if( s->top == NULL){
