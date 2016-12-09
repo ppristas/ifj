@@ -999,7 +999,12 @@ void interpret(ilist *L){
                     global_stack_frame->frame[global_stack_frame->top]->return_addres->init=true;
                 }
                 if(op1->type == tString && global_stack_frame->frame[global_stack_frame->top]->return_addres->type == tString ){
-                    global_stack_frame->frame[global_stack_frame->top]->return_addres->ptr_union.str = malloc(sizeof(char) * strlen(op1->ptr_union.str) + 1);
+                    if(global_stack_frame->frame[global_stack_frame->top]->return_addres->funcdata_union.offset == -1){
+                        global_stack_frame->frame[global_stack_frame->top]->return_addres->ptr_union.str = mymalloc(sizeof(char) * strlen(op1->ptr_union.str) + 1);
+                    }
+                    else{
+                        global_stack_frame->frame[global_stack_frame->top]->return_addres->ptr_union.str = malloc(sizeof(char) * strlen(op1->ptr_union.str) + 1);
+                    }
                     if(global_stack_frame->frame[global_stack_frame->top]->return_addres->ptr_union.str == NULL){
                         stackDestroyList(&stack);
                         error = 99;
