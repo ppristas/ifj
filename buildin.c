@@ -7,6 +7,7 @@
 
 // v interprete uvolnovat vystup str_ret
 //pridany mymalloc
+//Radenie retazca pomocou algoritmu heapsort
 char* sort(const char *str)
 {
     unsigned int n = strlen(str);
@@ -22,7 +23,7 @@ char* sort(const char *str)
 }
 
 
-// tmp treba uvolnit
+//vstavana funkcia na hladanie podretazcov
 char* substring(const char *s, const int i, const int n){
     if (s == NULL){
         return NULL;
@@ -56,7 +57,7 @@ char* substring(const char *s, const int i, const int n){
 }
 
 
-
+//vstavana funkcia na nacitanie Stringov
 void readString(symData * dest)
 {
     int chunk=10;
@@ -91,7 +92,7 @@ void readString(symData * dest)
     }
     free(save1);
 }
-
+//Vstavana funkcia na nacitanie celych cisel
 int readInt(symData * dest)
 {
     int i=0;
@@ -140,7 +141,7 @@ int readInt(symData * dest)
     free(save1);
     return 0;
 }
-
+//Vstavana funkcia na nacitanie desatinnych cisel
 int readDouble(symData * dest)
 {
     double d=0.0;
@@ -189,7 +190,7 @@ int readDouble(symData * dest)
     free(save1);
     return 0;
 }
-
+//Vstavana funkcia na vyhladanie indexu, kde zacina v retazci zadany pattern
 int find(char* s,char* search)
 {
     int s_len=strlen(s);
