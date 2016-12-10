@@ -1112,10 +1112,15 @@ void interpret(ilist *L){
                     if(op1->init==true){
                         tmpString = malloc(sizeof(char) * strlen(op1->ptr_union.str) + 1);
                         strcpy(tmpString, sort(op1->ptr_union.str));
-                        if(dest->init == true){
+                        if(dest->init == true && dest->funcdata_union.offset != -1){
                             free(dest->ptr_union.str);
                         }
-                        dest->ptr_union.str = malloc(sizeof(char ) * strlen(tmpString) + 1);
+                        if(dest->funcdata_union.offset == -1){
+                            dest->ptr_union.str = mymalloc(sizeof(char ) * strlen(tmpString) + 1);
+                        }
+                        else{
+                            dest->ptr_union.str = malloc(sizeof(char ) * strlen(tmpString) + 1);
+                        }
                         strcpy(dest->ptr_union.str, tmpString);
                         free(tmpString);
                         dest->init=true;
@@ -1233,10 +1238,15 @@ void interpret(ilist *L){
                     return;
                 }
                 strcpy(tmpString, substring(global_stack_frame->frame[global_stack_frame->top]->var_array[0].ptr_union.str, global_stack_frame->frame[global_stack_frame->top]->var_array[1].ptr_union.i, global_stack_frame->frame[global_stack_frame->top]->var_array[2].ptr_union.i));
-                if(dest->init == true){
+                if(dest->init == true && dest->funcdata_union.offset != -1){
                     free(dest->ptr_union.str);
                 }
-                dest->ptr_union.str = malloc(sizeof(char) * (global_stack_frame->frame[global_stack_frame->top]->var_array[2].ptr_union.i) + 1);
+                if(dest->funcdata_union.offset == -1){
+                    dest->ptr_union.str = mymalloc(sizeof(char) * (global_stack_frame->frame[global_stack_frame->top]->var_array[2].ptr_union.i) + 1);    
+                }
+                else{
+                    dest->ptr_union.str = malloc(sizeof(char) * (global_stack_frame->frame[global_stack_frame->top]->var_array[2].ptr_union.i) + 1);
+                }
                 strcpy(dest->ptr_union.str, tmpString);
                 if(tmpString != NULL){
                     free(tmpString);
