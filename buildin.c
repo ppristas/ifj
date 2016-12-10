@@ -80,10 +80,15 @@ void readString(symData * dest)
     *(save1+counter)='\0';
 
     if(dest != NULL){
-        if(dest->init == true){
+        if(dest->init == true && dest->funcdata_union.offset != -1){
             free(dest->ptr_union.str);
         }
-        dest->ptr_union.str=malloc(sizeof(char) * strlen(save1) + 1);
+        if(dest->funcdata_union.offset == -1){
+            dest->ptr_union.str=mymalloc(sizeof(char) * strlen(save1) + 1);
+        }
+        else{
+            dest->ptr_union.str=malloc(sizeof(char) * strlen(save1) + 1);
+        }
         if(dest->ptr_union.str == NULL){
             exit(99);
         }
