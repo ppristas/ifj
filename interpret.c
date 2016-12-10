@@ -1204,9 +1204,11 @@ void interpret(ilist *L){
             dest = I->dest;
             tmpString = NULL;
             if(dest != NULL){
-                tmpType = dest->type;
-                dest=pre_decode_addres(global_stack_frame, dest->funcdata_union.offset);
-                dest->type = tmpType;
+                if(dest->funcdata_union.offset != -1){
+                    tmpType = dest->type;
+                    dest=pre_decode_addres(global_stack_frame, dest->funcdata_union.offset);
+                    dest->type = tmpType;
+                }
             }
             if(global_stack_frame->frame[global_stack_frame->top]->var_array[2].init == false || global_stack_frame->frame[global_stack_frame->top]->var_array[1].init == false || global_stack_frame->frame[global_stack_frame->top]->var_array[0].init == false){
                 stackDestroyList(&stack);
